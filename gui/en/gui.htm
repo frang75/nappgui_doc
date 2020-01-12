@@ -1,0 +1,537 @@
+langrev.
+h1.Gui
+
+p.The <i>Gui</i> library allows you to create graphical user interfaces in a simple and intuitive way. Only available for desktop applications for obvious reasons <r>gui_depends</r>, unlike the rest of libraries that can also be used in command line applications. 
+
+img(gui_depends.svg,300,.4).Dependencies of <i>Gui</i>. See <lp>sdk</lp>.
+Gui library dependency tree.
+
+p.Like <lp>draw2d</lp> and <lp>osbs</lp> <i>Gui</i> relies on the APIs of each operating system <r>gui_tech</r>. In addition to the advantages already mentioned in these two cases, native access to interface elements will cause our programs to be fully integrated in the desktop and according to the visual theme present in each machine <r>native_look_and_feel</r>.
+
+img(gui_tech.svg,400,.5).<i>Gui</i> connects to the interface APIs of each operating system.
+Gui dependencies depending on each operating system.
+
+img(native_look_and_feel.svg,700,.75).The interfaces created with <i>Gui</i> will adapt to the style of each window environment.
+Image of the same program running on Windows, macOS and Linux.
+
+h2.Declarative composition
+
+p.The <i>Gui</i> library moves away from the concept of treating windows (or dialog boxes) as an external resource of the program. On the contrary, these are created directly from the source code avoiding layout by visual editors <r>visual_editor</r>. We must bear in mind that window managers use different fonts and templates, so specifying specific positions and sizes for the elements will not be portable between platforms <r>control_fixed_size</r>. On the contrary, in <i>Gui</i> the controls are located in a virtual grid called <lt>Layout</lt>, which will calculate its location and final size at runtime and depending on the platform <r>layout_compose</r>.
+
+img(visual_editor.svg,580,.65).Resource editors are not good allies to create complex dynamic interfaces. Even less if we want to carry them between platforms.
+Capture of the interface editor included in Xcode.
+
+img(control_fixed_size.svg,460,.6).Using fixed dimensions for controls will not adapt well when migrating the program.
+Label and Button controls on Windows, macOS and Linux.
+
+img(layout_compose.svg,460,.6).The Layout calculates the position and size of the components at runtime.
+Label and Button controls on Windows, macOS and Linux.
+
+p.In addition, another relevant fact is that interfaces are living objects subject to constant changes. A clear example is the translations, which alter the location of the elements due to the new dimension of the text <r>translate</r>. <i>Gui</i> will adapt to these events automatically, recalculating positions to maintain a consistent layout.
+
+img(translate.gif,0,.65).The windows automatically adapt to runtime changes.
+Translation of a runtime application.
+
+h2.Anatomy of a window.
+
+p.In <r>window_anatomy</r> we have the main parts of a window. <b>Controls</b> are the final elements with which the user interacts to enter data or launch actions. The <b>views</b> are rectangular regions of relatively large size where information is represented by text and graphics, being able to respond to keyboard or mouse events. Finally, all these elements will be grouped into <b>panels</b> and will be layout by <b>layouts</b>.
+
+img(window_anatomy.svg,600,.65).Notable parts in an interface window.
+Interface window where the most important parts are highlighted.
+
+li.<lp>label</lp>. Small blocks of descriptive text.
+
+li.<lp>button</lp>. Push buttons, check boxes or radio buttons.
+
+li.<lp>popup</lp>. Button with drop-down list.
+
+li.<lp>edit</lp>. Text edit box.
+
+li.<lp>combo</lp>. Edit box with drop-down list.
+
+li.<lp>slider</lp>. Sliding bar.
+
+li.<lp>updown</lp>. Increment and decrement buttons.
+
+li.<lp>progress</lp>. Progress bar.
+
+li.<lp>view</lp>. Generic view where you can freely draw and capture user events. Useful for creating custom controls.
+
+li.<lp>textview</lp>. View to show and edit texts, allowing to combine formats.
+
+li.<lp>imageview</lp>. View to display images.
+
+li.<lp>tableview</lp>. Table view to display tabulated information in rows and columns.
+
+li.<lp>splitview</lp>. View divided into two parts that allows, by means of a slider, to divide the total area between both zones.
+
+li.<lp>layout</lp>. Virtual and invisible grid that divides the panel space into cells where we will place the different controls and views.
+
+li.<lp>panel</lp>. Sub-window linked to the main window, without frame or border, where different controls can be grouped.
+
+li.<lp>window</lp>. Main window with title bar and frame.
+
+li.<lp>menu</lp>. List of options. Depending on the system they are part of the window (Windows, Ubuntu) or are displayed directly on the desktop (macOS).
+
+li.<lp>menuitem</lp>. Each of the menu items.
+
+h2.GUI Events
+
+p.Desktop applications are continuously waiting for the user to perform some action on the interface: Press a button, drag a <i>slider</i>, write a text, etc. When this occurs, the window manager detects the event and notifies the application <r>gui_event</r>, which must provide an <b>event handler</b> with the code to execute. For example in <r>eventhandler</r> we define a handler to respond to the press of a button. Obviously, if there is no associated handler, the application will ignore the event.
+
+li.Use <lf>event_params</lf> to obtain the parameters associated with the event. Each type of event has its own parameters. See <r>allevents</r>.
+
+li.Use <lf>event_result</lf> to write the response to the event. Very few events require sending a response.
+
+img(gui_event.svg,460,.6).Notification of an event through the handler.
+Interface window where the most important parts are highlighted.
+
+code(cpp,eventhandler).Assign a handler for the push of a button.
+static void i_OnClick(App *app, Event *e)
+{
+    const EvButton *param = event_params(e, EvButton);
+    if (param->state == ekON)
+        create_new_file(app);
+}
+
+Button *button = button_push();
+button_OnClick(button, listener(app, i_OnClick, App));
+code.
+
+table(allevents,| p{.4\textwidth} | c | c | c |).List of all interface events.
+row.
+p.Event
+p.Handler
+p.Parameters
+p.Response
+row.
+p.Click in label
+p.<lf>label_OnClick</lf>
+p.<lt>EvText</lt>
+p.-
+row.
+p.Click on button
+p.<lf>button_OnClick</lf>
+p.<lt>EvButton</lt>
+p.-
+row.
+p.Selection in PopUp
+p.<lf>popup_OnSelect</lf>
+p.<lt>EvButton</lt>
+p.-
+row.
+p.Press key on Edit
+p.<lf>edit_OnFilter</lf>
+p.<lt>EvText</lt>
+p.<lt>EvTextFilter</lt>
+row.
+p.End of edit in Edit
+p.<lf>edit_OnChange</lf>
+p.<lt>EvText</lt>
+p.-
+row.
+p.Key press on Combo
+p.<lf>combo_OnFilter</lf>
+p.<lt>EvText</lt>
+p.<lt>EvTextFilter</lt>
+row.
+p.End of editing in Combo
+p.<lf>combo_OnChange</lf>
+p.<lt>EvText</lt>
+p.-
+row.
+p.Slider movement
+p.<lf>slider_OnMoved</lf>
+p.<lt>EvSlider</lt>
+p.-
+row.
+p.Click on UpDown
+p.<lf>updown_OnClick</lf>
+p.<lt>EvButton</lt>
+p.-
+row.
+p.Draw the contents of a view
+p.<lf>view_OnDraw</lf>
+p.<lt>EvDraw</lt>
+p.-
+row.
+p.The size of a view has changed
+p.<lf>view_OnSize</lf>
+p.<lt>EvSize</lt>
+p.-
+row.
+p.The mouse moves over a view
+p.<lf>view_OnMoved</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.The mouse enters the area of a view
+p.<lf>view_OnEnter</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.The mouse leaves the area of a view
+p.<lf>view_OnExit</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.Click on a view
+p.<lf>view_OnClick</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.Start click and drag over a view
+p.<lf>view_OnStartDrag</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.Dragging on a view
+p.<lf>view_OnDrag</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.End drag on a view
+p.<lf>view_OnEndDrag</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.Mouse wheel on a view
+p.<lf>view_OnWheel</lf>
+p.<lt>EvWheel</lt>
+p.-
+row.
+p.Press key on a view
+p.<lf>view_OnKeyDown</lf>
+p.<lt>EvKey</lt>
+p.-
+row.
+p.Release key on a view
+p.<lf>view_OnKeyUp</lf>
+p.<lt>EvKey</lt>
+p.-
+row.
+p.Close a window
+p.<lf>window_OnClose</lf>
+p.<lt>EvWinClose</lt>
+p.<lt>bool_t</lt>
+row.
+p.Window moving around the desk
+p.<lf>window_OnMoved</lf>
+p.<lt>EvPos</lt>
+p.-
+row.
+p.Window is re-dimensioning
+p.<lf>window_OnResize</lf>
+p.<lt>EvSize</lt>
+p.-
+row.
+p.Click on an item menu
+p.<lf>menuitem_OnClick</lf>
+p.<lt>EvMenu</lt>
+p.-
+table.
+
+enum(orient_t).Orientation.
+enumv(ekHORIZONTAL).Horizontal.
+enumv(ekVERTICAL).Vertical.
+
+enum(state_t).State values.
+enumv(ekOFF).Off.
+enumv(ekON).On.
+enumv(ekMIXED).Medium/undetermined.
+
+enum(mouse_t).Mouse buttons.
+enumv(ekMLEFT).Left.
+enumv(ekMRIGHT).Right.
+enumv(ekMMIDDLE).Center.
+
+enum(close_t).Reason for closing a window.
+enumv(ekCLESC).The <c>[ESC]</c> key has been pressed (cancel).
+enumv(ekCLINTRO).The <c>[ENTER]</c> key has been pressed (accept).
+enumv(ekCLBUTTON).The close button <c>[X]</c> has been pressed in the title bar.
+enumv(ekCLDEACT).The parent window has been hidden.
+
+enum(scale_t).Scaling modes.
+enumv(ekAUTO).Automatic scaling, the proportion may change.
+enumv(ekSNONE).No scaling.
+enumv(ekASPECT).Automatic scaling, but maintaining the proportion <i>(aspect ratio)</i>.
+enumv(ekASPECTDW).Same as above, but does not increase the original size, only reduce it if appropriate.
+
+enum(vkey_t).Keyboard codes.
+enumv(ekKEY_UNDEF).
+enumv(ekKEY_A).
+enumv(ekKEY_S).
+enumv(ekKEY_D).
+enumv(ekKEY_F).
+enumv(ekKEY_H).
+enumv(ekKEY_G).
+enumv(ekKEY_Z).
+enumv(ekKEY_X).
+enumv(ekKEY_C).
+enumv(ekKEY_V).
+enumv(ekKEY_BACKSLASH).
+enumv(ekKEY_B).
+enumv(ekKEY_Q).
+enumv(ekKEY_W).
+enumv(ekKEY_E).
+enumv(ekKEY_R).
+enumv(ekKEY_Y).
+enumv(ekKEY_T).
+enumv(ekKEY_1).
+enumv(ekKEY_2).
+enumv(ekKEY_3).
+enumv(ekKEY_4).
+enumv(ekKEY_6).
+enumv(ekKEY_5).
+enumv(ekKEY_9).
+enumv(ekKEY_7).
+enumv(ekKEY_8).
+enumv(ekKEY_0).
+enumv(ekKEY_RBRACKET).
+enumv(ekKEY_O).
+enumv(ekKEY_U).
+enumv(ekKEY_LBRACKET).
+enumv(ekKEY_I).
+enumv(ekKEY_P).
+enumv(ekKEY_RETURN).
+enumv(ekKEY_L).
+enumv(ekKEY_J).
+enumv(ekKEY_SEMICOLON).
+enumv(ekKEY_K).
+enumv(ekKEY_APOSTROPHE).
+enumv(ekKEY_COMMA).
+enumv(ekKEY_MINUS).
+enumv(ekKEY_N).
+enumv(ekKEY_M).
+enumv(ekKEY_PERIOD).
+enumv(ekKEY_TAB).
+enumv(ekKEY_SPACE).
+enumv(ekKEY_MAJOR_MINOR).
+enumv(ekKEY_BACK).
+enumv(ekKEY_ESCAPE).
+enumv(ekKEY_F17).
+enumv(ekKEY_NUMPAD_DECIMAL).
+enumv(ekKEY_NUMPAD_MULT).
+enumv(ekKEY_NUMPAD_ADD).
+enumv(ekKEY_NUMLOCK).
+enumv(ekKEY_NUMPAD_DIV).
+enumv(ekKEY_NUMPAD_RETURN).
+enumv(ekKEY_NUMPAD_SUBTRACT).
+enumv(ekKEY_F18).
+enumv(ekKEY_F19).
+enumv(ekKEY_NUMPAD_EQUAL).
+enumv(ekKEY_NUMPAD0).
+enumv(ekKEY_NUMPAD1).
+enumv(ekKEY_NUMPAD2).
+enumv(ekKEY_NUMPAD3).
+enumv(ekKEY_NUMPAD4).
+enumv(ekKEY_NUMPAD5).
+enumv(ekKEY_NUMPAD6).
+enumv(ekKEY_NUMPAD7).
+enumv(ekKEY_NUMPAD8).
+enumv(ekKEY_NUMPAD9).
+enumv(ekKEY_F5).
+enumv(ekKEY_F6).
+enumv(ekKEY_F7).
+enumv(ekKEY_F3).
+enumv(ekKEY_F8).
+enumv(ekKEY_F9).
+enumv(ekKEY_F11).
+enumv(ekKEY_F13).
+enumv(ekKEY_F16).
+enumv(ekKEY_F14).
+enumv(ekKEY_F10).
+enumv(ekKEY_F12).
+enumv(ekKEY_F15).
+enumv(ekKEY_PAGE_UP).
+enumv(ekKEY_PAGE_BEGIN).
+enumv(ekKEY_SUPR).
+enumv(ekKEY_F4).
+enumv(ekKEY_PAGE_DOWN).
+enumv(ekKEY_F2).
+enumv(ekKEY_PAGE_END).
+enumv(ekKEY_F1).
+enumv(ekKEY_LEFT).
+enumv(ekKEY_RIGHT).
+enumv(ekKEY_DOWN).
+enumv(ekKEY_UP).
+enumv(ekKEY_ALT).
+enumv(ekKEY_CONTROL).
+
+enum(keymod_t).Modifier keys.
+enumv(ekKEYMOD_NONE).
+enumv(ekKEYMOD_SHIFT).
+enumv(ekKEYMOD_CONTROL).
+enumv(ekKEYMOD_ALT).
+enumv(ekKEYMOD_COMMAND).
+
+enum(view_flag_t).Attributes for creating a custom view.
+enumv(ekHSCROLL).With horizontal scrollbar.
+enumv(ekVSCROLL).With vertical scrollbar.
+
+enum(window_flag_t).Window creation attributes.
+enumv(ekWNFLAG).Default attributes.
+enumv(ekWNEDGE).The window draws an outer border.
+enumv(ekWNTITLE).The window has a title bar.
+enumv(ekWNMAX).The window shows the maximize button.
+enumv(ekWNMIN).The window shows the minimize button.
+enumv(ekWNCLOSE).The window shows the close button.
+enumv(ekWNRES).The window has resizable borders.
+enumv(ekWNSTD).Combination <c>ekWNTITLE | ekWNMIN | ekWNCLOSE</c>.
+enumv(ekWNSRES).Combination <c>ekWNSTD | ekWNMAX | ekWNRES</c>.
+
+enum(event_t).Event type. See <lh>GUI Events</lh>.
+enumv(ekEVENT_LABEL).Click on a <lt>Label</lt> control.
+enumv(ekEVENT_BUTTON).Click on a <lt>Button</lt> control.
+enumv(ekEVENT_POPUP).The selection of a <lt>PopUp</lt> control has been changed.
+enumv(ekEVENT_SLIDER).You are moving an <lt>Slider</lt>control.
+enumv(ekEVENT_UPDOWN).Click on a <lt>UpDown</lt> control.
+enumv(ekEVENT_TXTFILTER).The text of a <lt>Edit</lt> or <lt>Combo</lt> control is being edited.
+enumv(ekEVENT_TXTCHANGE).You have finished editing the text of a <lt>Edit</lt> or <lt>Combo</lt> control.
+enumv(ekEVENT_FOCUS).A control has received keyboard focus.
+enumv(ekEVENT_MENU).Click on a menu.
+enumv(ekEVENT_CLICK).Click on a view.
+enumv(ekEVENT_MOVED).The mouse is moving on the view surface.
+enumv(ekEVENT_ENTER).The mouse has entered the view area.
+enumv(ekEVENT_EXIT).The mouse has left the view area.
+enumv(ekEVENT_BEGDRAG).<i>Dragging</i> has begun within view.
+enumv(ekEVENT_DRAG).<i>Dragging</i> is being done within view.
+enumv(ekEVENT_ENDDRAG).<i>Dragging</i> in view is over.
+enumv(ekEVENT_WHEEL).Mouse wheel has moved.
+enumv(ekEVENT_KEYDOWN).A key has been pressed.
+enumv(ekEVENT_KEYUP).A key has been released.
+enumv(ekEVENT_DRAW).The view content must be redrawn.
+enumv(ekEVENT_RESIZE).The size of a view has changed.
+enumv(ekEVENT_WNDMOVED).The window is moving across the desktop.
+enumv(ekEVENT_WNDSIZING).The window is being resized.
+enumv(ekEVENT_WNDSIZE).The window has been resized.
+enumv(ekEVENT_WNDCLOSE).The window has been closed.
+enumv(ekEVENT_THEME).Desktop theme has changed.
+
+struct(Control).Interface Control (abstract).
+
+struct(Label).Interface control that contains static text, usually limited to a single line. <lp>label</lp>.
+
+struct(Button).Interface control representing a button. <lp>button</lp>.
+
+struct(PopUp).Control button with drop-down list. <lp>popup</lp>.
+
+struct(Edit).Text editing control <lp>edit</lp>.
+
+struct(Combo).Control that combines an edit box with a drop-down list. <lp>combo</lp>.
+
+struct(UpDown).Control that shows two small increase and decrease buttons. <lp>updown</lp>.
+
+struct(Slider).Control that shows a bar with a slider. <lp>slider</lp>.
+
+struct(Progress).Progress bar. <lp>progress</lp>.
+
+struct(View).Custom View that allows to create our own controls, drawing what we want. <lp>view</lp>
+
+struct(TextView).Text view with several paragraphs and different attributes. <lp>textview</lp>.
+
+struct(ImageView).Image viewer control. <lp>imageview</lp>.
+
+struct(TableView).Table view with multiple rows and columns. <lp>tableview</lp>.
+
+struct(SplitView).Resizable horizontal or vertical split view. <lp>splitview</lp>.
+
+struct(Layout).Invisible grid where the controls of a <lt>Panel</lt> are organized. <lp>layout</lp>.
+
+struct(Cell).Each of the cells that form a <lt>Layout</lt>. <lp>cell</lp>.
+
+struct(Panel).Internal area of a window, which allows you to group different controls. <lp>panel</lp>.
+
+struct(Window).Interface window. <lp>window</lp>.
+
+struct(Menu).Menu or submenu. <lp>menu</lp>.
+
+struct(MenuItem).Item within a menu. <lp>menuitem</lp>.
+
+struct(EvButton).Parameters of the <i>OnClick</i> event of a button or <i>OnSelect</i> of a popup.
+smember(uint32_t,index).Button or item index.
+smember(state_t,state).State.
+smember(const char_t*,text).Text.
+
+struct(EvSlider).Parameters of the <i>OnMoved</i> event of a slider.
+smember(real32_t,pos).Normalized slider position (0, 1).
+smember(real32_t,incr).Increase with respect to the previous position.
+
+struct(EvText).Parameters of the <i>OnChange</i> event of the text boxes.
+smember(const char_t*,text).Text.
+smember(uint32_t,cpos).Cursor position <i>(caret)</i>.
+
+struct(EvTextFilter).Result of the <i>OnFilter</i> event of the text boxes.
+smember(bool_t,apply).<c>TRUE</c> if the original control text should be changed.
+smember(char_t*,text).New control text, which is a revision (filter) of the original text.
+smember(uint32_t,cpos).Cursor position <i>(caret)</i>.
+
+struct(EvDraw).<i>OnDraw</i> event parameters.
+smember(DCtx*,ctx).2D drawing context.
+smember(real32_t,width).Width of the drawing area.
+smember(real32_t,height).Height of the drawing area.
+
+struct(EvMouse).Mouse event parameters.
+smember(real32_t,x).Pointer x coordinate.
+smember(real32_t,y).Coordinate and pointer.
+smember(real32_t,width).Control width.
+smember(real32_t,height).Control height.
+smember(mouse_t,button).Active button.
+smember(uint32_t,count).Number of clicks.
+
+struct(EvWheel).<i>OnWheel</i> event <i>parameters</i>.
+smember(real32_t,x).Pointer x coordinate.
+smember(real32_t,y).Pointer y coordinate.
+smember(real32_t,dx).Increase in x of the wheel or <i>trackpad</i>.
+smember(real32_t,dy).Increase in x of the wheel or <i>trackpad</i>.
+smember(real32_t,dz).Increase in x of the wheel or <i>trackpad</i>.
+
+struct(EvKey).Keyboard event parameters.
+smember(vkey_t,key).Pulsed key or released.
+
+struct(EvPos).Parameters of change of position events.
+smember(real32_t,x).X coordinate.
+smember(real32_t,y).Y coordinate.
+
+struct(EvSize).Resize event parameters.
+smember(real32_t,width).Width (size in x).
+smember(real32_t,height).Height (size in y).
+
+struct(EvWinClose).Window closing Event Parameters.
+smember(close_t,origin).Origin of the close.
+
+struct(EvMenu).Menu event parameters.
+smember(uint32_t,index).Pressed <i>item</i> index.
+smember(state_t,state).Pressed <i>item</i> status.
+smember(const char_t*,str).Pressed <i>item</i> text.
+
+func(gui_start).Start the <i>Gui</i> library, reserving space for global internal structures. Internally call <lf>draw2d_start</lf>. It is called automatically by <lf>osmain</lf>.
+
+func(gui_finish).Finish the <i>Gui</i> library, freeing up the space of global internal structures. Internally call <lf>draw2d_finish</lf>. It is called automatically by <lf>osmain</lf>.
+
+func(gui_respack).Register a resource package.
+fpar(FPtr_respack,func_respack).Resource constructor.
+fnote.See <lp>resources</lp>.
+
+func(gui_language).Set the language of the registered resources with <lf>gui_respack</lf>.
+fpar(const char_t*, lang).Language.
+fnote.See <lp>resources</lp>.
+
+func(gui_text).Get a text string through its resource identifier.
+fret(const char_t*).The text string or <c>NULL</c> if it is not found.
+fpar(const ResId, id).Resource Identifier.
+fnote.The resource must belong to a package registered with <lf>gui_respack</lf>.
+
+func(gui_image).Get an image through its resource identifier.
+fret(const Image*).The image or <c>NULL</c> if it is not found.
+fpar(const ResId, id).Resource Identifier.
+fnote.The resource must belong to a package registered with <lf>gui_respack</lf>. Do not destroy the image as it is managed by Gui.
+
+func(gui_file).Get the contents of a file through its resource identifier.
+fret(const byte_t*).File data or <c>NULL</c> if it is not found.
+fpar(const ResId, id).Resource Identifier.
+fpar(uint32_t*, size).Buffer size in bytes.
+fnote.The resource must belong to a package registered with <lf>gui_respack</lf>. The data is managed by Gui, so there is no need to free memory.
+
+func(gui_OnThemeChanged).Set a handler to detect the change of the visual theme of the windows environment.
+fpar(Listener*,listener).The event handler.

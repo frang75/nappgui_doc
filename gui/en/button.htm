@@ -1,0 +1,136 @@
+langrev.
+h1.Button
+
+p.The buttons are another classic element in graphic interfaces, where we distinguish four types: the push button, checkbox, radiobutton and flat button typical of toolbars <r>buttons</r> . In <lh>Hello Button!</lh> you have an example of use.
+
+li.Use <lf>button_push</lf>to create a push button.
+
+li.Use <lf>button_check</lf>to create a check box.
+
+li.Use <lf>button_check3</lf> to create a box with three states.
+
+li.Use <lf>button_radio</lf> to create a radio button.
+
+li.Use <lf>button_flat</lf>to create a flat button.
+
+li.Use <lf>button_flatgle</lf>to create a flat button with status.
+
+img(buttons.png,0,.45).Windows, macOS and Linux buttons.
+Window where several typical buttons appear: Push, check box and radio buttons.
+
+p.In addition to capturing the event and notifying the application, the <i>checkbox</i> and <i>flatgle</i> maintain a state (pressed/check or released/uncheck).
+
+li.Use <lf>button_state</lf>to set the button status.
+
+li.Use <lf>button_get_state</lf> to get the status of the button.
+
+p.Special mention is required of the radio buttons, which only make sense when they appear in a group, since they are used to select a single option within a set. Groups are formed at the <lt>Layout</lt> level, that is, all <i>radiobuttons</i> of the same layout will be considered from the same group, where only one of them can be selected. If we need several sub-groups, we must create several sub-layout, as shown <r>radiogroup</r> <r>laygroup</r>. When capturing the event, the field <c>index</c>from <lt>EvButton</lt> will indicate the index of the button that has been pressed.
+
+img(radiogroup.svg,480,.65).Radio groups linked to different layouts.
+Examples of radio groups. A group of eight options and two groups of four. 
+
+code(cpp,laygroup).Radio button groups.
+Button *button1 = button_radio();
+Button *button2 = button_radio();
+Button *button3 = button_radio();
+Button *button4 = button_radio();
+Button *button5 = button_radio();
+Button *button6 = button_radio();
+Button *button7 = button_radio();
+Button *button8 = button_radio();
+button_text(button1, "One");
+button_text(button2, "Two");
+button_text(button3, "Three");
+button_text(button4, "Four");
+button_text(button5, "Five");
+button_text(button6, "Six");
+button_text(button7, "Seven");
+button_text(button8, "Eight");
+
+// One group - One layout
+Layout *layout = layout_create(2, 4);
+layout_button(layout, button1, 0, 0);
+layout_button(layout, button2, 0, 1);
+layout_button(layout, button3, 0, 2);
+layout_button(layout, button4, 0, 3);
+layout_button(layout, button5, 1, 0);
+layout_button(layout, button6, 1, 1);
+layout_button(layout, button7, 1, 2);
+layout_button(layout, button8, 1, 3);
+
+// Two groups - Two sub-layouts
+Layout *layout1 = layout_create(2, 1);
+Layout *layout2 = layout_create(1, 4);
+Layout *layout3 = layout_create(1, 4);
+layout_button(layout2, button1, 0, 0);
+layout_button(layout2, button2, 0, 1);
+layout_button(layout2, button3, 0, 2);
+layout_button(layout2, button4, 0, 3);
+layout_button(layout3, button5, 0, 0);
+layout_button(layout3, button6, 0, 1);
+layout_button(layout3, button7, 0, 2);
+layout_button(layout3, button8, 0, 3);
+layout_layout(layout, layout1, 0, 0);
+layout_layout(layout, layout2, 1, 0);
+code.
+
+func(button_push).Create a push button, the typical <c>[Accept]</c>, <c>[Cancel]</c>, etc.
+fret(Button*).The button.
+
+func(button_check).Create a checkbox. 
+fret(Button*).The button.
+
+func(button_check3).Create a checkbox with three states. 
+fret(Button*).The button.
+
+func(button_radio).Create a radio button.
+fret(Button*).The button.
+
+func(button_flat).Create a flat button, to which an image can be assigned. It is the typical toolbar button.
+fret(Button*).The button.
+
+func(button_flatgle).Create a flat button with status. The button will alternate between pressed/released each time you click on it.
+fret(Button*).The button.
+
+func(button_OnClick).Set a function for pressing the button.
+fpar(Button*,button).The button.
+fpar(Listener*,listener).<i>Callback</i> function to be called after clicking.
+fnote.See <lh>GUI Events</lh>.
+
+func(button_text).Set the text that the button will display.
+fpar(Button*,button).The button.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+fnote.In flat buttons, the text will be displayed as <i>tooltip</i>.
+
+func(button_text_alt).Set an alternative text.
+fpar(Button*,button).The button.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+fnote.Only applicable on flat buttons with status <lf>button_flatgle</lf>. It will be displayed when the button is in <lt>ekON</lt> status.
+
+func(button_tooltip).Set a tooltip for the button. It is a small explanatory text that will appear when the mouse is over the control.
+fpar(Button*,button).The button.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(button_font).Set the button font.
+fpar(Button*,button).The button.
+fpar(const Font*,font).Font.
+
+func(button_image).Set the icon that will show the button.
+fpar(Button*,button).The button.
+fpar(const Image*,image).Image.
+fnote.Not applicable in checkbox or radiobutton. In flat buttons, the size of the control will be adjusted to the image.
+
+func(button_image_alt).Set an alternative image for the button.
+fpar(Button*,button).The button.
+fpar(const Image*,image).Image.
+fnote.Only applicable on flat buttons with status <lf>button_flatgle</lf>. It will be displayed when the button is in <lt>ekON</lt> status.
+
+func(button_state).Set the button status.
+fpar(Button*,button).The button.
+fpar(const state_t,state).State.
+fnote.Not applicable on push buttons <lf>button_push</lf>.
+
+func(button_get_state).Get button status.
+fret(state_t).The state.
+fpar(Button*,button).The button.
+fnote.Not applicable on push buttons <lf>button_push</lf>.

@@ -1,0 +1,142 @@
+langrev.
+
+h1.File operations
+
+ep.Provides high level functions on <lp>bfile</lp>.
+
+func(hfile_dir).Check if the path is a directory.
+fret(bool_t).<c>TRUE</c> if <c>pathname</c> is a directory. If it does not exist or is a file <c>FALSE</c>.
+fpar(const char_t*,pathname).Name of the path to check. <lh>Filename and pathname</lh>.
+
+func(hfile_dir_create).Create all intermediate subdirectories of a path.
+fret(bool_t).<c>TRUE</c> if the entire path has been created, otherwise <c>FALSE</c>.
+fpar(const char_t*,pathname).Name of the path to create. <lh>Filename and pathname</lh>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fcode.
+// C:\dir1 doesn't exist.
+bool_t ok = hfile_dir_create("C:\dir1\dir2\dir3\dir4\dir5");
+ok = TRUE
+fcode.
+
+func(hfile_dir_destroy).Recursive destroy a directory and all its contents.
+fret(bool_t).<c>TRUE</c> if the directory has been destroyed, or <c>FALSE</c> if there has been an error.
+fpar(const char_t*,pathname).Directory path to destroy. <lh>Filename and pathname</lh>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(hfile_dir_list).Get a list of the contents of a directory.
+fret(ArrSt(DirEntry)*).Array of <lt>DirEntry</lt> with the content. It must be destroyed with <c>arrst_destroy(&array, hfile_dir_entry_remove, DirEntry)</c> when it is no longer necessary.
+fpar(const char_t*,pathname).Directory path to list. <lh>Filename and pathname</lh>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(hfile_dir_entry_remove).Free the memory of an item in the directory listing.
+fpar(DirEntry*,entry).Element.
+fnote.See <lf>hfile_dir_list</lf>.
+
+func(hfile_dir_sync).Synchronize the contents of two directories.
+fret(bool_t).<c>TRUE</c> if everything went well, <c>FALSE</c> if there has been an error.
+fpar(const char_t*,src).Source directory.
+fpar(const char_t*,dest).Destination directory.
+fpar(const bool_t,recursive).If <c>TRUE</c> recursive process the subdirectories.
+fpar(const bool_t,remove_in_dest).If <c>TRUE</c> removes in <c>dest</c> those files/directories that are not in <c>src</c>.
+fpar(const char_t**,except).List of file/directory names that will remain intact in <c>dest</c>.
+fpar(const uint32_t,except_size).Array <c>except</c> size.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.If a file is in <c>src</c> and not in <c>dest</c>, is copied to <c>dest</c>. If a file is newer in <c>src</c> it is also copied in <c>dest</c>. If a file exists in <c>dest</c> but not in <c>src</c> and <c>remove_in_dest</c> is <c>TRUE</c>, will be removed from <c>dest</c>. If the file exists in <c>except</c> array it will not be taken into account to copy or delete. If <c>recursive</c> is <c>TRUE</c> subdirectories will be processed in this way: If both subdirs exist in <c>src</c> and <c>dest</c> the same logic described here will be executed in both subdirs. If the subdir exists in <c>src</c> but not in <c>dest</c>, will be copied in its entirety to <c>dest</c>. If it exists in <c>dest</c> and not in <c>src</c> and <c>remove_in_dest</c> is <c>TRUE</c> will be completely removed from <c>dest</c>.
+
+func(hfile_exists).Check if <c>pathname</c> exists in the file system.
+fret(bool_t).<c>TRUE</c> if <c>pathname</c> exists, <c>FALSE</c> if not.
+fpar(const char_t*,pathname).Path of the directory or file to check. <lh>Filename and pathname</lh>.
+fpar(file_type_t*,file_type).Type of file. It can be <c>NULL</c>.
+
+func(hfile_is_uptodate).Check if a file is up to date. Consider that <c>dest</c> is a copy or depends on <c>src</c>.
+fret(bool_t).<c>TRUE</c> if <c>dest</c> exists and is more recent than <c>src</c>, otherwise <c>FALSE</c>.
+fpar(const char_t*,src).Source file pathname.
+fpar(const char_t*,dest).Destiny file pathname.
+
+func(hfile_copy).Copy a file from one location to another.
+fret(bool_t).<c>TRUE</c> if the copy was successful. Otherwise <c>FALSE</c>.
+fpar(const char_t*,src).Pathname of the file to copy. <lh>Filename and pathname</lh>.
+fpar(const char_t*,dest).Copy destination. If it is a directory it will have the same <i>filename</i> as the source. Otherwise, the copy will be made with another file name.
+fpar(ferror_t*,error).Error code if the function fails. It can be <c>NULL</c>.
+fcode.
+hfile_copy("/home/john/image.png", "/home/john/images", NULL); // image.png
+hfile_copy("/home/john/image.png", "/home/john/images/party.png", NULL); // party.png
+fcode.
+
+func(hfile_buffer).Create a buffer with the contents of a file on disk.
+fret(Buffer*).The buffer with the file data or <c>NULL</c> if the function fails.
+fpar(const char_t*,pathname).File path to load.
+fpar(ferror_t*,error).Error code if the function fails. It can be <c>NULL</c>.
+fnote.It does not work with files larger than 4Gb (32-bit).
+
+func(hfile_string).Create a string with the contents of a file on disk.
+fret(String*).The string object with the text file data or <c>NULL</c> if the function fails.
+fpar(const char_t*,pathname).File path to load.
+fpar(ferror_t*,error).Error code if the function fails. It can be <c>NULL</c>.
+fnote.It does not work with files larger than 4Gb (32-bit).
+
+func(hfile_stream).Create a <lh>Memory stream</lh> and initializes it with the contents of a file.
+fret(Stream*).The stream initialized with the file data or <c>NULL</c> if the function fails.
+fpar(const char_t*,pathname).File path to load.
+fpar(ferror_t*,error).Error code if the function fails. It can be <c>NULL</c>.
+fnote.It does not work with files larger than 4Gb (32-bit).
+
+func(hfile_from_string).Create a file on disk with the contents of a <lp>string</lp>.
+fret(bool_t).<c>TRUE</c> if the file has been created successfully. Otherwise <c>FALSE</c>.
+fpar(const char_t*,pathname).File path to save.
+fpar(const String*,str).String to save to file.
+fpar(ferror_t*,error).Error code if the function fails. It can be <c>NULL</c>.
+
+func(hfile_from_data).Create a file on disk with the contents of a generic block of memory.
+fret(bool_t).<c>TRUE</c> if the file has been created successfully. Otherwise <c>FALSE</c>.
+fpar(const char_t*,pathname).File path to save.
+fpar(const byte_t*,data).Block to save in the file.
+fpar(const uint32_t,size).Block size in bytes.
+fpar(ferror_t*,error).Error code if the function fails. It can be <c>NULL</c>.
+
+func(hfile_dir_loop).Browse all the files in a directory.
+fret(bool_t).<c>TRUE</c> tf the loop has been successfully completed. <c>FALSE</c> if an error has occurred.
+fpar(const char_t*,pathname).Directory Path. <lh>Filename and pathname</lh>.
+fpar(Listener*,listener).<i>Callback</i> function to be called for each directory file.
+fpar(const bool_t,direntry).If <c>TRUE</c> the loop will enter the subdirectories.
+fpar(const bool_t,hiddens).If <c>TRUE</c> hidden files will be processed.
+fpar(ferror_t*,error).Error code if the function fails. It can be <c>NULL</c>.
+fnote.For each file, an event will be sent to <c>listener</c>. Will be of type <lt>ekEFILE</lt> for regular files, <lt>ekEENTRY</lt> when enters a subdirectory and <lt>ekEEXIT</lt> when leaves it. The file attributes are sent in the event parameter as a <lt>EvFileDir</lt> object. The tour will continue until all files/subdirectories have been processed or returned <c>FALSE</c> in <lf>event_result</lf> . This controlled output will not be considered an error and this function will return <c>TRUE</c>.
+fcode.
+static void OnFile(App *app, Event *event)
+{
+    uint32_t type = event_type(event);
+    const EvFileDir *params = event_params(event, EvFileDir);
+    if (type == ekEFILE)
+        bstd_printf("File: %s\n", params->pathname);
+    else if (type == ekEDIRENTRY)
+        bstd_printf("Entering: %s\n", params->pathname);
+    else if (type == ekEDIREXIT)
+        bstd_printf("Exiting: %s\n", params->pathname);
+
+    // Abort the directory loop
+    if (app->more == FALSE)
+    {
+        bool_t *more = event_result(event, bool_t);
+        *more = FALSE;
+    }
+}
+
+hfile_dir_loop("/home/john/personal", listener(app, OnFile, App), TRUE, FALSE, NULL);
+fcode.
+
+func(hfile_appdata).Get the full path of a data file or application settings.
+fret(String*).The full path to the configuration file.
+fpar(const char_t*,pathname).Relative file path.
+fnote.In many cases, applications need to create configuration files to remember user preferences or other data between sessions <lh>Home and AppData</lh>. This function adds a relative path and file name and ensures that all intermediate directories will exist.
+fcode.
+String *fname = hfile_appdata("gui/preferences.cfg");
+fname = "C:\Users\USER\AppData\Roaming\MyApp\gui\preferences.cfg"
+(in Windows operating system)
+...
+Stream *out = stm_to_file(tc(fname), NULL);
+fcode.
+
+func(hfile_home_dir).Get the full path to a file in the user's <b>(home)</b> directory.
+fret(String*).Absolute file path.
+fpar(const char_t*,path).Relative path from the <b>home</b> directory.

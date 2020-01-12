@@ -1,0 +1,24 @@
+langrev.
+h1.Progress
+
+p.Progress bars are passive controls that show the remaining time to complete a certain task <r>progress</r>. As time passes we must update the control. The undefined state will show an animation without indicating status, which will be useful when we cannot determine the required time. In <lh>Hello Slider and Progress!</lh> you have an example of use.
+
+li.Use <lf>progress_create</lf> to create a progress bar.
+
+li.Use <lf>progress_undefined</lf> to set the bar as undefined.
+
+li.Use <lf>progress_value</lf> to update the progress of the task.
+
+img(progress.png,0,.5).ProgressBar on Windows, macOS and Linux.
+Window where several controls appear progress bars.
+
+func(progress_create).Create a progress bar.
+fret(Progress*).The progress.
+
+func(progress_undefined).Set the progress bar as undefined.
+fpar(Progress*, progress).The progress.
+fpar(const bool_t, running).<c>TRUE</c>to activate the animation.
+
+func(progress_value).Set the progress position.
+fpar(Progress*, progress).The progress.
+fpar(const real32_t,value).The position between 0.0 and 1.0.

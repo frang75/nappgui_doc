@@ -1,0 +1,115 @@
+langrev.
+h1.Sewer
+
+ep.Even the grandest palaces needed sewers.
+<i>Tom Lehrer</i>
+
+p.<b>sewer</b> is the most elementary library within the NAppGUI SDK <r>sewer_depends</r>. It declares the basic types, the Unicode fundamental support, assertions and pointers safe manipulation. It is also used as a "sink" to bury the unsightly preprocessor macros necessary to configure the compiler, CPU, platforms, etc. As dependencies only has a few headers of the C standard library:
+
+li.<b><<>stdint.h<>></b>: For fixed size integers and limits.
+
+li.<b><<>stdarg.h<>></b>: To support functions with a variable number of parameters.
+
+li.<b><<>stddef.h<>></b>: For the <c>NULL</c> constant and the <c>offsetof</c> macro.
+
+img(sewer_depends.svg,150,.25).Dependencies of <i>sewer</i>. See <lp>sdk</lp>.
+Dependency tree of the sewer library.
+
+type(int8_t).8-bit signed integer. It can represent a value between <lt>INT8_MIN</lt> and <lt>INT8_MAX</lt>.
+
+type(int16_t).16-bit signed integer. It can represent a value between <lt>INT16_MIN</lt> and <lt>INT16_MAX</lt>.
+
+type(int32_t).32-bit signed integer. It can represent a value between <lt>INT32_MIN</lt> and <lt>INT32_MAX</lt>.
+
+type(int64_t).64-bit signed integer. It can represent a value between <lt>INT64_MIN</lt> and <lt>INT64_MAX</lt>.
+
+type(uint8_t).8-bit unsigned integer. It can represent a value between 0 and <lt>UINT8_MAX</lt>.
+
+type(uint16_t).16-bit unsigned integer. It can represent a value between 0 and <lt>UINT16_MAX</lt>.
+
+type(uint32_t).32-bit unsigned integer. It can represent a value between 0 and <lt>UINT32_MAX</lt>.
+
+type(uint64_t).64-bit unsigned integer. It can represent a value between 0 and <lt>UINT64_MAX</lt>.
+
+type(char_t).8-bit character type (Unicode). A single character may need 1, 2, 3 or 4 elements (bytes), depending on <lh>UTF encodings</lh>.
+
+type(byte_t).8-bit type to store generic memory blocks.
+
+type(bool_t).8-bit boolean. Only two values are allowed <lt>TRUE</lt> (1) and <lt>FALSE</lt> (0).
+
+type(real).32 or 64-bit floating point number.
+
+type(real32_t).32-bit floating point number. The C <c>float</c> type.
+
+type(real64_t).64-bit floating point number. The C <c>double</c> type.
+
+const(bool_t, TRUE, 1).True.
+
+const(bool_t, FALSE, 0).False.
+
+const(void*,NULL,0).Null pointer.
+
+const(int8_t,INT8_MIN,0x80).-128.
+
+const(int8_t,INT8_MAX,0x7F).127.
+
+const(int16_t,INT16_MIN,0x8000).-32.768.
+
+const(int16_t,INT16_MAX,0x7FFF).32.767.
+
+const(int32_t,INT32_MIN,0x80000000).-2.147.483.648.
+
+const(int32_t,INT32_MAX,0x7FFFFFFF).2.147.483.647.
+
+const(int64_t,INT64_MIN,0x8000000000000000).-9.223.372.036.854.775.808.
+
+const(int64_t,INT64_MAX,0x7FFFFFFFFFFFFFFF).9.223.372.036.854.775.807.
+
+const(uint8_t,UINT8_MAX,0xFF).255.
+
+const(uint16_t,UINT16_MAX,0xFFFF).65.535.
+
+const(uint32_t,UINT32_MAX,0xFFFFFFFF).4.294.967.295.
+
+const(uint64_t,UINT64_MAX,0xFFFFFFFFFFFFFFFF).18.446.744.073.709.551.615.
+
+enum(unicode_t).Represents the <lh>UTF encodings</lh>.
+enumv(ekUTF8).UTF8 encoding.
+enumv(ekUTF16).UTF16 encoding.
+enumv(ekUTF32).UTF32 encoding.
+
+func(FPtr_destroy,ptr).Destructor function prototype.
+fpar(type**,item).Double pointer to the object to destroy. It must be assigned to <c>NULL</c> after the destruction to invalidate its use.
+
+func(FPtr_copy,ptr).Copy constructor function prototype.
+fret(type*).The new object that is an exact copy of the input.
+fpar(const type*,item).Pointer to the object to be copied.
+
+func(FPtr_compare,ptr).Comparison function prototype.
+fret(int).Comparison result.
+fpar(const type*,item1).First item to compare.
+fpar(const type*,item2).Second item to compare.
+
+func(FPtr_compare_ex,ptr).Similar to <c>FPtr_compare</c>, but receive an additional parameter that may influence the comparison.
+fret(int).Comparison result.
+fpar(const type*,item1).First item to compare.
+fpar(const type*,item2).Second item to compare.
+fpar(const dtype*,data).Additional parameter.
+
+func(FPtr_assert,ptr).<i>Callback</i> function prototype called when an <c>assert</c> occurs.
+fpar(type*,item).User data passed as the first parameter.
+fpar(const uint32_t,group).0 = Fatal error, 1 = Execution can continue.
+fpar(const char_t*,caption). Title.
+fpar(const char_t*,detail). Detailed message.
+fpar(const char_t*,file). Source file where the assert occurred.
+fpar(const uint32_t,line).Line inside the source file.
+
+func(unref).Mark the parameter as non-referenced, disabling the compiler's warnings.
+fpar(,param).Parameter.
+fcode.
+static void i_OnClick(App *app, Event *e)
+{
+    unref(e);
+    app_click_action(app);
+}
+fcode.

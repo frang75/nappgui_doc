@@ -1,0 +1,39 @@
+langrev.
+
+h1.Clocks
+
+ep.Time control.
+
+p.Simple objects that allow us, in a comfortable way, to measure the time span between two instants. They are also useful for launching events at regular time intervals <r>clocka</r>.
+
+code(cpp,clocka).25fps animation.
+Clock *clock = clock_create(.04);
+for (;;)
+{
+    ...
+    if (clock_frame(clock) == TRUE)
+        listener_event(transition, ekGUI_EVENT_ANIMATION, NULL, params, NULL, void, EvTransition, void);
+    ...
+}
+clock_destroy(&clock);
+code.
+
+func(clock_create).Create a clock.
+fret(Clock*).The new clock.
+fpar(const real64_t,interval).Time interval for animation control (in seconds).
+
+func(clock_destroy).Destroy the clock.
+fpar(Clock**,clk).Clock. Will be set to <c>NULL</c> after destruction.
+
+func(clock_frame).Detect if a new sequence in an animation has expired.
+fret(bool_t).<c>TRUE</c> if the time has come to launch a new sequence. <c>FALSE</c> if we have to wait.
+fpar(Clock*,clk).Clock.
+fpar(real64_t*,prev_frame).Time mark of the previous instant. Only relevant if returns <c>TRUE</c>.
+fpar(real64_t*,curr_frame).Time mark of the current instant. Only relevant if returns <c>TRUE</c>.
+
+func(clock_reset).Set the clock to 0.0.
+fpar(Clock*,clk).Clock.
+
+func(clock_elapsed).Gets the time elapsed since the object was created or since the last call to <lf>clock_reset</lf>.
+fret(real64_t).The number of seconds (with precision of micro-seconds 0.000001).
+fpar(Clock*,clk).Clock.

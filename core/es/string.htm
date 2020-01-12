@@ -1,0 +1,408 @@
+
+
+h1.Strings
+
+ep.Cadenas de caracteres en UTF-8, reservadas dinámicamente.
+
+p.Los objetos <b>String</b> contienen cadenas de caracteres <lh>UTF-8</lh> reservadas dinámicamente. A pesar que es posible insertar cadenas de texto directamente en el código fuente o acceder a ellas a través de los paquetes de recursos (<lf>respack_text</lf>), es habitual componer textos en tiempo de ejecución o almacenar datos volátites recibidos a través de algún canal de entrada (teclado, archivos, red, etc). El módulo <c>strings.h</c> ofrece soporte para trabajar con este tipo de objetos, así como funciones genéricas para la manipulación de textos.
+
+p.Hay diferentes formas de componer cadenas UTF8, pero los dos constructores más utilizados son <lf>str_c</lf> para crear una copia de una cadena C y <lf>str_printf</lf> para componer una cadena a partir de varios campos, con el conocido formato de la función <c>printf()</c>.
+
+code.
+String *str1 = str_c("This a static char array.");
+String *str2 = str_printf("Code: %s, Price %8.2f.", tc(product->code), product->price);
+str1 = "This a static char array."
+str2 = "Code: 456-34GH-JKL, Price   439.67."
+code.
+
+p.En el caso que sea necesario crear textos más extensos a partir de bucles u otros condicionales, la forma más eficiente es crear un <lt>Stream</lt> y, posteriormente, obtener el <lt>String</lt>.
+
+code.
+String *str;
+Stream *stm = stm_memory(2048);
+stm_printf(stm, "List of %d products\n", arrpt_size(products, Product));
+arrpt_foreach(product, products, Product);
+    stm_printf(stm, "Code: %s, Price %8.2f.\n", tc(product->code), product->price);
+arrpt_end();
+str = stm_str(stm);
+stm_close(&stm);
+code.
+
+func(tc).Devuelve la cadena C interna en formato <lh>UTF-8</lh> contenida en el String.
+fret(const char_t*).Puntero a la cadena C.
+fpar(const String*,str).El objeto string.
+
+func(str_c).Crea un String a partir de una cadena C codificada en <lh>UTF-8</lh>.
+fret(String*).El objeto string.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(str_cn).Crea un String copiando los primeros <c>n</c> bytes de una cadena C.
+fret(String*).El objeto string.
+fpar(const char_t*,str).Cadena C UTF8.
+fpar(const uint32_t,n).El número de bytes a copiar.
+fnote.En cadenas <lh>UTF-8</lh>, el número de bytes no corresponde con el número de caracteres.
+
+func(str_trim).Crea un String a partir de una cadena C recortando los espacios en blanco, tanto al principio como al final.
+fret(String*).El objeto string.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(str_trim_n).Crea un String a partir a partir de los primeros <c>n</c> bytes de una cadena C recortando los espacios en blanco, tanto al principio como al final.
+fret(String*).El objeto string.
+fpar(const char_t*,str).Cadena C UTF8.
+fpar(const uint32_t,n).El número de bytes a considerar de la cadena original. La copia puede contener 'n' o menos bytes, según la cantidad de blancos.
+
+func(str_copy).Crea un copia exacta del String.
+fret(String*).El objeto string copiado.
+fpar(const String*,str).El objeto string original.
+fnote.Los Strings son un tipo especial de objeto mutable. Copiar implica crear un nuevo objeto y no incrementar un contador de referencias.
+
+func(str_printf).Compone un String desde varios campos, utilizando el formato del <c>printf</c>.
+fret(String*).El objeto string.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+fnote.El uso de esta función previene vulnerabilidades del tipo <b>buffer overflow</b>, asociadas a las clásicas funciones C como <c>strcpy</c>.
+
+func(str_path).Igual que <lf>str_printf</lf>, pero considera que la cadena es un <i>pathname</i> y, por tanto, utiliza el separador conveniente según <c>platform</c>.
+fret(String*).El objeto string.
+fpar(const platform_t,platform).Plataforma para la que se crea el <i>pathname</i>.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+fcode.
+String *path = str_path(ekWINDOWS, "/%s/img/%s.png", tc(product->category), tc(product->name));
+path = "\\camera\\img\\sony_a5000.png"
+fcode.
+
+func(str_cpath).Igual que <lf>str_path</lf>, pero considerando la plataforma donde está corriendo el programa.
+fret(String*).El objeto string.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+fcode.
+String *path = str_cpath("/%s/img/%s.png", tc(product->category), tc(product->name));
+path = "\\camera\\img\\sony_a5000.png"  // In Windows
+path = "/camera/img/sony_a5000.png"     // In Unix-like
+fcode.
+
+func(str_relpath).Calcula la ruta relativa a <c>path1</c> para llegar a <c>path2</c>.
+fret(String*).El objeto string que contiene la ruta relativa.
+fpar(const char_t*, path1).La ruta de origen.
+fpar(const char_t*, path2).La ruta de destino.
+
+func(str_repl).Crea un String reemplazando un número indeterminado de sub-cadenas. El primer parámetro es la cadena original. Los siguiente pares indican la sub-cadena a buscar y la sub-cadena que debe sustituirla. El último parámetro debe ser 0.
+fret(String*).El objeto string.
+fpar(const char_t*,str).Cadena original C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fpar(,...).Número de parámetros variable, por pares. El primer elemento del par indica la sub-cadena a buscar en <c>str</c>. El segundo elemento la sustituta.
+fcode.
+String *str = str_repl("const Product **pr;", "const", "", "*", "", " ", "", 0);
+str = "Productpr;"
+fcode.
+
+func(str_reserve).Crea un String con n+1 bytes, pero sin asignarle ningún contenido.
+fret(String*).El objeto string. Su contenido será indeterminado (basura). Debe escribirse posteriormente.
+fpar(const uint32_t,n).Número de bytes. Reserva espacio para uno más (el <c>'\n'</c>).
+
+func(str_fill).Crea un String repitiendo <c>n</c> veces un mismo carácter.
+fret(String*).El objeto string.
+fpar(const uint32_t,n).Número de caracteres.
+fpar(const char_t,c).Carácter patrón.
+
+func(str_read).Crea un String leyendo su contenido de un <lt>Stream</lt> (de-serialización). El String ha debido ser escrito previamente por <c>str_write</c>.
+fret(String*).El objeto string.
+fpar(Stream*,stream).Un <i>stream</i> de lectura.
+fnote.Es una operación <b>binaria</b>. El tamaño del string se deserializa primero.
+
+func(str_write).Escribe un string en un <lp>stream</lp> (serialización).
+fpar(Stream*,stream).Un <i>stream</i> de escritura.
+fpar(String*,str).El objeto string.
+fnote.Es una operación <b>binaria</b>. El tamaño del string se serializa primero. Utiliza <lf>str_writef</lf> para escribir solo el texto.
+
+func(str_writef).Escribe en un <lp>stream</lp> la cadena C contenida en el string.
+fpar(Stream*,stream).Un <i>stream</i> de escritura.
+fpar(String*,str).El objeto string.
+fnote.Escribe únicamente el texto del <i>string</i>, <b>sin el carácter nulo <c>'\0'</c></b> final. Es equivalente a <c>stm_writef(stream, tc(str));</c> pero más eficiente, ya que no hay que calcular el tamaño de <c>str</c>.
+
+func(str_copy_c).Copia la cadena C <c>src</c> en el búfer apuntado por <c>dest</c>, incluyendo el carácter nulo <c>'\0'</c>.
+fpar(char_t*,dest).Búfer de destino.
+fpar(const uint32_t,size).Tamaño en bytes de <c>dest</c>.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fnote.Es una operación segura. No se escribirán en <c>dest</c> más de <c>size</c> bytes y nunca se truncará un carácter. <c>dest</c> siempre acabará con el carácter nulo <c>'\0'</c>.
+
+func(str_copy_cn).Copia en <c>dest</c> un máximo de <c>n</c> bytes de la cadena C UTF8 apuntada por <c>src</c>, incluyendo el carácter nulo <c>'\0'</c>.
+fpar(char_t*,dest).Búfer de destino.
+fpar(const uint32_t,size).Tamaño en bytes de <c>dest</c>.
+fpar(const char_t*,str).Cadena C UTF8.
+fpar(const uint32_t,n).Máximo número de bytes a copiar en <c>dest</c>.
+fnote.Es una operación segura. No se escribirán en <c>dest</c> más de <c>n</c> bytes y nunca se truncará un carácter. <c>dest</c> siempre acabará con el carácter nulo <c>'\0'</c>.
+
+func(str_cat).Concatena dinámicamente el contenido de <c>src</c> en <c>dest</c>.
+fpar(String,**dest).Objeto <i>string</i> de origen y destino.
+fpar(const char_t*,src).Cadena C UTF8 a concatenar.
+fnote.Esta operación implica reasignar memoria dinámica. Para componer textos largos es más eficiente utilizar <lt>Stream</lt>.
+
+func(str_cat_c).Concatena el contenido de <c>src</c> en <c>dest</c>. El carácter nulo en <c>dest</c> será sobrescrito por el primer carácter de <c>src</c>.
+fpar(char_t*,dest).Cadena C UTF8 de origen y destino.
+fpar(const uint32_t,size).Tamaño en bytes de <c>dest</c>.
+fpar(const char_t*,src).Cadena C UTF8 a concatenar.
+fnote.Es una operación segura. No se escribirán en <c>dest</c> más de <c>size</c> bytes y nunca se truncará un carácter. <c>dest</c> siempre acabará con el carácter nulo <c>'\0'</c>.
+
+func(str_upd).Cambia el contenido de un <i>string</i> por otro.
+fpar(String**,str).Objeto <i>string</i> destino. El contenido original será borrado.
+fpar(const char_t*,new_str).Cadena C UTF8 que sustituirá a la original.
+fcode.
+// Equivalent code
+String *str = ..original content..
+String *temp = str_c(new_str);
+str_destroy(&str);
+str = temp;
+temp = NULL;
+fcode.
+
+func(str_destroy).Destruye un objeto <i>string</i>.
+fpar(String**,str).El objeto string. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(str_destopt).Destruye un objeto <i>string</i> si su contenido no es <c>NULL</c> (destructor opcional).
+fpar(String**,str).El objeto string. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(str_len).Retorna el tamaño en bytes de un string.
+fret(uint32_t).El número de bytes, sin incluir el carácter nulo <c>'\0'</c>.
+fpar(const String*,str).Objeto string.
+fnote.En cadenas <lh>UTF-8</lh> el número de bytes no es el mismo que el caracteres. <lf>str_nchars</lf>.
+
+func(str_len_c).Retorna el tamaño en bytes de una cadena C UTF8.
+fret(uint32_t).El número de bytes, sin incluir el carácter nulo <c>'\0'</c>.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fnote.En cadenas <lh>UTF-8</lh> el número de bytes no es el mismo que el caracteres. <lf>unicode_nchars</lf>.
+
+func(str_nchars).Retorna el número de caracteres de un objeto string.
+fret(uint32_t).El número de caracteres, sin incluir el carácter nulo <c>'\0'</c>.
+fpar(const String*,str).Objeto string.
+fnote.En cadenas <lh>UTF-8</lh> el número de bytes no es el mismo que el caracteres.
+
+func(str_scmp).Compara alfabéticamente dos strings. 
+fret(int).Resultado de la comparación.
+fpar(const String*,str1).Primer string.
+fpar(const String*,str2).Segundo string.
+
+func(str_cmp).Compara alfabéticamente un string con una cadena C UTF8. 
+fret(int).Resultado de la comparación.
+fpar(const String*,str1).Objeto string.
+fpar(const char_t*,str2).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(str_cmp_c).Compara alfabéticamente dos cadenas C UTF8 terminadas en carácter nulo <c>'\0'</c>.
+fret(int).Resultado de la comparación.
+fpar(const char_t*,str1).Primera cadena C UTF8.
+fpar(const char_t*,str2).Segunda cadena C UTF8.
+
+func(str_cmp_cn).Compara alfabéticamente los primeros <c>n</c> bytes de dos cadenas C UTF8 terminadas en carácter nulo <c>'\0'</c>.
+fret(int).Resultado de la comparación.
+fpar(const char_t*,str1).Primera cadena C UTF8.
+fpar(const char_t*,str2).Segunda cadena C UTF8.
+fpar(const uint32_t,n).Máximo número de bytes a comparar.
+fnote.Es una operación segura. Si alguna de las dos cadenas llega al final antes de llegar a <c>n</c> bytes, la comparación termina.
+
+func(str_empty).Comprueba si un string está vacío (<c>str->data[0] == '\0'</c>).
+fret(bool_t).<c>TRUE</c> si está vacío o es <c>NULL</c>.
+fpar(const String*,str).Objeto string.
+
+func(str_empty_c).Comprueba si una cadena C UTF8 está vacía (<c>str[0] == '\0'</c>).
+fret(bool_t).<c>TRUE</c> si está vacía o es <c>NULL</c>.
+fpar(const char_t*,str).Cadena C UTF8.
+
+func(str_equ).Comprueba si el contenido de un string es igual a una cadena C.
+fret(bool_t).<c>TRUE</c> si son iguales.
+fpar(const String*,str1).Objeto string.
+fpar(const char_t*,str2).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(str_equ_c).Comprueba si dos cadenas C UTF8 son iguales.
+fret(bool_t).<c>TRUE</c> si son iguales.
+fpar(const char_t*,str1).Primera cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,str2).Segunda cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+
+func(str_equ_cn).Comprueba si los primeros bytes de dos cadenas C UTF8 son iguales.
+fret(bool_t).<c>TRUE</c> si son iguales.
+fpar(const char_t*,str1).Primera cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,str2).Segunda cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,n).Primeros 'n' bytes a comparar.
+fnote.Si se alcanza '\0' en alguna de las dos cadenas, se devolverá <c>TRUE</c>.
+
+func(str_equ_nocase).Comprueba si dos cadenas C UTF8 son iguales, ignorando mayúsculas o minúsculas.
+fret(bool_t).<c>TRUE</c> si son iguales.
+fpar(const char_t*,str1).Primera cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,str2).Segunda cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fnote.Solo se consideran caracteres US-ASCII (0-127).
+
+func(str_equ_end).Comprueba la terminación de una cadena.
+fret(bool_t).<c>TRUE</c> si <c>str</c> acaba en <c>end</c>. 
+fpar(const char_t*,str).Cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,end).Cadena C UTF8 con la terminación.
+
+func(str_upper).Cambia los letras minúsculas por mayúsculas.
+fpar(String*,str).Objeto string.
+fnote.Solo se consideran caracteres US-ASCII (0-127). La cadena original cambiará, pero no los requisitos de memoria.
+
+func(str_lower).Cambia los letras mayúsculas por minúsculas.
+fpar(String*,str).Objeto string.
+fnote.Solo se consideran caracteres US-ASCII (0-127). La cadena original cambiará, pero no los requisitos de memoria.
+
+func(str_subs).Cambia todas las instancias de un carácter por otro.
+fpar(String*,str).Objeto string.
+fpar(const char_t,replace).Carácter a reemplazar.
+fpar(const char_t,with).Carácter de reemplazo.
+fnote.Solo se consideran caracteres US-ASCII (0-127). La cadena original cambiará, pero no los requisitos de memoria.
+fcode.
+String *str = str_c("customer.service.company.com");
+str_subs(str, '.', '_');
+str_uppercase(str);
+str="CUSTOMER_SERVICE_COMPANY_COM"
+fcode.
+
+func(str_repl_c).Cambia todas las instancias de una subcadena por otra.
+fpar(String*,str).Objeto string.
+fpar(const char_t*,replace).Subcadena a reemplazar.
+fpar(const char_t*,with).Subcadena de reemplazo.
+fnote.Las subcadenas <c>replace</c> y <c>with</c> deben tener el mismo tamaño, de lo contrario se producirá un <lp>cassert</lp>. Utiliza <lf>str_repl</lf> para el caso general.
+
+func(str_str).Busca una subcadena dentro de otra de mayor tamaño.
+fret(const char_t*).Puntero a la primera ocurrencia de <c>substr</c> en <c>str</c> o <c>NULL</c> si no existe ninguna.
+fpar(const char_t*,str).Cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,substr).Subcadena a buscar acabada en carácter nulo <c>'\0'</c>.
+
+func(str_split).Divide una cadena en dos, utilizando la primera ocurrencia de una subcadena.
+fret(bool_t).<c>TRUE</c> si <c>substr</c> existe en <c>str</c>.
+fpar(const char_t*,str).Cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,substr).Subcadena a buscar.
+fpar(String**,left).Subcadena izquierda. Será igual a <c>str</c> si <c>substr</c> no existe. El parámetro puede ser <c>NULL</c> si no es necesario.
+fpar(String**,right).Subcadena derecha. Será igual a <c>""</c> si <c>substr</c> no existe. El parámetro puede ser <c>NULL</c> si no es necesario.
+fcode.
+const char_t *str = "one::two";
+String *str1, *str2, *str3;
+bool_t ok1, ok2;
+ok1 = str_split(str, "::", &str1, &str2);
+ok2 = str_split(tc(str1), "::", NULL, &str3);
+str1 = "one"
+str2 = "two"
+str3 = ""
+ok1 = TRUE
+ok2 = FALSE
+fcode.
+
+func(str_split_trim).Igual que <lf>str_split</lf> pero eliminando todos los espacios en blanco al principio y final de <c>left</c> y <c>right</c>.
+fret(bool_t).<c>TRUE</c> si <c>substr</c> existe en <c>str</c>.
+fpar(const char_t*,str).Cadena C UTF8 acabada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,substr).Subcadena a buscar.
+fpar(String**,left).Subcadena izquierda.
+fpar(String**,right).Subcadena derecha.
+
+func(str_split_pathname).Divide un <i>pathname</i> en <c>path</c> y <c>file</c> <lh>Filename y pathname</lh>.
+fpar(const char_t*,pathname).Pathname de entrada.
+fpar(String**,path).Ruta de directorios. El parámetro puede ser <c>NULL</c> si no es necesario.
+fpar(String**,file).Nombre de archivo o directorio final. El parámetro puede ser <c>NULL</c> si no es necesario.
+fcode.
+String *path, *name, *name2;
+str_split_pathname("C:\\Users\\john\\Desktop\\image.png", &path, &name);
+str_split_pathname(tc(path), NULL, name2);
+path = "C:\\Users\\john\\Desktop"
+name = "image.png"
+name2 = "Desktop"
+fcode.
+
+func(str_split_pathext).Igual que <lf>str_split_pathname</lf> pero extrayendo también la extensión del archivo.
+fpar(const char_t*,pathname).Pathname de entrada.
+fpar(String**,path).Parte <c>path</c> de la ruta.
+fpar(String**,file).Parte <c>file</c> de la ruta.
+fpar(String**,ext).Extensión del archivo.
+fcode.
+String *path, *name, *ext;
+str_split_pathext("C:\\Users\\john\\Desktop\\image.png", &path, &name, &ext);
+path = "C:\\Users\\john\\Desktop"
+name = "image"
+ext = "png"
+fcode.
+
+func(str_filename).Retorna la parte final de un <i>pathname</i>. <lh>Filename y pathname</lh>.
+fret(const char_t*).El último tramo de una ruta de directorios.
+fpar(const char_t*,pathname).Pathname de entrada.
+fcode.
+const char_t *name = str_filename("C:\\Users\\john\\Desktop\\image.png");
+name = "image.png"
+fcode.
+
+func(str_filext).Retorna la extensión del archivo, a partir de un <i>pathname</i>. <lh>Filename y pathname</lh>.
+fret(const char_t*).La extensión del archivo.
+fpar(const char_t*,pathname).Pathname de entrada.
+fcode.
+const char_t *ext = str_fileext("C:\\Users\\john\\Desktop\\image.png");
+ext = "png"
+fcode.
+
+func(str_find).Busca una cadena en un array.
+fret(uint32_t).La posición de la cadena o <c>UINT32_MAX</c> si no existe.
+fpar(const ArrPt(String)*,array).El array.
+fpar(const char_t*,str).La cadena a buscar.
+
+func(str_to_i8).Convierte una cadena de texto en un entero.
+fret(int8_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,base).Base numérica: 8 (octal), 10 (decimal), 16 (hexadecimal).
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0 con <c>error=TRUE</c>.
+
+func(str_to_i16).Convierte una cadena de texto en un entero.
+fret(int16_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,base).Base numérica: 8 (octal), 10 (decimal), 16 (hexadecimal).
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0 con <c>error=TRUE</c>.
+
+func(str_to_i32).Convierte una cadena de texto en un entero.
+fret(int32_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,base).Base numérica: 8 (octal), 10 (decimal), 16 (hexadecimal).
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0 con <c>error=TRUE</c>.
+
+func(str_to_i64).Convierte una cadena de texto en un entero.
+fret(int64_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,base).Base numérica: 8 (octal), 10 (decimal), 16 (hexadecimal).
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0 con <c>error=TRUE</c>.
+
+func(str_to_u8).Convierte una cadena de texto en un entero.
+fret(uint8_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,base).Base numérica: 8 (octal), 10 (decimal), 16 (hexadecimal).
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0 con <c>error=TRUE</c>.
+
+func(str_to_u16).Convierte una cadena de texto en un entero.
+fret(uint16_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,base).Base numérica: 8 (octal), 10 (decimal), 16 (hexadecimal).
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0 con <c>error=TRUE</c>.
+
+func(str_to_u32).Convierte una cadena de texto en un entero.
+fret(uint32_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,base).Base numérica: 8 (octal), 10 (decimal), 16 (hexadecimal).
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0 con <c>error=TRUE</c>.
+
+func(str_to_u64).Convierte una cadena de texto en un entero.
+fret(uint64_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,base).Base numérica: 8 (octal), 10 (decimal), 16 (hexadecimal).
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0 con <c>error=TRUE</c>.
+
+func(str_to_r32).Convierte una cadena de texto en un real.
+fret(real32_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0.0 con <c>error=TRUE</c>.
+
+func(str_to_r64).Convierte una cadena de texto en un real.
+fret(real64_t).El valor numérico.
+fpar(const char_t*,str).Cadena de texto, terminada en carácter nulo <c>'\0'</c>.
+fpar(bool_t*,error).Obtiene <c>TRUE</c> si hay algún error en la conversión. Puede ser <c>NULL</c>.
+fnote.Si la cadena es errónea o el valor está fuera de rango, devuelve 0.0 con <c>error=TRUE</c>.

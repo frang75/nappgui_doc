@@ -1,0 +1,115 @@
+
+h1.Sewer
+
+ep.Incluso los más grandes palacios necesitaban alcantarillas.
+<i>Tom Lehrer</i>
+
+p.<b>sewer</b> es la librería más elemental dentro del SDK de NAppGUI <r>sewer_depends</r>. En ella se declaran los tipos básicos, el soporte fundamental para Unicode, aserciones y manipulación segura de punteros. También es utilizada como "sumidero" donde enterrar las antiestéticas macros del preprocesador necesarias para configurar el compilador, CPU, plataformas, etc. Sus únicas dependencias son unas cuantas cabeceras de la librería estándar de C:
+
+li.<b><<>stdint.h<>></b>: Para tipos enteros de tamaño fijo y límites.
+
+li.<b><<>stdarg.h<>></b>: Para soportar funciones con un número de parámetros variable.
+
+li.<b><<>stddef.h<>></b>: Para la constante <c>NULL</c> y la macro <c>offsetof</c>.
+
+img(sewer_depends.svg,150,.25).Dependencias de <i>sewer</i>. Ver <lp>sdk</lp>.
+Árbol de dependencias de la librería sewer.
+
+type(int8_t).Entero con signo de 8 bits. Puede representar un valor entre <lt>INT8_MIN</lt> y <lt>INT8_MAX</lt>.
+
+type(int16_t).Entero con signo de 16 bits. Puede representar un valor entre <lt>INT16_MIN</lt> y <lt>INT16_MAX</lt>.
+
+type(int32_t).Entero con signo de 32 bits. Puede representar un valor entre <lt>INT32_MIN</lt> y <lt>INT32_MAX</lt>.
+
+type(int64_t).Entero con signo de 64 bits. Puede representar un valor entre <lt>INT64_MIN</lt> y <lt>INT64_MAX</lt>.
+
+type(uint8_t).Entero sin signo de 8 bits. Puede representar un valor entre 0 y <lt>UINT8_MAX</lt>.
+
+type(uint16_t).Entero sin signo de 16 bits. Puede representar un valor entre 0 y <lt>UINT16_MAX</lt>.
+
+type(uint32_t).Entero sin signo de 32 bits. Puede representar un valor entre 0 y <lt>UINT32_MAX</lt>.
+
+type(uint64_t).Entero sin signo de 64 bits. Puede representar un valor entre 0 y <lt>UINT64_MAX</lt>.
+
+type(char_t).Tipo carácter de 8 bits (Unicode). Un solo carácter puede necesitar 1, 2, 3 o 4 elementos (bytes), dependiendo de <lh>Codificaciones UTF</lh>.
+
+type(byte_t).Tipo de 8 bits para almacenar bloques de memoria genéricos.
+
+type(bool_t).Booleano de 8 bits. Solo dos valores son correctos <lt>TRUE</lt> (1) y <lt>FALSE</lt> (0).
+
+type(real).Número de punto flotante de 32 o 64 bits.
+
+type(real32_t).Número de punto flotante de 32 bits. El tipo <c>float</c> de C.
+
+type(real64_t).Número de punto flotante de 64 bits. El tipo <c>double</c> de C.
+
+const(bool_t, TRUE, 1).Cierto, verdadero.
+
+const(bool_t, FALSE, 0).Falso.
+
+const(void*,NULL,0).Puntero nulo.
+
+const(int8_t,INT8_MIN,0x80).-128.
+
+const(int8_t,INT8_MAX,0x7F).127.
+
+const(int16_t,INT16_MIN,0x8000).-32.768.
+
+const(int16_t,INT16_MAX,0x7FFF).32.767.
+
+const(int32_t,INT32_MIN,0x80000000).-2.147.483.648.
+
+const(int32_t,INT32_MAX,0x7FFFFFFF).2.147.483.647.
+
+const(int64_t,INT64_MIN,0x8000000000000000).-9.223.372.036.854.775.808.
+
+const(int64_t,INT64_MAX,0x7FFFFFFFFFFFFFFF).9.223.372.036.854.775.807.
+
+const(uint8_t,UINT8_MAX,0xFF).255.
+
+const(uint16_t,UINT16_MAX,0xFFFF).65.535.
+
+const(uint32_t,UINT32_MAX,0xFFFFFFFF).4.294.967.295.
+
+const(uint64_t,UINT64_MAX,0xFFFFFFFFFFFFFFFF).18.446.744.073.709.551.615.
+
+enum(unicode_t).Representa las <lh>Codificaciones UTF</lh>.
+enumv(ekUTF8).Codificación UTF8.
+enumv(ekUTF16).Codificación UTF16.
+enumv(ekUTF32).Codificación UTF32.
+
+func(FPtr_destroy,ptr).Prototipo de función destructora.
+fpar(type**,item).Doble puntero al objeto a destruir. Debe ser puesto a <c>NULL</c> tras la destrucción para invalidar su uso.
+
+func(FPtr_copy,ptr).Prototipo de constructor de copia.
+fret(type*).El nuevo objeto que es una copia exacta de la entrada.
+fpar(const type*,item).Puntero al objeto que debe ser copiado.
+
+func(FPtr_compare,ptr).Prototipo de función de comparación.
+fret(int).Resultado de la comparación.
+fpar(const type*,item1).Primer elemento a comparar.
+fpar(const type*,item2).Segundo elemento a comparar.
+
+func(FPtr_compare_ex,ptr).Similar a <c>FPtr_compare</c>, pero recibe un parámetro adicional que puede influir en la comparación.
+fret(int).Resultado de la comparación.
+fpar(const type*,item1).Primer elemento a comparar.
+fpar(const type*,item2).Segundo elemento a comparar.
+fpar(const dtype*,data).Parámetro adicional.
+
+func(FPtr_assert,ptr).Prototipo de función <i>callback</i> llamada cuando se produce un <c>assert</c>.
+fpar(type*,item).Datos de usuario pasados como primer parámetro.
+fpar(const uint32_t,group).0 = Error fatal, 1 = La ejecución puede continuar.
+fpar(const char_t*,caption). Título.
+fpar(const char_t*,detail). Mensaje detallado.
+fpar(const char_t*,file). Archivo fuente donde ocurrió el <i>assert</i>.
+fpar(const uint32_t,line).Línea dentro del archivo fuente.
+
+func(unref).Marca el parámetro como no referenciado, desactivando los avisos del compilador.
+fpar(,param).Parámetro.
+fcode.
+static void i_OnClick(App *app, Event *e)
+{
+    unref(e);
+    app_click_action(app);
+}
+fcode.

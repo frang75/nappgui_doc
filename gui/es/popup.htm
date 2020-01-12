@@ -1,0 +1,42 @@
+
+h1.PopUp
+
+p.Los <b>PopUps</b> son botones que tienen asociado un menú desplegable <r>popups</r>. Aparentemente parecen <i>pushbuttons</i> que al pulsarse muestran una lista de opciones. En <lh>¡Hola PopUp y Combo!</lh> tienes un ejemplo de uso.
+
+img(popups.png,0,.8).PopUps en Windows, macOS y Linux.
+Captura de varios controles PopUp en una ventana.
+
+func(popup_create).Crea un nuevo control de lista desplegable <i>(PopUp button)</i>.
+fret(PopUp*).El popup recién creado.
+
+func(popup_OnSelect).Establece un manejador para la selección de un nuevo elemento.
+fpar(PopUp*,popup).El popup.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará tras seleccionar un nuevo elemento de la lista.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(popup_tooltip).Asigna un tooltip al control popup.
+fpar(PopUp*,popup).El popup.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(popup_add_elem).Añade un nuevo elemento a la lista desplegable.
+fpar(PopUp*,popup).El popup.
+fpar(const char_t*,text).El texto del elemento en UTF-8 o el identificador del recurso. <lp>resources</lp>.
+fpar(const Image*,image).Icono asociado al elemento o el identificador del recurso. Por cuestión de espacio, se escalará a un alto máximo de 16 píxeles.
+
+func(popup_set_elem).Edita un elemento de la lista desplegable.
+fpar(PopUp*,popup).El popup.
+fpar(const uint32_t,index).El índice del elemento a sustituir.
+fpar(const char_t*,text).El texto del elemento en UTF-8 o el identificador del recurso. <lp>resources</lp>.
+fpar(const Image*,image).Icono asociado al elemento o el identificador del recurso. Por cuestión de espacio, se escalará a un alto máximo de 16 píxeles.
+
+func(popup_list_height).Establece el tamaño de la lista desplegable.
+fpar(PopUp*,popup).El popup.
+fpar(const uint32_t,elems).Número de elementos visibles. Si el control tiene más, aparecerá una barra de scroll.
+
+func(popup_selected).Establece el elemento seleccionado del popup.
+fpar(PopUp*,popup).El popup.
+fpar(const uint32_t,index).El elemento a seleccionar. Si pasamos <c>UINT32_MAX</c> se quita la selección. 
+
+func(popup_get_selected).Obtiene el elemento seleccionado del popup.
+fret(uint32_t).El elemento seleccionado.
+fpar(PopUp*,popup).El popup.

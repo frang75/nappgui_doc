@@ -1,0 +1,201 @@
+langrev.
+h1.Memory
+
+ep.Generic manipulation of memory blocks and <b>heap</b> handling.
+
+p.From the programmer point of view, access to memory is done through variables and manipulated through the language operators (+, -, *, =, ...) and always in the same way, regardless of how the variables were created or in what memory zone they are hosted. In the case of <i>arrays</i> or generic blocks, within <c>bmem.h</c> we have several functions to make copies, assignments or verifications. This module also defines functions for dynamic memory manipulation <i>(Heap)</i>.
+
+h2.Stack Segment
+
+p.The memory of a compiled and running C program is divided into several segments. One of them is the <i>stack</i>, a space of variable but limited size, where local variables and function calls <i>(call stack)</i> are stored. It grows and shrinks as the process enters and leaves areas or functions <r>stack</r>. It is automatically managed by the compiler as a LIFO <i>Last-in First-out structure</i>, so it goes unnoticed most of the time, since it does not require extra attention from the programmer. We are aware of its existence when receiving the <i>Stack Overflow</i> error, usually caused by infinite recursion or the reservation of very large C vectors <r>stackover</r>. The debugger allows us to inspect the state of the stack at execution time <lh>Debugging the program</lh>.
+
+img(stack.svg,480,.65).<i>Stack</i> state in different points of the program.
+Scheme of the stack segment at various times of execution.
+
+code(cpp,stackover).Two simple cases that cause the stack overflow.
+int func(int n) { func(n); } // Stack Overflow
+
+float v[2000000]; // Stack Overflow
+code.
+
+p.While the use of the <i>stack</i> is ideal due to its high performance, security and ease of use, sometimes falls short. On the one hand, it is necessary to foresee in the design time the amount of memory needed and define it statically (eg. <c>struct Product pr[100];</c>), something very inflexible when it comes to building real applications. On the other hand, variables are destroyed when closing a scope or leaving a function, which prevents sharing data globally. 
+
+h2.Heap Segment
+
+p.The <i>heap</i> is a memory zone that the process can request on demand, through calls to the system. It is complementary to the <i>stack</i> and is characterized by:
+
+li.It can be accessed globally, from any point of the program through a pointer.
+
+li.The amount of available memory is practically unlimited.
+
+li.It is less efficient than the <i>stack</i>.
+
+li.Requires management. Operating systems provide functions for requesting dynamic memory blocks (<c>HeapAlloc()</c>, <c>sbrk()</c>), being the responsibility of the process (programmer) to release these blocks when they are no longer needed.
+
+p.As allocations and de-allocations can be made in any order, internal fragmentation occurs as the program progresses <r>heap</r>. Here would come into play the so-called <b>memory manager</b>, which are algorithms that allow optimizing the use of the heap by compacting it and reusing the released blocks. The standard C library provides the familiar functions <c>malloc()/free()</c>, which implement a generic memory manager through system calls.
+
+img(heap.svg,420,.5).Fragmentation of the <i>heap</i> during the execution of the process.
+Diagram of heap segment fragmentation as program execution progresses.
+
+bq.NAppGUI implements its own dynamic memory manager/auditor <lp>heap</lp> very optimized to serve numerous requests of small size, which is what applications demand normally. <lf>bmem_malloc</lf>/<lf>bmem_free</lf> connect to the operating system through system calls and should not be used directly.
+
+func(bmem_malloc).Reserve a memory block with the default alignment <c>sizeof(void*)</c>.
+fret(byte_t*).Pointer to the new block. Must be released with <lf>bmem_free</lf> when it is no longer necessary.
+fpar(const uint32_t,size).Size in bytes of the block.
+fnote.Use <lp>heap</lp> for more efficient and secure allocations.
+
+func(bmem_realloc).Reallocs an existing memory block due to the expansion or reduction of it. Guarantees that the previous content of the block is preserved <c>min(size, new_size)</c>. Try to do it without moving memory (in situ), but if it is not possible look for a new zone. It also guarantees the default alignment <c>sizeof(void*)</c> if has to reserve a new block.
+fret(byte_t*).Pointer to the relocated block. It will be the same as the original pointer <c>mem</c> if the relocation "in-situ" has been successful. Must be released with <lf>bmem_free</lf> when it is no longer necessary.
+fpar(byte_t*,mem).Pointer to the original block to relocate.
+fpar(const uint32_t,size).Size in bytes of the original block <c>mem</c>.
+fpar(const uint32_t,new_size).New required size, in bytes.
+fnote.Use <lp>heap</lp> for more efficient and secure allocations.
+
+func(bmem_aligned_malloc).Reserve a memory block with alignment.
+fret(byte_t*).Pointer to the new block. Must be released with <lf>bmem_free</lf> when it is no longer necessary.
+fpar(const uint32_t,size).Size in bytes of the block.
+fpar(const uint32_t,align).Alignment. It must be power of 2.
+fnote.Use <lp>heap</lp> for more efficient and secure allocations.
+
+func(bmem_aligned_realloc).Like <lf>bmem_realloc</lf>, but it guarantees a specific alignment.
+fret(byte_t*).Pointer to the relocated block.
+fpar(byte_t*,mem).Pointer to the original block to relocate.
+fpar(const uint32_t,size).Size in bytes of the original block <c>mem</c>.
+fpar(const uint32_t,new_size).New required size, in bytes.
+fpar(const uint32_t,align).Alignment. It must be power of 2.
+fnote.Use <lp>heap</lp> for more efficient and secure allocations.
+
+func(bmem_free).Free memory pointed by <c>mem</c>, previously reserved by <lf>bmem_malloc</lf>, <lf>bmem_realloc</lf> or its equivalents with alignment.
+fpar(byte_t*,mem).Pointer to the memory block to be released.
+fnote.Use <lp>heap</lp> for more efficient and secure allocations.
+
+func(bmem_set1).Fill a block of memory with the same 1-byte mask.
+fpar(byte_t*,dest).Pointer to the memory block.
+fpar(const uint32_t,size).Size in bytes of the block <c>dest</c>.
+fpar(const byte_t,mask).Mask.
+
+func(bmem_set4).Fill a block of memory with the same 4-byte mask.
+fpar(byte_t*,dest).Pointer to the memory block.
+fpar(const uint32_t,size).Size in bytes of the block <c>dest</c>. It is not necessary to be a multiple of 4.
+fpar(const byte_t*,mask).4-byte mask.
+fcode.
+byte_t mblock[10];
+byte_t mask[4] = "abcd";
+bmem_set4(mblock, 10, mask);
+/* mblock = "abcdabcdab" */
+fcode.
+
+func(bmem_set8).Fill a block of memory with the same 8-byte mask.
+fpar(byte_t*,dest).Pointer to the memory block.
+fpar(const uint32_t,size).Size in bytes of the block <c>dest</c>. It is not necessary to be a multiple of 8.
+fpar(const byte_t*,mask).8-byte mask.
+
+func(bmem_set16).Fill a block of memory with the same 16-byte mask.
+fpar(byte_t*,dest).Pointer to the memory block.
+fpar(const uint32_t,size).Size in bytes of the block <c>dest</c>. It is not necessary to be a multiple of 16.
+fpar(const byte_t*,mask).16-byte mask.
+
+func(bmem_set_u32).Fill an array of type <lt>uint32_t</lt> with the same value.
+fpar(uint32_t*,dest).Pointer to the array.
+fpar(const uint32_t,n).Array size (number of elements).
+fpar(const uint32_t,value).Filling value.
+
+func(bmem_is_zero).Check if a memory block is completely filled with 0s.
+fret(bool_t).<c>TRUE</c> if all positions are 0, otherwise <c>FALSE</c>.
+fpar(const byte_t*,mem).Pointer to the memory block.
+fpar(const uint32_t,size).Size in bytes of the block <c>mem</c>.
+
+func(bmem_set_zero).Fill a memory block with 0s.
+fpar(byte_t*,dest).Pointer to the memory block that must be filled.
+fpar(const uint32_t,size).Size in bytes of the block <c>dest</c>.
+
+func(bmem_zero).Initialize an object with 0s.
+fpar(type*,dest).Pointer to the object.
+fpar(,type).Object type.
+fcode.
+typedef struct
+{
+    uint32_t f1;
+    real32_t f2;
+    String *f3;
+    ...
+} MyType;
+
+MyType t1;
+bmem_zero(&t1, MyType);
+/* t1 = {0} */
+fcode.
+
+func(bmem_zero_n).Initialize an array of objects with 0s.
+fpar(type*,dest).Object array.
+fpar(const uint32_t,n).Array size.
+fpar(,type).Object type.
+
+func(bmem_copy).Copy the contents of one block in another. The blocks must not be overlapping.
+fpar(byte_t*,dest).Pointer to the destination block.
+fpar(const byte_t*,src).Pointer to the source block.
+fpar(const uint32_t,size).Number of bytes to copy.
+
+func(bmem_copy_n).Copy an array of objects to another location.
+fpar(type*,dest).Pointer to the destination array.
+fpar(const type*,src).Pointer to the source array.
+fpar(const uint32_t,n).Array size (number of elements, not bytes).
+fpar(,type).Object type.
+fcode.
+real32_t v1[64];
+real32_t v2[64]; = {1.f, 45.f, 12.4f, ...};
+bmem_copy_n(v1, v2, 64, real32_t);
+fcode.
+
+func(bmem_move).Like <lf>bmem_copy</lf>, but the blocks can overlap.
+fpar(byte_t*,dest).Pointer to the destination block.
+fpar(const byte_t*,src).Pointer to the source block.
+fpar(const uint32_t,size).Number of bytes to copy.
+fnote.If we have the certainty that both blocks do not overlap, <lf>bmem_copy</lf> is much more efficient.
+
+func(bmem_overlaps).Check if two memory blocks overlap.
+fret(bool_t).<c>TRUE</c> if there is overlap.
+fpar(byte_t*,mem1).Pointer to the first block.
+fpar(byte_t*,mem2).Pointer to the second block.
+fpar(const uint32_t,size1).Size of the first block (in bytes).
+fpar(const uint32_t,size2).Size of the second block (in bytes).
+
+func(bmem_rev).Reverts a memory block <c>m[i] = m[ni-1]</c>.
+fpar(byte_t*,mem).Pointer to the memory block.
+fpar(const uint32_t,size).Block size in bytes.
+
+func(bmem_rev2).Reverts a 2-byte memory block.
+fpar(byte_t*,mem).Pointer to the memory block.
+
+func(bmem_rev4).Reverts a 4-byte memory block.
+fpar(byte_t*,mem).Pointer to the memory block.
+
+func(bmem_rev8).Reverts an 8-byte memory block.
+fpar(byte_t*,mem).Pointer to the memory block.
+
+func(bmem_revcopy).Make a reverse copy of a memory block.
+fpar(byte_t*,dest).Pointer to the destination block.
+fpar(const byte_t*,src).Pointer to the source block.
+fpar(const uint32_t,size).Number of bytes to copy.
+
+func(bmem_swap).Exchanges the contents of two memory blocks (not overlapping). At end, <c>mem1[i] = mem2[i]</c> and <c>mem2[i] = mem1[i]</c>.
+fpar(byte_t*,mem1).Pointer to the first block.
+fpar(byte_t*,mem2).Pointer to the second block.
+fpar(const uint32_t,size).Number of bytes to be exchanged.
+
+func(bmem_swap_type).Exchange the contents of two objects.
+fpar(type*,obj1).First object.
+fpar(type*,obj2).Second object.
+fpar(,type).Object type.
+
+func(bmem_shuffle).Randomly shuffles a memory block.
+fpar(byte_t*,mem).Pointer to the memory block.
+fpar(const uint32_t,size).Block size (number of elements).
+fpar(const uint32_t,esize).Size of each element.
+fnote.This function is based on a pseudo-random number generator. Use <lf>bmath_rand_seed</lf> to change the sequence.
+
+func(bmem_shuffle_n).Randomly shuffle an object array.
+fpar(type*,array).Elements array.
+fpar(const uint32_t,size).Number of elements.
+fpar(,type).Object type.
+fnote.This function is based on a pseudo-random number generator. Use <lf>bmath_rand_seed</lf> to change the sequence.

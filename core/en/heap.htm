@@ -1,0 +1,209 @@
+langrev.
+h1.Dynamic allocation
+
+ep.Optimized memory manager and <i>leaks</i> control.
+
+p.<b>Heap</b> is a very efficient dynamic memory manager and auditor included in the <i>core</i> library and available for all programs based on NAppGUI (command line and desktop). It is common for applications to request a large number of small memory blocks to hold different objects (character strings, interface controls, structure instances, I/O buffer, etc). The strategy behind <i>heap</i> is just to ask the operating system for memory pages of a certain size (64kb) using <lf>bmem_malloc</lf> and use them to solve several requests. With this we pursue several objectives:
+
+li.Performance: A call to <lf>heap_malloc</lf> is solved only by increasing the value of a counter. <lf>heap_free</lf> it only updates the header of the affected page.
+
+li.Locality: Two consecutive calls to <c>heap_malloc()</c> are located in contiguous physical memory positions. This reduces the number of cache failures because, according to the locality principle, there is a high probability that two objects that are created together will be used together.
+
+li.Memory leaks: <i>heap</i> points reservations and releases by object type. If necessary, will notify the programmer through <lp>cassert</lp> or <lp>log</lp> that there are objects not released. The great advantage of this auditor over other tools is that it is always being executed as part of the program. This exploits the temporal coherence, because if after a program change <i>leaks</i> are detected where there was not before, it is very likely that we can limit and detect the error, since it will be something we have just worked on.
+
+li.Statistics: We can obtain memory usage profiles (time/bytes). This can help us detect bottlenecks (especially at startup) or optimize page size.
+
+h2.How Heap Works
+
+p.When a program starts, <i>heap</i> creates a default memory page. The first bytes are reserved as a header, a small structure that controls the state of the page. Each request is assigned sequentially within the same page, increasing the value of a pointer <r>heap_malloc</r>. When the page runs out of space, a new one is created <lf>bmem_malloc</lf>, which is linked to the previous one and labeled as the new <b>default page</b> <r>heap_new_page</r>. Each call to <lf>heap_free</lf> update the header with the number of blocks/bytes released <r>heap_free</r>. These blocks <b>are not reused</b>, otherwise the logic of <i>heap</i> would be complicated by slowing it down. The address of the header is stored at the end of each block, so do not have to iterate to locate it. When all the blocks on the page have been released, the entire page is destroyed by <lf>bmem_free</lf> and the pointers between neighboring pages restored <r>heap_delete_page</r>.
+
+img(heap_malloc.svg,420,.6).Reserve a new memory block with <c>heap_malloc()</c>.
+Draw of a memory page when running malloc.
+
+img(heap_new_page.svg,420,.6).Request to the operating system of a new empty page.
+Request to the operating system for a new memory page.
+
+img(heap_free.svg,420,.6).Releasing a block of memory (only updates the header).
+Draw of a memory page when running free.
+
+img(heap_delete_page.svg,420,.6).Destroying the entire page.
+Destruction of a memory page when all its elements have been released.
+
+p.<i>Heap</i> also counts the number of alloc/dealloc per object type using the parameter <c>name</c> of <lf>heap_malloc</lf>. At the end of the execution of the program, if the application lacks <i>memory leaks</i>, it will write in <lp>log</lp> a message like this:
+
+code(text).
+[12:58:08] [OK] Heap Memory Staticstics
+[12:58:08] ============================
+[12:58:08] Total a/dellocations: 1126, 1126
+[12:58:08] Total bytes a/dellocated: 74611, 74611
+[12:58:08] Max bytes allocated: 54939
+[12:58:08] Effective reallocations: (0/34)
+[12:58:08] Real allocations: 2 pages of 65536 bytes
+[12:58:08] ============================
+code.
+
+p(noindent).But if after the execution, the application has memory to be released, the message will be different:
+
+code(text).
+[13:00:35] [FAIL] Heap Object Leaks!!!
+[13:00:35] ===========================
+[13:00:35] 'App' a/deallocations: 1, 0 (1 leaks)
+[13:00:35] 'String' a/deallocations: 414, 410 (4 leaks)
+[13:00:35] ===========================
+[13:00:35] [FAIL] Heap Global Memory Leaks!!!
+[13:00:35] ==================================
+[13:00:35] Total a/dellocations: 1161, 1156 (5 leaks)
+[13:00:35] Total bytes a/dellocated: 75704, 75596 (108 bytes)
+[13:00:35] Max bytes allocated: 54939
+[13:00:35] ==================================
+code.
+
+p(noindent).That warns that we have an object <c>App</c> and four <c>String</c> without releasing. If in the previous execution there were no <i>leaks</i>, it is very likely that we can narrow the error without too much difficulty.
+
+bq.The <i>heap</i> auditor does not intend to replace more advanced memory testing tools, it is only a first filter that constantly alerts us during the development and test phase. Although the overhead that occurs at runtime is minimal, the auditor is completely disabled in the <c>Release</c> configuration.
+
+func(heap_malloc).Reserve a memory block with the default alignment <c>sizeof(void*)</c>.
+fret(byte_t*).Pointer to the new block. Must be released with <lf>heap_free</lf> when it is no longer necessary.
+fpar(const uint32_t,size).Size in bytes of the block.
+fpar(const char_t*,name).Reference text for the auditor.
+fnote.Use this function for generic blocks. For types use <lf>heap_new</lf>.
+fcode.
+byte_t *mem = heap_malloc(1024 * 768, "PixelBuffer");
+...
+heap_free(&mem, 1024 * 768, "PixelBuffer");
+fcode.
+
+func(heap_calloc).Like <lf>heap_malloc</lf>, but initializing the block with 0s.
+fret(byte_t*).Pointer to the new block. Must be released with <lf>heap_free</lf> when it is no longer necessary.
+fpar(const uint32_t,size).Size in bytes of the block.
+fpar(const char_t*,name).Reference text for the auditor.
+fnote.Use this function for generic blocks. For types use <lf>heap_new</lf>.
+fcode.
+byte_t *mem = heap_calloc(256 * 256, "DrawCanvas");
+/* mem = {0, 0, 0, 0, ..., 0}; */
+...
+heap_free(&mem, 256 * 256, "DrawCanvas");
+fcode.
+
+func(heap_realloc).Reallocs an existing memory block due to the expansion or reduction of it. Guarantees that the previous content of the block is preserved <c>min(size, new_size)</c>. Try to do it without moving memory (in situ), but if it is not possible look for a new zone. It also guarantees the default alignment <c>sizeof(void*) </c> if you have to reserve a new block.
+fret(byte_t*).Pointer to the relocated block. It will be the same as the original pointer <c>mem</c> if the relocation "in-situ" has been successful. Must be released with <lf>heap_free</lf> when it is no longer necessary.
+fpar(byte_t*,mem).Pointer to the original block to relocate.
+fpar(const uint32_t,size).Size in bytes of the original block <c>mem</c>.
+fpar(const uint32_t,new_size).New required size, in bytes.
+fpar(const char_t*,name).Reference text for the auditor. It must be the same as the one used in <lf>heap_malloc</lf>.
+fcode.
+byte_t *mem = heap_malloc(64, "ArrayData");
+...
+mem = heap_realloc(mem, 64, 128, ArrayData);
+...
+heap_free(&mem, 128, "ArrayData");
+fcode.
+fnote.Use this function for generic blocks. For types use <lf>heap_realloc_n</lf>.
+
+func(heap_aligned_malloc).Reserve a memory block with alignment.
+fret(byte_t*).Pointer to the new block. Must be released with <lf>heap_free</lf> when it is no longer necessary.
+fpar(const uint32_t,size).Size in bytes of the block.
+fpar(const uint32_t,align).Alignment. It must be power of 2.
+fpar(const char_t*,name).Reference text for the auditor.
+fcode.
+byte_t *sse_data = heap_aligned_malloc(256 * 16, 16, "Vectors");
+...
+heap_free(&mem, 256 * 16, "Vectors");
+fcode.
+
+func(heap_aligned_calloc).Like <lf>heap_aligned_malloc</lf> , but initializing the block with 0s.
+fret(byte_t*).Pointer to the new block. Must be released with <lf>heap_free</lf> when it is no longer necessary.
+fpar(const uint32_t,size).Size in bytes of the block.
+fpar(const uint32_t,align).Alignment. It must be power of 2.
+fpar(const char_t*,name).Reference text for the auditor.
+fcode.
+byte_t *sse_data = heap_aligned_calloc(256 * 16, 16, "Vectors");
+/* see_data = {0, 0, 0, 0, ..., 0}; */
+...
+heap_free(&mem, 256 * 16, "Vectors");
+fcode.
+
+func(heap_aligned_realloc).Like <lf>heap_realloc</lf>, but guaranteeing memory alignment.
+fret(byte_t*).Pointer to the relocated block. Must be released with <lf>heap_free</lf> when it is no longer necessary.
+fpar(byte_t*,mem).Pointer to the original block to relocate.
+fpar(const uint32_t,size).Size in bytes of the original block <c>mem</c>.
+fpar(const uint32_t,new_size).New required size, in bytes.
+fpar(const uint32_t,align).Alignment. It must be power of 2.
+fpar(const char_t*,name).Texto reference for the auditor. It must be the same as the one used in <lf>heap_aligned_malloc</lf>.
+fcode.
+byte_t *sse_data = heap_aligned_malloc(256 * 16, 16, "Vectors");
+...
+sse_data = heap_aligned_realloc(sse_data, 256 * 16, 512 * 16, 16, "Vectors");
+...
+heap_free(&mem, 512 * 16, "Vectors");
+fcode.
+
+func(heap_free).Free memory pointed by <c>mem</c>, previously reserved by <lf>heap_malloc</lf>, <lf>heap_realloc</lf> or its equivalents with alignment.
+fpar(byte_t**,mem).Double pointer to the block to be released. It will be set to <c>NULL</c> after the release.
+fpar(const uint32_t,size).Memory block size.
+fpar(const char_t*,name).Reference text for the auditor, must be the same as that used in <lf>heap_malloc</lf>.
+fnote.Use this function for generic memory blocks. For types it uses <lf>heap_delete</lf>.
+
+func(heap_new).Reserve memory for an object. The return pointer is converted to <c>type</c>.
+fret(type*).Pointer to the created object. It must be destroyed by <lf>heap_delete</lf> when it is no longer necessary.
+fpar(,type).Object type.
+fcode.
+MyAppCtrl *ctrl = heap_new(MyAppCtrl);
+...
+heap_delete(&ctrl, MyAppCtrl);
+fcode.
+
+func(heap_new0).Like <lf>heap_new</lf>, but initializing the object with 0s.
+fret(type*).Pointer to the created object. It must be destroyed by <lf>heap_delete</lf> when it is no longer necessary.
+fpar(,type).Object type.
+fcode.
+MyAppModel *model = heap_new0(MyAppModel);
+/* model = {0} */
+...
+heap_delete(&model, MyAppModel);
+fcode.
+
+func(heap_new_n).Reserve memory for <c>n</c> objects. The return pointer is converted to <c>type</c>.
+fret(type*).Pointer to the newly created array. It must be destroyed by <lf>heap_delete_n</lf> when it is no longer necessary.
+fpar(const uint32_t,n).Number of objects to create.
+fpar(,type).Object type.
+fcode.
+Car *cars = heap_new_n(10, Car);
+...
+heap_delete_n(&cars, 10, Car);
+fcode.
+
+func(heap_new_n0).Like <lf>heap_new_n</lf>, but initializing the array with 0s.
+fret(type*).Pointer to the newly created array. It must be destroyed by <lf>heap_delete_n</lf> when it is no longer necessary.
+fpar(const uint32_t,n).Number of objects to create.
+fpar(,type).Object type.
+fcode.
+Car *cars = heap_new_n0(10, Car);
+/* cars = {0, 0, 0, ..., 0}; */
+...
+heap_delete_n(&cars, 10, Car);
+fcode.
+
+func(heap_realloc_n).Reallocs an array of objects created dynamically with <lf>heap_new_n</lf> or <lf>heap_new_n0</lf>. Guarantees that the previous objects remain unchanged <c>min(size,new_size)</c>.
+fret(type*).Pointer to the relocated array. It must be destroyed by <lf>heap_delete_n</lf> when it is no longer necessary.
+fpar(type*,mem).Pointer to the array to relocate.
+fpar(const uint32_t).Number of elements of the original array <c>mem</c>.
+fpar(const uint32_t,new_size).New required size (in elements).
+fpar(,type).Object type.
+fcode.
+Car *cars = heap_new_n(10, Car);
+...
+cars = heap_realloc_n(cars, 10, 20, Car);
+/* cars[0]-[9] remains untouched. */
+...
+heap_delete_n(&cars, 20, Car);
+fcode.
+
+func(heap_delete).Releases the object targeted by <c>obj</c>, previously reserved by <lf>heap_new</lf> or <lf>heap_new0</lf>.
+fpar(type**,obj).Double pointer to the object to be released. It will be set to <c>NULL</c> after the release.
+fpar(,type).Object type.
+
+func(heap_delete_n).Free <c>n</c> objects targeted by <c>obj</c>, previously booked by <lf>heap_new_n</lf>, <lf>heap_new_n0</lf>.
+fpar(type**,obj).Double pointer to the array to be released. It will be set to <c>NULL</c> after the release.
+fpar(const uint32_t,n).Number of objects to be released, the same as in the reservation.
+fpar(,type).Object type.

@@ -1,0 +1,22 @@
+langrev.
+h1.UpDown
+
+p.<b>UpDown</b> are two-part horizontally divided button controls <r>updown</r>. Each part has a small arrow printed and is normally used to make discrete increases in numerical values associated with controls <lp>edit</lp>. In <lh>Hello Edit and UpDown!</lh> you have an example of use.
+
+li.Use <lf>updown_create</lf> to create an updown button.
+
+img(updown.png,0,.5).UpDown on Windows, macOS and Linux.
+Window where several updowns controls appear next to editbox.
+
+func(updown_create).Create an updown control.
+fret(UpDown*).The updown.
+
+func(updown_OnClick).Set an event handler for pressing the button.
+fpar(UpDown*,updown).The updown.
+fpar(Listener*,listener).<i>Callback</i> function to be called after clicking.
+fnote.See <lh>GUI Events</lh>.
+
+func(updown_tooltip).Set a tooltip for the button. It is a small explanatory text that will appear when the mouse is over the control.
+fpar(UpDown*,updown).The updown.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+

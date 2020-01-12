@@ -1,0 +1,16 @@
+langrev.
+
+h1.Time
+
+ep.Access to the internal computer clock.
+
+func(btime_now).Gets the number of micro-seconds elapsed since January 1, 1970 until this precise moment. Use the difference between instants to know the time consumed by a process.
+fret(uint64_t).The number of micro-seconds elapsed, that is, the number of intervals of 1/1000000 seconds.
+fnote.The initial instant is January 1, 1970 in Unix/Linux systems and January 1, 1601 in Windows since it is the first year of the Gregorian cycle in which Windows NT was activated. This function equates both starts, always returning the Unix time.
+
+func(btime_date).Gets the current system date.
+fpar(Date*,date).Current date.
+
+func(btime_year).Gets the current year.
+fret(uint16_t).Current year.
+

@@ -1,0 +1,201 @@
+
+h1.Memoria
+
+ep.Manipulación genérica de bloques de memoria y manejo del <b>heap</b>.
+
+p.Desde el punto de vista del programador, el acceso a memoria se realiza por medio de variables y se manipula a través de los operadores del lenguaje (+, -, *, =, ...) y siempre de la misma forma, independientemente de como se hayan creado las variables o en que zona de memoria se alojen. En el caso de <i>arrays</i> o bloques genéricos, dentro de <c>bmem.h</c> disponemos de varias funciones para realizar copias, asignaciones o comprobaciones. En este módulo también se definen funciones para la manipulación de la memoria dinámica <i>(Heap)</i>.
+
+h2.Segmento Stack
+
+p.La memoria de un programa C compilado y en ejecución se divide en varios segmentos. Uno de ellos es el <i>stack</i>, un espacio de tamaño variable pero limitado, donde se guardan las variables locales y las llamadas a función <i>(call stack)</i>. Va creciendo y encogiendo a medida que el proceso entra y sale de ámbitos o funciones <r>stack</r>. Es gestionado automáticamente por el compilador como una estructura LIFO <i>Last-in First-out</i>, por lo que pasa desapercibido la mayor parte del tiempo, ya que no requiere atención extra por parte del programador. Nos percatamos de su existencia al recibir el error <i>Stack Overflow</i>, normalmente provocado por recursividad infinita o la reserva de vectores C muy grandes <r>stackover</r>. El depurador nos permite inspeccionar el estado de la pila en cualquier instante de la ejecución <lh>Depurando el programa</lh>.
+
+img(stack.svg,480,.65).Estado del <i>stack</i> en diferentes puntos del programa.
+Esquema del segmento stack en varios momentos de la ejecución.
+
+code(cpp,stackover).Dos sencillos casos que provocan el desbordamiento de la pila.
+int func(int n) { func(n); } // Stack Overflow
+
+float v[2000000]; // Stack Overflow
+code.
+
+p.Si bien el uso del <i>stack</i> es ideal debido a su gran rendimiento, seguridad y facilidad de uso, en ocasiones se queda corto. Por un lado hay que prever en tiempo de diseño la cantidad de memoria necesaria y definirla estáticamente (pe. <c>struct Product pr[100];</c>), algo muy poco flexible a la hora de construir aplicaciones de verdad. Por otro lado, las variables se destruyen al cerrar un ámbito o salir de una función, lo que impide compartir datos de forma global. 
+
+h2.Segmento Heap
+
+p.El <i>heap</i> es una zona de memoria que el proceso puede solicitar bajo demanda, a través de llamadas al sistema. Es complementaria al <i>stack</i> y se caracteriza por:
+
+li.Se puede acceder de forma global, desde cualquier punto del programa a través de un puntero.
+
+li.La cantidad de memoria disponible es prácticamente ilimitada.
+
+li.Es menos eficiente que el <i>stack</i>.
+
+li.Requiere gestión. Los sistemas operativos proveen funciones para solicitar bloques de memoria dinámica (<c>HeapAlloc()</c>, <c>sbrk()</c>), siendo responsabilidad del proceso (programador) liberar estos bloques cuando ya no se necesiten.
+
+p.Como las reservas y liberaciones pueden realizarse en cualquier orden se produce una fragmentación interna a medida que avanza el programa <r>heap</r>. Aquí entraría en juego el denominado <b>gestor de memoria</b>, que son algoritmos que permiten optimizar el uso del heap compactándolo y reutilizando los bloques liberados. La librería estándar de C proporciona las conocidas funciones <c>malloc()/free()</c>, que implementan un gestor de memoria genérico a través de llamadas al sistema.
+
+img(heap.svg,420,.5).Fragmentación del <i>heap</i> durante la ejecución del proceso.
+Esquema de la fragmentación del segmento heap a medida que avanza la ejecución del programa.
+
+bq.NAppGUI implementa su propio gestor/auditor de memoria dinámica <lp>heap</lp> muy optimizado para servir numerosas de peticiones de pequeño tamaño, que es lo que demandan las aplicaciones en gran medida. <lf>bmem_malloc</lf>/<lf>bmem_free</lf> conectan con el sistema operativo a través de llamadas al sistema y no deberían utilizarse directamente.
+
+func(bmem_malloc).Reserva un bloque de memoria con la alineación por defecto <c>sizeof(void*)</c>.
+fret(byte_t*).Puntero al nuevo bloque. Debe ser liberado con <lf>bmem_free</lf> cuando ya no sea necesario.
+fpar(const uint32_t,size).Tamaño en bytes del bloque.
+fnote.Utiliza <lp>heap</lp> para reservas más eficientes y seguras.
+
+func(bmem_realloc).Realoja un bloque de memoria existente debido a la expansión o reducción del mismo. Garantiza que se conserva el contenido previo del bloque <c>min(size, new_size)</c>. Intenta hacerlo sin mover memoria (in situ), pero si no es posible busca una nueva zona. También garantiza la alineación por defecto <c>sizeof(void*)</c> si hay que reservar un nuevo bloque.
+fret(byte_t*).Puntero al bloque realojado. Será el mismo que el puntero original <c>mem</c> si la reubicación "in-situ" ha tenido éxito. Debe ser liberado con <lf>bmem_free</lf> cuando ya no sea necesario.
+fpar(byte_t*,mem).Puntero al bloque original a realojar.
+fpar(const uint32_t,size).Tamaño en bytes del bloque original <c>mem</c>.
+fpar(const uint32_t,new_size).Nuevo tamaño requerido, en bytes.
+fnote.Utiliza <lp>heap</lp> para reservas más eficientes y seguras.
+
+func(bmem_aligned_malloc).Reserva un bloque de memoria con alineación.
+fret(byte_t*).Puntero al nuevo bloque. Debe ser liberado con <lf>bmem_free</lf> cuando ya no sea necesario.
+fpar(const uint32_t,size).Tamaño en bytes del bloque.
+fpar(const uint32_t,align).Alineación. Debe ser potencia de 2.
+fnote.Utiliza <lp>heap</lp> para reservas más eficientes y seguras.
+
+func(bmem_aligned_realloc).Igual que <lf>bmem_realloc</lf>, pero garantiza una alineación concreta.
+fret(byte_t*).Puntero al bloque realojado.
+fpar(byte_t*,mem).Puntero al bloque original a realojar.
+fpar(const uint32_t,size).Tamaño en bytes del bloque original <c>mem</c>.
+fpar(const uint32_t,new_size).Nuevo tamaño requerido, en bytes.
+fpar(const uint32_t,align).Alineación. Debe ser potencia de 2.
+fnote.Utiliza <lp>heap</lp> para reservas más eficientes y seguras.
+
+func(bmem_free).Libera la memoria apuntada por <c>mem</c>, previamente reservada por <lf>bmem_malloc</lf>, <lf>bmem_realloc</lf> o sus equivalentes con alineación.
+fpar(byte_t*,mem).Puntero al bloque de memoria a liberar.
+fnote.Utiliza <lp>heap</lp> para reservas más eficientes y seguras.
+
+func(bmem_set1).Rellena un bloque de memoria con la misma máscara de 1-byte.
+fpar(byte_t*,dest).Puntero al bloque de memoria.
+fpar(const uint32_t,size).Tamaño en bytes del bloque <c>dest</c>.
+fpar(const byte_t,mask).Máscara.
+
+func(bmem_set4).Rellena un bloque de memoria con la misma máscara de 4-bytes.
+fpar(byte_t*,dest).Puntero al bloque de memoria.
+fpar(const uint32_t,size).Tamaño en bytes del bloque <c>dest</c>. No es necesario que sea múltiplo de 4.
+fpar(const byte_t*,mask).Máscara de 4 bytes.
+fcode.
+byte_t mblock[10];
+byte_t mask[4] = "abcd";
+bmem_set4(mblock, 10, mask);
+/* mblock = "abcdabcdab" */
+fcode.
+
+func(bmem_set8).Rellena un bloque de memoria con la misma máscara de 8-bytes.
+fpar(byte_t*,dest).Puntero al bloque de memoria.
+fpar(const uint32_t,size).Tamaño en bytes del bloque <c>dest</c>. No es necesario que sea múltiplo de 8.
+fpar(const byte_t*,mask).Máscara de 8 bytes.
+
+func(bmem_set16).Rellena un bloque de memoria con la misma máscara de 16-bytes.
+fpar(byte_t*,dest).Puntero al bloque de memoria.
+fpar(const uint32_t,size).Tamaño en bytes del bloque <c>dest</c>. No es necesario que sea múltiplo de 16.
+fpar(const byte_t*,mask).Máscara de 16 bytes.
+
+func(bmem_set_u32).Rellena un array de tipo <lt>uint32_t</lt> con el mismo valor.
+fpar(uint32_t*,dest).Puntero al array.
+fpar(const uint32_t,n).Tamaño del array (número de elementos).
+fpar(const uint32_t,value).Valor de relleno.
+
+func(bmem_is_zero).Comprueba si un bloque de memoria está completamente relleno de 0s.
+fret(bool_t).<c>TRUE</c> si todas las posiciones son 0, de lo contrario <c>FALSE</c>.
+fpar(const byte_t*,mem).Puntero al bloque de memoria.
+fpar(const uint32_t,size).Tamaño en bytes del bloque <c>mem</c>.
+
+func(bmem_set_zero).Rellena un bloque de memoria con 0s.
+fpar(byte_t*,dest).Puntero al bloque de memoria que debe ser rellenado.
+fpar(const uint32_t,size).Tamaño en bytes del bloque <c>dest</c>.
+
+func(bmem_zero).Inicializa un objeto con 0s.
+fpar(type*,dest).Puntero al objeto.
+fpar(,type).Tipo de objeto.
+fcode.
+typedef struct
+{
+    uint32_t f1;
+    real32_t f2;
+    String *f3;
+    ...
+} MyType;
+
+MyType t1;
+bmem_zero(&t1, MyType);
+/* t1 = {0} */
+fcode.
+
+func(bmem_zero_n).Inicializa un array de objetos con 0s.
+fpar(type*,dest).Array de objetos.
+fpar(const uint32_t,n).Tamaño del array.
+fpar(,type).Tipo de objeto.
+
+func(bmem_copy).Copia el contenido de un bloque en otro. Los bloques no deben estar superpuestos.
+fpar(byte_t*,dest).Puntero al bloque de destino.
+fpar(const byte_t*,src).Puntero al bloque de origen.
+fpar(const uint32_t,size).Número de bytes a copiar.
+
+func(bmem_copy_n).Copia un array de objetos en otra localización.
+fpar(type*,dest).Puntero al array de destino.
+fpar(const type*,src).Puntero al array de origen.
+fpar(const uint32_t,n).Tamaño del array (número de elementos, no bytes).
+fpar(,type).Tipo de objeto.
+fcode.
+real32_t v1[64];
+real32_t v2[64]; = {1.f, 45.f, 12.4f, ...};
+bmem_copy_n(v1, v2, 64, real32_t);
+fcode.
+
+func(bmem_move).Igual que <lf>bmem_copy</lf>, pero los bloques pueden estar superpuestos.
+fpar(byte_t*,dest).Puntero al bloque de destino.
+fpar(const byte_t*,src).Puntero al bloque de origen.
+fpar(const uint32_t,size).Número de bytes a copiar.
+fnote.Si tenemos la certeza de que ambos bloque no se solapan, <lf>bmem_copy</lf> es mucho más eficiente.
+
+func(bmem_overlaps).Comprueba si dos bloques de memoria se solapan.
+fret(bool_t).<c>TRUE</c> si hay solapamiento.
+fpar(byte_t*,mem1).Puntero al primer bloque.
+fpar(byte_t*,mem2).Puntero al segundo bloque.
+fpar(const uint32_t,size1).Tamaño del primer bloque (en bytes).
+fpar(const uint32_t,size2).Tamaño del segundo bloque (en bytes).
+
+func(bmem_rev).Revierte un bloque de memoria <c>m[i] = m[n-i-1]</c>.
+fpar(byte_t*,mem).Puntero al bloque de memoria.
+fpar(const uint32_t,size).Tamaño del bloque en bytes.
+
+func(bmem_rev2).Revierte un bloque de memoria de 2-bytes.
+fpar(byte_t*,mem).Puntero al bloque de memoria.
+
+func(bmem_rev4).Revierte un bloque de memoria de 4-bytes.
+fpar(byte_t*,mem).Puntero al bloque de memoria.
+
+func(bmem_rev8).Revierte un bloque de memoria de 8-bytes.
+fpar(byte_t*,mem).Puntero al bloque de memoria.
+
+func(bmem_revcopy).Realiza una copia revertida de un bloque de memoria.
+fpar(byte_t*,dest).Puntero al bloque de destino.
+fpar(const byte_t*,src).Puntero al bloque de origen.
+fpar(const uint32_t,size).Número de bytes a copiar.
+
+func(bmem_swap).Intercambia el contenido de dos bloques de memoria (no solapados). Al finalizar, <c>mem1[i] = mem2[i]</c> y <c>mem2[i] = mem1[i]</c>.
+fpar(byte_t*,mem1).Puntero al primer bloque.
+fpar(byte_t*,mem2).Puntero al segundo bloque.
+fpar(const uint32_t,size).Número de bytes a intercambiar.
+
+func(bmem_swap_type).Intercambia el contenido de dos objetos.
+fpar(type*,obj1).Primer objeto.
+fpar(type*,obj2).Segundo objeto.
+fpar(,type).Tipo de objeto.
+
+func(bmem_shuffle).Desordena aleatoriamente (barajar) un bloque de memoria.
+fpar(byte_t*,mem).Puntero al bloque de memoria.
+fpar(const uint32_t,size).Tamaño del bloque (número de elementos).
+fpar(const uint32_t,esize).Tamaño de cada elemento.
+fnote.Esta función se basa en un generador de números pseudo-aleatorios. Utiliza <lf>bmath_rand_seed</lf> para cambiar la secuencia.
+
+func(bmem_shuffle_n).Desordena aleatoriamente (barajar) un array de objetos.
+fpar(type*,array).Array de elementos.
+fpar(const uint32_t,size).Número de elementos.
+fpar(,type).Tipo de objeto.
+fnote.Esta función se basa en un generador de números pseudo-aleatorios. Utiliza <lf>bmath_rand_seed</lf> para cambiar la secuencia.

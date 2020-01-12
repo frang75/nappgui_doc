@@ -1,0 +1,23 @@
+
+h1.JSON
+
+func(json_read).Procesa un script JSON.
+fret(type*).Objeto resultado.
+fpar(Stream*,stm).Entrada de datos en formato JSON. 
+fpar(const JsonOpts*,opts).Opciones.
+fpar(,type).Tipo de datos.
+fnote.Esta función transformará datos JSON en un objeto. Ver <lp>htjson</lp>.
+
+func(json_write).Guarda un objeto en formato JSON.
+fpar(Stream*,stm).Salida de datos en formato JSON. 
+fpar(type*,data).Objeto.
+fpar(const JsonOpts*,opts).Opciones.
+fpar(,type).Tipo de datos.
+
+func(json_destroy).Destruye un objeto JSON.
+fpar(type**,data).Objeto.
+fpar(,type).Tipo de datos.
+
+func(json_destopt).Destruye un objeto JSON, si este no es <c>NULL</c>.
+fpar(type**,data).Objeto.
+fpar(,type).Tipo de datos.

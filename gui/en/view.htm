@@ -1,0 +1,122 @@
+langrev.
+h1.View
+
+p.Custom <b>View</b> are blank areas within the window that allow us to implement our own components. They are characterized by three things:
+
+li.They are integrated within a <lt>Layout</lt> like the rest of interface elements. The layout will manage the position and size of the view based on its configuration.
+
+li.They allow you to draw anything through the <b>OnDraw</b> event. The handler will receive a 2D context ready to draw.
+
+li.They allow to capture the keyboard and mouse events produced by the user, which will make it possible to interact with the generated scenes.
+
+li.They assume nothing about the content. It is the programmer who must synchronize the user's events with the drawing to produce the desired effect.
+
+li.Use <lf>view_create</lf> to create a custom view.
+
+li.Use <lf>view_OnDraw</lf> to draw in a view.
+
+li.Use <lf>view_data</lf> to associate user data with the view.
+
+p.We can't draw in the view whenever we want. Being an area within the window is subject to overlaps so the drawing buffer is managed by the operating system. The refresh cycle is divided into several steps <r>view_events</r>:
+
+li.There is an event that requires updating the view content.
+
+li.We call the <lf>view_update</lf> method to notify that the view must be updated. 
+
+li.In a timely manner, the system will send an <c>OnDraw</c> event with an <lt>DCtx</lt> object ready to receive our drawing command. In <lp>drawimg</lp> or <lp>die</lp> you have examples of using custom views.
+
+img(view_events.svg,420,.6).Refresh cycle of a custom view.
+Chart with the different phases of updating a view.
+
+func(view_create).Create a new custom view.
+fret(View*).The view.
+fpar(uint32_t,flags).Creation options. <c>OR |</c> combination of <lt>view_flag_t</lt> values.
+
+func(view_data).Associate user data with the view.
+fpar(View*,view).The view.
+fpar(type**,data).User data.
+fpar(FPtr_destroy,func_destroy_data).Destructor of user data. It will be called upon destroying the view.
+fpar(,type).Type of user data.
+
+func(view_get_data).Obtiene los datos de usuario asociados con la vista.
+fret(type*).Los datos de usuario.
+fpar(const View*,view).The view.
+fpar(,type).Type of user data.
+
+func(view_size).Set the default view size.
+fpar(View*,view).The view.
+fpar(const S2Df,size).The size.
+fnote.It corresponds to <lh>Natural sizing</lh> of control Default 128x128.
+
+func(view_OnDraw).Set an event handler to draw in the view.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called every time the drawing needs to be refreshed.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnSize).Set an event handler for resizing.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called every time the view changes size.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnMoved).Set an event handler for mouse movement.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called as the mouse cursor moves over the view.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnEnter).Set an event handler for mouse enter.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called when the mouse cursor enters the view area.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnExit).Set an event handle for mouse exit.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called when the mouse cursor exits the view area.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnClick).Set an event handler for mouse click.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function that will be called every time the view is clicked.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnStartDrag).Set an event handler for the start of mouse drag.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function that will be called when you start dragging the mouse.
+fnote."Drag" is to move the mouse with one of the buttons pressed. See <lh>GUI Events</lh>.
+
+func(view_OnDrag).Set an event handler for mouse drag.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called while dragging the mouse cursor over the view.
+fnote."Drag" is to move the mouse with one of the buttons pressed. See <lh>GUI Events</lh>.
+
+func(view_OnEndDrag).Set an event handler for the end of the mouse drag.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function that will be called when you finish dragging the mouse.
+fnote."Drag" is to move the mouse with one of the buttons pressed. See <lh>GUI Events</lh>.
+
+func(view_OnWheel).Set an event handler for mouse wheel.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function that will be called when the mouse wheel moves over the view.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnKeyDown).Set an event handler for a keystroke.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called when a key is pressed and the view has the keyboard focus.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnKeyUp).Set an event handler for releasing a key.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called when a key is released and the view has the keyboard focus.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_scrollbar_size).Get the size of scroll bars.
+fpar(const View*,view).The view.
+fpar(S2Df*,size).The width of the horizontal bar and height of the vertical.
+fnote.Useful if we must take into account the scroll bars when drawing in the view.
+
+func(view_content_size).Set the size of the drawing area when scroll bars exist.
+fpar(View*,view).The view.
+fpar(const S2Df,size).The internal size of the drawing area.
+fnote.When creating a scroll view, this method indicates the entire drawing area. The control will use it to size and position the scroll bars.
+
+func(view_update).Send an order to the operating system that the view should be refreshed.
+fpar(View*,view).The view.

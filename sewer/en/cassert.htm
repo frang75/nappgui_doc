@@ -1,0 +1,94 @@
+langrev.
+h1.Asserts
+
+ep.The <b>asserts</b> will perform dynamic code checks when the program is running.
+
+p.<b>asserts</b> are sentences distributed by the source code that perform an intensive <lh>Dynamic analysis</lh>, helping to detect errors at runtime. When the <i>assert</i> condition becomes <c>FALSE</c>, the program execution stops and a warning window is displayed <r>assert_window</r>.
+
+code.
+void layout_vmargin(Layout *layout, const uint32_t row, const real32_t margin)
+{
+    cassert_no_null(layout);
+    cassert_msg(row < layout->num_rows, "'row' out of range");
+    ...
+}
+code.
+
+img(assert_window.png,480,.6).<i>assert</i> window displayed after a runtime error.
+Capture of the window that appears when an assert is triggered.
+
+p.At this time we have three alternatives:
+
+li.<b>Debug</b>: Debug the program: Access the call stack, inspect variables, etc. More in <lh>Debugging the program</lh>.
+
+li.<b>Continue</b>: Continue with the execution, ignoring the <i>assert</i>.
+
+li.<b>Exit</b>: Exit the program.
+
+p.To avoid showing this window in futher <i>asserts</i>, deactivate the check <c>'Show this window in next assert'</c>. Future incidents will be directed to a <i>log</i> file. You can also omit dumps in this log, deactivating <c>'Write assert info in log'</c>.
+
+bq.<b>asserts</b> sentences provide very valuable information about program anomalies and should never be ignored.
+
+p.In the previous example we have seen a "continuable" <i>assert</i>, that is, the execution of the program can continue if we press <c>[Continue]</c>. However, as we indicated, they should not be ignored indefinitely. On the other hand we have the <b>critical asserts</b> <r>fatal_assert</r>. Normally they are related to segment violation problems, where it will not be possible to continue running the program.
+
+img(fatal_assert.png,480,.6).Critical <i>assert</i> caused by null pointer access.
+Capture of the window that appears after a critical assert.
+
+func(cassert).Basic <i>assert</i> sentence. If the condition is evaluated at <c> FALSE </c>, a "continuable" <i>assert</i> will be launched. The message shown will be the literal of the condition itself.
+fpar(bool_t,cond).Boolean expression.
+fcode.
+// "row < arrpt_size(layout->rows)"
+// will be shown in the assert window
+cassert(row < arrpt_size(layout->rows));
+fcode.
+
+func(cassert_msg).Same as the <c>cassert()</c> sentence, but using a custom message, instead of the literal condition.
+fpar(bool_t,cond).Boolean expression.
+fpar(const char_t*,msg).Message related to the <i>assert</i>.
+fcode.
+// "'row' out of range"
+// will be shown in the assert window
+cassert_msg(layout < layout->num_rows, "'row' out of range");
+fcode.
+
+func(cassert_fatal).Same as the <c>cassert()</c> sentence, but throwing a <b>critical</b> assert (not "continuable").
+fpar(bool_t,cond).Boolean expression.
+fcode.
+// "gravity > 0."
+// will be shown in the assert window
+cassert_fatal(gravity > 0.);
+fcode.
+
+func(cassert_fatal_msg).Same as the <c>cassert_msg()</c> sentence, but throwing a <b>critical</b> assert (not "continuable").
+fpar(bool_t,cond).Boolean expression.
+fpar(const char_t*,msg).Message related to the <i>assert</i>.
+fcode.
+// "'gravity' can't be negative."
+// will be shown in the assert window
+cassert_fatal_msg(gravity > 0., "'gravity' can't be negative");
+fcode.
+
+func(cassert_no_null).Triggers a critical <i>assert</i> if a pointer has <c>NULL</c> value.
+fpar(void*,ptr).Pointer to evaluate.
+
+func(cassert_no_nullf).Triggers a critical <i>assert</i> if <b>a function</b> pointer has <c>NULL</c> value.
+fpar(void*,fptr).Pointer to evaluate.
+
+func(cassert_default).Triggers a "continuable" <i>assert</i> if the <b>switch</b> statement reaches the <c>default:</c> state. Useful to ensure that, for example, all the values of an enum have been considered.
+fcode.
+switch(align) {
+case LEFT:
+    // Do something
+    break;
+case RIGHT:
+    // Do something
+    break;
+// Others are not allowed.
+cassert_default();
+}
+fcode.
+
+func(cassert_set_func).Set a custom function to execute an alternative code when an <i>assert</i> occurs. By default, in desktop applications, an informative window is displayed <r>assert_window</r> and the message is saved in a <lp>log</lp> file.
+fpar(void*,data).User data or application context.
+fpar(FPtr_assert,func_assert).<i>Callback</i> function called after the activation of an <i>assert</i>.
+fnote.When using this function, the previous <i>asserts</i> management will be deactivated.

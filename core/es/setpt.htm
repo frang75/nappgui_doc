@@ -1,0 +1,116 @@
+
+h1.Sets de punteros
+
+ep.Conjuntos de punteros. Para información general, consultar <lp>setst</lp>.
+
+func(setpt_create).Crea un set de punteros vacío.
+fret(SetPt(type)*).El nuevo set.
+fpar(FPtr_compare,func_compare).Función para comparar dos elementos. <lh>Ordenar y buscar</lh>.
+fpar(,type).Tipo de objeto.
+
+func(setpt_destroy).Destruye un set y todos sus elementos.
+fpar(SetPt(type)**,set).El set. Será puesto a <c>NULL</c> tras la destrucción.
+fpar(FPtr_destroy,func_destroy).Función para destruir un elemento del set <lh>Destructores</lh>. Si es <c>NULL</c> se destruirá solo el set, pero no sus elementos.
+fpar(,type).Tipo de objeto.
+
+func(setpt_size).Obtiene el número de elementos del set.
+fret(uint32_t).Número de elementos.
+fpar(const SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+
+func(setpt_get).Busca un elemento en <c>O(logn)</c>. Es equivalente a <lf>arrpt_bsearch</lf>. El iterador interno de la estructura quedará fijado en él.
+fret(type*).Puntero al elemento buscado si existe, o <c>NULL</c> si no.
+fpar(SetPt(type)*,set).El set.
+fpar(type*,key).Clave a buscar. Es un puntero a un objeto donde solo los campos relevantes de la búsqueda deben ser inicializados.
+fpar(,type).Tipo de objeto.
+fcode.
+Product key;
+Product *pr;
+key.id = 453;
+pr = setpt_get(setpt, &key, Product);
+fcode.
+fnote.<lh>Iteradores</lh>.
+
+func(setpt_insert).Inserta un nuevo elemento en el set.
+fret(bool_t).<c>TRUE</c> si el elemento ha sido insertado. <c>FALSE</c> si ya existe otro elemento con la misma clave.
+fpar(SetPt(type)*,set).El set.
+fpar(type*,value).Puntero al elemento a insertar.
+fpar(,type).Tipo de objeto.
+fnote.Insertar o eliminar elementos invalida el iterador interno del set <lh>Iteradores</lh>. Debes volver a inicializarlo con <lf>setpt_first</lf>.
+fcode.
+Product *pr = product_create(...);
+if (setpt_insert(setpt, pr, Product) == FALSE)
+{
+    error("Already exists");
+    product_destroy(&pr);
+}
+fcode.
+
+func(setpt_delete).Elimina un elemento del set.
+fret(bool_t).<c>TRUE</c> si el elemento ha sido eliminado, o <c>FALSE</c> si no existe un elemento con dicha clave.
+fpar(SetPt(type)*,set).El set.
+fpar(type*,key).Clave a eliminar. Es un puntero a un objeto donde solo los campos relevantes de la búsqueda deben ser inicializados.
+fpar(FPtr_destroy,func_destroy).Destructor del elemento. Puede ser <c>NULL</c>. Ver <lf>setpt_destroy</lf>.
+fpar(,type).Tipo de objeto.
+fnote.Insertar o eliminar elementos invalida el iterador interno del set <lh>Iteradores</lh>. Debes inicializarlo con <lf>setpt_first</lf>.
+fcode.
+Product key;
+key.id = 345;
+if (setpt_delete(setpt, &key, product_destroy, Product) == FALSE)
+    error("Doesn't exists");
+fcode.
+
+func(setpt_first).Obtiene el primer elemento del set e inicializa el iterador interno.
+fret(type*).Puntero al primer elemento o <c>NULL</c> si el set está vacío.
+fpar(SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fnote.<lh>Iteradores</lh>.
+
+func(setpt_last).Obtiene el último elemento del set e inicializa el iterador interno.
+fret(type*).Puntero al último elemento o <c>NULL</c> si el set está vacío.
+fpar(SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fnote.<lh>Iteradores</lh>.
+
+func(setpt_next).Obtiene el siguiente elemento del set, tras incrementar el iterador interno.
+fret(type*).Puntero al siguiente elemento o <c>NULL</c> si el iterador ha alcanzado el último.
+fpar(SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fnote.Utiliza <lf>setpt_first</lf> para inicializar el iterador interno <lh>Iteradores</lh>.
+
+func(setpt_prev).Obtiene el elemento anterior del set, tras decrementar el iterador interno.
+fret(type*).Puntero al elemento anterior o <c>NULL</c> si el iterador ha alcanzado el primero.
+fpar(SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fnote.Utiliza <lf>setpt_last</lf> para inicializar el iterador interno en recorridos revertidos <lh>Iteradores</lh>.
+
+func(setpt_foreach).Recorre todos los elementos del set. Utiliza <lf>setpt_fornext</lf> para cerrar el bucle.
+fpar(type*,elem).Nombre de la variable 'elemento' dentro del bucle. Añadiendo el sufijo <c>'_i'</c> obtenemos el índice.
+fpar(SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fcode.
+setpt_foreach(product, set, Product)
+    bstd_printf("Position:%d, Id:%d\n", product_i, product->id);
+setpt_fornext(product, set, Product)
+fcode.
+
+func(setpt_fornext).Cierra el bucle abierto por <lf>setpt_foreach</lf>, incrementando el iterador interno.
+fpar(type*,elem).Nombre de la variable 'elemento'. Debe ser el mismo que <c>setpt_foreach</c>.
+fpar(SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+
+func(setpt_foreach_rev).Recorre todos los elementos del set en orden inverso. Utiliza <lf>setpt_forprev</lf> para cerrar el bucle.
+fpar(type*,elem).Nombre de la variable 'elemento' dentro del bucle. Añadiendo el sufijo <c>'_i'</c> obtenemos el índice.
+fpar(SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fcode.
+// Now in reverse order
+setpt_foreach_rev(product, set, Product)
+    bstd_printf("Position:%d, Id:%d\n", product_i, product->id);
+setpt_forprev(product, set, Product)
+fcode.
+
+func(setpt_forprev).Cierra el bucle abierto por <lf>setpt_foreach_rev</lf>, decrementando el iterador interno.
+fpar(type*,elem).Nombre de la variable 'elemento'. Debe ser el mismo que <c>setpt_foreach_rev</c>.
+fpar(SetPt(type)*,set).El set.
+fpar(,type).Tipo de objeto.

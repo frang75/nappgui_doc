@@ -1,0 +1,68 @@
+langrev.
+h1.Sockets
+
+ep.The <b>sockets</b> establish a communication channel between two remote processes through the Internet.
+
+p.We can define a <b>socket</b> as a communication channel between two processes that are running on different machines. They use as a base the family of TCP/IP protocols that govern Internet communication from the first prototypes of the big network back in 1969. For its part, the IP protocol <i>(Internet Protocol)</i> is responsible for sending small data packets between two remote computers through the network. As there are packets that can be lost or take different paths when crossing the Internet nodes, TCP <i>(Transmission Control Protocol)</i> will be in charge of sorting them sequentially and re-ordering those that have been lost. Another important aspect that TCP adds is the concept of a <b>port</b>, which allows the same machine to have multiple connections open at the same time. The conjunction of TCP/IP provides the process of a reliable bidirectional communication channel <i>(full-duplex)</i> with the remote computer with which it has just connected and is the basis of the client/server model <r>socket</r>.
+
+img(socket.svg,480,.5).TCP/IP sockets allow two processes to be connected through the Internet.
+Schema showing two remote processes connected through a socket through the Internet.
+
+p.In the program, working with <i>sockets</i> is very similar to working with files on disk. The implementation of TCP/IP is complicated and is part of the operating system. We will access it through very simplified system calls that will allow us to create connections <lf>bsocket_connect</lf>, write on the channel <lf>bsocket_write</lf> and read from it <lf>bsocket_read</lf>. Since a socket only allows sending and receiving raw bytes, the dialogue between the two ends is determined by the established protocol, which both extremes must implement so that the communication occurs satisfactorily. Some of the most used on the Internet are: HTTP, SMTP, FTP, SSH, etc..
+
+func(bsocket_connect).Create a client socket and try to establish a connection to a remote server.
+fret(Socket*).Socket handle, or <c>NULL</c> if the function fails.
+fpar(const uint32_t,ip).The 32-bit IPv4 address of the remote host. <lf>bsocket_ipv4</lf>.
+fpar(const uint16_t,port).The connection port.
+fpar(const SockOpt*,opts).Socket creation options. Can be <c>NULL</c> for default values.
+fpar(serror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(bsocket_close).Close a previously created socket with <lf>bsocket_connect</lf>.
+fpar(Socket**,socket).The socket handler. It will be set to <c>NULL</c> after closing.
+
+func(bsocket_ip).Get the local ip address and port associated with the socket. 
+fpar(Socket*,socket).Socket handle.
+fpar(uint32_t*,ip).Local IP address.
+fpar(uint16_t*,port).Local IP port.
+
+func(bsocket_read).Read data from the socket.
+fret(bool_t).<c>TRUE</c> if data has been read. <c>FALSE</c> if any error has occurred.
+fpar(Socket*,socket).Socket handle.
+fpar(byte_t*,data).Buffer where the read data will be written.
+fpar(const uint32_t,size).The number of maximum bytes to read (buffer size).
+fpar(uint32_t*,rsize).Receive the number of bytes actually read. Can be <c>NULL</c>.
+fpar(serror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.<lh>Socket stream</lh> implements high-level functions for read/write in sockets.
+
+func(bsocket_write).Write data in the socket.
+fret(bool_t).<c>TRUE</c> if data has been written. <c>FALSE</c> if any error has occurred.
+fpar(Socket*,socket).Socket handle.
+fpar(const byte_t*,data).Buffer that contains the data to write.
+fpar(const uint32_t,size).The number of bytes to write.
+fpar(uint32_t*,wsize).It receives the number of bytes actually written. Can be <c>NULL</c>.
+fpar(serror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.<lh>Socket stream</lh> implements high-level functions for read/write in sockets.
+
+func(bsocket_host_ip).Get the decimal value of the IPv4 address of a host from its url.
+fret(bool_t).<c>TRUE</c> if it worked correctly, <c>FALSE</c> otherwise.
+fpar(const char_t*,url).The host url, eg. <c>www.google.com</c>.
+fpar(uint32_t*,ip).Value of the host's IPv4 address.
+fpar(serror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fcode.
+uint32_t ip;
+if (bhost_ip("www.google.com", &ip, NULL) == TRUE)
+{
+    Socket *sock = bsocket_connect(ip, 80, NULL, NULL);
+    ...
+}
+fcode.
+
+func(bsocket_ipv4).Compose the decimal value of a 32-bit IP address from the four values of the dotted notation (a.b.c.d).
+fret(uint32_t).The 32-bit decimal IP value.
+fpar(uint8_t,a).First value.
+fpar(uint8_t,b).Second value.
+fpar(uint8_t,c).Third value.
+fpar(uint8_t,d).Fourth value.
+fcode.
+uint32_t ip = bsocket_ipv4(216, 58, 210, 164);
+fcode.

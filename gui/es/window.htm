@@ -1,0 +1,110 @@
+
+h1.Window
+
+p.Los objetos <b>Window</b> son los contenedores de más alto nivel dentro de la interfaz de usuario <r>windows_3</r>. Están compuestas por la barra de título, donde se ubican los botones de cerrar, maximizar y minimizar, la zona interior y el marco. Si la ventana admite redimensionado, dicho marco podrá ser arrastrado con el ratón para cambiar su tamaño. La zona interior o área cliente de la ventana, se configura mediante un <lt>Panel</lt> pasado como parámetro del constructor.
+
+li.Utiliza <lf>window_create</lf> para crear una ventana.
+
+img(windows_3.png,0,.5).El concepto de ventana aparece ya en los primeros sistemas gráficos.
+Captura del sistema operativo Windows 3.
+
+h2.Tamaño de la ventana
+
+p.En principio, el tamaño de la ventana se calcula automáticamente en función del <lh>Dimensionado natural</lh> de su panel principal, pero puede cambiarse en cualquier momento.
+
+li.Utiliza <lf>window_size</lf> para cambiar el tamaño del panel principal.
+
+li.Utiliza <lt>ekWNRES</lt> para crear una ventana redimensionable por el usuario.
+
+p.El cambio en las dimensiones del área cliente lleva implícita una re-ubicación y re-dimensionado de los controles interiores. Esto se gestiona automáticamente por los objetos <lt>Layout</lt> en función de como se haya configurado su <lh>Expansión de celdas</lh>, que se propagará de manera recursiva por todos los sublayouts. En <lp>die</lp> tienes un ejemplo del redimensionado de una ventana <r>resize_window</r>.
+
+img(resize_window.svg,520,.5).Redimensionado de la ventana en la demo <b>Die</b>.
+Muestra como se reparte entre los controles el exceso al tamaño al redimensionar la ventana.
+
+func(window_create).Crea una nueva ventana.
+fret(Window*).La ventana recién creada.
+fpar(const uint32_t,flags).Combinación de valores <lt>window_flag_t</lt>.
+fpar(Panel**,main_panel).Panel principal, que integra el contenido de la ventana.
+fnote.El tamaño de la ventana se calculará en función del <lh>Dimensionado natural</lh> del panel principal.
+
+func(window_destroy).Destruye la ventana y todo su contenido.
+fpar(Window**,window).La ventana. Será puesto a <c>NULL</c> tras la destrucción.
+fnote.Se destruirán recursivamente paneles, layouts y componentes.
+
+func(window_OnClose).Establece un manejador para el evento de cierre de la ventana.
+fpar(Window*,window).La ventana.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará antes de cerrar una ventana.
+fnote.Si por cualquier motivo la ventana no debe cerrarse, se debe devolver <c>FALSE</c> como resultado del evento. Ver <lh>Eventos GUI</lh>.
+fcode.
+static void i_OnClose(App *app, Event *e)
+{
+    const EvWinClose *params = event_params(e, EvWinClose);
+    if (can_close(app, params->origin) == FALSE)
+    {
+        bool_t *result = event_result(e, bool_t);
+        *result = FALSE;
+    }
+}
+...
+window_OnClose(window, listener(app, i_OnClose, App));
+fcode.
+
+func(window_OnMoved).Establece un manejador para el desplazamiento de la ventana por el escritorio.
+fpar(Window*,window).La ventana.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará a medida que se arrastre la barra de título y se mueva la ventana por el escritorio.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(window_OnResize).Establece un manejador para el redimensionado de la ventana.
+fpar(Window*,window).La ventana.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará a medida que se arrastren los bordes externos de la ventana para cambiar su tamaño.
+fnote.El redimensionado y rehubicación de elementos se realiza de forma automática en función del <lt>Layout</lt> principal, por lo que no suele ser necesario que la aplicación responda a este evento. Ver <lh>Eventos GUI</lh>.
+
+func(window_title).Establece el texto que mostrará la ventana en la barra de título.
+fpar(Window*,window).La ventana.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(window_show).Muestra la ventana. Por defecto las ventanas se crean ocultas. Hay que mostrarlas explícitamente.
+fpar(Window*,window).La ventana.
+
+func(window_hide).Oculta la ventana.
+fpar(Window*,window).La ventana.
+
+func(window_modal).Lanza una ventana en modo <b>modal</b>.
+fret(uint32_t).Valor retornado por <lf>window_stop_modal</lf>.
+fpar(Window*,window).La ventana.
+fpar(Window*,parent).La ventana bloqueada.
+fnote.<c>parent</c> dejará de recibir eventos hasta que no se llame a <lf>window_stop_modal</lf>.
+
+func(window_stop_modal).Termina el ciclo <b>modal</b> de una ventana.
+fpar(Window*,window).La ventana lanzada previamente con <lf>window_modal</lf>.
+fpar(const uint32_t,return_value).Valor que deberá devolver <lf>window_modal</lf>.
+
+func(window_update).Recalcula la posición y tamaño de los controles tras modificar cualquier <lt>Layout</lt>.
+fpar(Window*,window).La ventana.
+
+func(window_origin).Mueve la ventana a unas coordenadas concretas del escritorio.
+fpar(Window*,window).La ventana.
+fpar(const V2Df,origin).Posición <c>(x,y)</c> de la esquina superior-izquierda de la ventana.
+
+func(window_size).Establece el tamaño del área cliente de la ventana.
+fpar(Window*,window).La ventana.
+fpar(const S2Df,size).Tamaño del panel principal.
+fnote.El tamaño final dependerá de la configuración del marco de la ventana y del tema de escritorio. Esta medida solo hace referencia al área interior.
+
+func(window_get_origin).Obtiene la posición de la ventana.
+fret(V2Df).Posición <c>(x,y)</c> de la esquina superior-izquierda de la ventana.
+fpar(const Window*,window).La ventana.
+
+func(window_get_size).Obtiene las dimensiones totales de la ventana.
+fret(S2Df).Tamaño de la ventana.
+fpar(const Window*,window).La ventana.
+fnote.Se tiene en cuenta el marco y barra de título.
+
+func(window_get_client_size).Obtiene las dimensiones del área cliente de la ventana.
+fret(S2Df).Tamaño del panel principal.
+fpar(const Window*,window).La ventana.
+
+func(window_defbutton).Establece el botón por defecto de la ventana. Será activado cuando se pulse <c>[Intro]</c>.
+fpar(Window*,window).La ventana.
+fpar(Button*,button).El botón.
+

@@ -1,0 +1,265 @@
+
+h1.Sets - Árboles de búsqueda
+
+ep.Contenedor de datos donde los elementos se almacenan en forma de árbol binario, optimizando las búsquedas, inserciones o borrados. Para conjuntos de punteros consultar <lp>setpt</lp>.
+
+p.Al igual que los <i>array</i> los <b>binary search trees (BST)</b>, también conocidos como conjuntos (<c>set</c>) o mapas (<c>map</c>), son contenedores que nos permiten trabajar con una colección de objetos. La principal diferencia con respecto a los primeros es que los elementos no se almacenan de forma lineal en posiciones contiguas de memoria, sino que utilizan una estructura en forma de árbol donde cada nodo tiene dos descendientes <r>createset</r> <r>rbtree</r>.
+
+code(cpp,createset).Creación de arrays y sets.
+typedef struct _product_t Product;
+struct _product_t
+{
+    type_t type;
+    String *code;
+    String *description;
+    Image *image64;
+    real32_t price;
+};
+
+static int i_compare(const Product *p1, const Product *p2)
+{
+    return str_scmp(p1->code, p2->code);
+}
+
+ArrSt(Product) *arrst = arrst_create(Product);
+ArrPt(Product) *arrpt = arrpt_create(Product);
+SetSt(Product) *setst = setst_create(i_compare, Product);
+SetPt(Product) *setpt = setpt_create(i_compare, Product);
+code.
+
+img(rbtree.svg,360,.5).Representación de arrays y sets.
+Representación de un conjunto de elementos en array y en un árbol de búsqueda.
+
+p.Los <i>BST</i> son estructuras optimizadas para casos donde sean muy frecuentes las inserciones, borrados y búsquedas. Están permanentemente ordenados, de ahí que sea posible insertar, eliminar o localizar cualquier elemento en tiempo logarítmico <c>O(logn)</c>, sin necesidad de utilizar funciones de ordenación como <lf>arrst_sort</lf> <r>insert_delete_tree</r>. Para que el mantenimiento se pueda llevar a cabo de forma eficiente, el árbol que soporta la estructura debe cumplir una serie de características:
+
+img(insert_delete_tree.svg,600,.8).En árboles de búsqueda la inserción o borrado no rompe el orden del conjunto.
+Esquema que muestra de inserción o borrado de un elemento en un árbol binario de búsqueda.
+
+li.<b>Binario</b>: Cada nodo solo puede tener 0, 1 ó 2 hijos.
+
+li.<b>Ordenado</b>: Todos los descendientes a la izquierda de un nodo son de menor valor y los situados a la derecha de mayor valor. El criterio de orden y búsqueda se establece en el constructor mediante una función de comparación (<c>i_compare</c> en el ejemplo anterior) y no se puede cambiar durante el tiempo de vida del contenedor. Los nuevos elementos se insertarán en su posición correcta conforme a este orden. No soporta elementos duplicados ni en posiciones arbitrarias.
+
+li.<b>Balanceado</b>: Un árbol puede cumplir las dos propiedades anteriores, pero haber degenerado a una lista donde las búsquedas ya no pueden resolverse en tiempo logarítmico <r>degenerate_tree</r>. Internamente, los contenedores <c>Set</c> de NAppGUI están implementados con los llamados <i>árboles rojo-negro</i>, donde se garantiza una altura máxima de <c>2log(n+1)</c>. Esto se consigue reestructurando el árbol después de cada inserción o borrado, por lo que añadir un nuevo elemento (o eliminarlo) se resuelve en un máximo de <c>O(logn)</c>. Esto es muchísimo más rápido que en arrays, donde hay que desplazar todos los elementos para insertar un registro en una posición concreta, con un coste asociado de <c>O(n)</c>.
+
+img(degenerate_tree.svg,360,.5).Árbol de búsqueda degenerado y balanceado.
+Comparativa de un árbol de búsqueda degenerado (a una lista) y balanceado.
+
+p.Como ya vimos en <lh>Registros o punteros</lh>, tenemos dos modalidades a la hora de crear conjuntos <r>setst_vs_setpt</r>. La versión basada en registros es más eficiente que la basada en punteros, aunque menos flexible.
+
+li.Utiliza <lf>setst_create</lf> para crear un conjunto de registros.
+
+li.Utiliza <lf>setpt_create</lf> para crear un conjunto de punteros.
+
+img(setst_vs_setpt.svg,640,.9).Conjuntos de registros y de punteros.
+Comparativa de conjuntos de registros y conjuntos de punteros.
+
+h2.Iteradores
+
+p.No podemos acceder a los elementos de un set mediante un índice aleatorio, como ocurría con los arrays. Los nodos están dispersos en diferentes zonas de memoria, lo que impide calcular la posición de un elemento concreto a partir de una dirección base. Un iterador no es más que un puntero dentro del set que actúa como marcador del elemento seleccionado actualmente <r>iterator</r>. A partir de una posición concreta, podemos desplazarnos al elemento anterior o posterior, pero nunca dar saltos arbitrarios. Podemos controlar la posición del iterador con diferentes funciones:
+
+img(iterator.svg,400,.6).Los iteradores nos permiten movernos por la estructura.
+Muestra el comportamiento de un puntero iterador dentro de un árbol de búsqueda.
+
+li.Utiliza <lf>setst_get</lf> para buscar un elemento. El iterador quedará fijado en él.
+
+li.Utiliza <lf>setst_next</lf> para desplazar el iterador al siguiente elemento.
+
+li.Utiliza <lf>setst_prev</lf> para desplazar el iterador al elemento anterior.
+
+li.Utiliza <lf>setst_first</lf> para desplazar el iterador al primer elemento del set.
+
+li.Utiliza <lf>setst_last</lf> para desplazar el iterador al último elemento del set.
+
+h2.Comparativa Arrays vs Sets
+
+p.Hemos realizado un test para ver el comportamiento de estos dos tipos de estructuras en situaciones reales, al margen de la mera teoría <r>arrsettest</r>. Se ha utilizado la estructura <c>Product</c> descrita en <r>createset</r>. Compararemos seis tipos de contenedores <c>ArrSt(Product)</c> y <c>ArrPt(Product)</c> (desordenados), <c>ArrSt(Product)</c> y <c>ArrPt(Product)</c> (ordenados), <c>SetSt(Product)</c> y <c>SetPt(Product)</c>.
+
+li.Los elementos se ordenarán por el campo <c>code</c> utilizando el método <c>i_compare</c> descrito en <r>createset</r>.
+
+li.Los elementos han sido creados previamente y residen en memoria. Los tiempos solo reflejan la gestión realizada por los contenedores.
+
+li.El campo <c>code</c> toma valores desde <c>"0"</c> hasta <c>"n-1"</c>, donde <c>n=100.000</c> es el número de elementos. Los elementos han sido previamente desordenados utilizando la función <lf>bmem_shuffle_n</lf>.
+
+li.Las pruebas se han realizado en una <b>Raspberry Pi 3 Model B</b> con NAppGUI compilado en versión Release (<lh>Configuraciones</lh>). Hemos elegido esta plataforma por su clara inferioridad técnica con respecto a otras. De esta forma la diferencia asintótica resulta más evidente.
+
+table(arrsettest).Resultados de la comparativa (en segundos).
+row.
+p.Operation
+p.ArrSt
+p.ArrPt
+p.ArrSt-Sort
+p.ArrPt-Sort
+p.SetSt
+p.SetPt
+row.
+p.Add(100k)
+p.0.006
+p.0.004
+p.27.600
+p.2.896
+p.0.159
+p.0.274
+row.
+p.Loop(100k)
+p.0.000
+p.0.000
+p.0.000
+p.0.000
+p.0.022
+p.0.025
+row.
+p.Search(100k)
+p.84.139
+p.588.080
+p.0.101
+p.0.218
+p.0.121
+p.0.232
+row.
+p.Sort(100k)
+p.0.085
+p.0.205
+p.-
+p.-
+p.-
+p.-
+row.
+p.Delete(100k)
+p.0.004
+p.0.003
+p.31.198
+p.3.064
+p.0.171
+p.0.253
+table.
+
+p.A la vista de estos datos, podemos llegar a las siguientes conclusiones:
+
+li.Las búsquedas lineales <c>O(n)</c> son tremendamente lentas.
+
+li.Mantener un array ordenado tras cada inserción o borrado es costoso. Es más eficiente añadir todos los elementos y luego ordenar, aunque esto no siempre será posible. Si los elementos entran o salen de forma arbitraria pero el conjunto debe siempre estar ordenado, es mejor utilizar Sets.
+
+li.Las estructuras basadas en registros son más eficientes en consultas, pero menos al insertar o borrar. No obstante, este test no incluye el tiempo de crear o liberar memoria dinámica, algo inherente a los contenedores de punteros.
+
+li.Iterar en arrays sale prácticamente gratis, pero iterar en sets tiene un pequeño coste debido a la lógica de salto entre nodos.
+
+li.No podemos decir que un contenedor sea mejor que otro en general. Dependerá de cada caso concreto.
+
+li.Para grupos pequeños (menos de 1000 elementos) las diferencias son prácticamente imperceptibles.
+
+li.Para grupos extremadamente pequeños (hasta 100 elementos) utilizar siempre arrays. La mejora asintótica de los Sets se ve empañada por la implementación mucho más eficiente de los Arrays.
+
+func(setst_create).Crea un set de registros vacío.
+fret(SetSt(type)*).El nuevo set.
+fpar(FPtr_compare,func_compare).Función para comparar dos elementos. <lh>Ordenar y buscar</lh>.
+fpar(,type).Tipo de objeto.
+
+func(setst_destroy).Destruye un set y todos sus elementos.
+fpar(SetSt(type)**,set).El set. Será puesto a <c>NULL</c> tras la destrucción.
+fpar(FPtr_remove,func_remove).Función que debe liberar la memoria asociada a los campos del objeto, pero no el objeto en si mismo <lh>Destructores</lh>. Si es <c>NULL</c> se liberará solo el set y no el contenido interno de los elementos.
+fpar(,type).Tipo de objeto.
+
+func(setst_size).Obtiene el número de elementos del set.
+fret(uint32_t).Número de elementos.
+fpar(const SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+
+func(setst_get).Busca un elemento en <c>O(logn)</c>. Es equivalente a <lf>arrst_bsearch</lf>. Si existe, el iterador interno de la estructura quedará fijado en él.
+fret(type*).Puntero al elemento si existe, o <c>NULL</c> si no.
+fpar(SetSt(type)*,set).El set.
+fpar(type*,key).Clave a buscar. Es un puntero a un objeto donde solo los campos relevantes de la búsqueda deben ser inicializados.
+fpar(,type).Tipo de objeto.
+fcode.
+Product key;
+Product *pr;
+key.id = 453;
+pr = setst_get(setst, &key, Product);
+fcode.
+fnote.<lh>Iteradores</lh>.
+
+func(setst_insert).Inserta un nuevo elemento en el set.
+fret(type*).Puntero al elemento insertado, que debe utilizarse para inicializar el objeto. Si ya existe un elemento con la misma clave, retorna <c>NULL</c>.
+fpar(SetSt(type)*,set).El set.
+fpar(type*,key).Clave a insertar. Es un puntero a un objeto donde solo los campos relevantes de la búsqueda deben ser inicializados.
+fpar(,type).Tipo de objeto.
+fnote.Insertar o eliminar elementos invalida el iterador interno del set <lh>Iteradores</lh>. Debes volver a inicializarlo con <lf>setst_first</lf>.
+fcode.
+Product *pr;
+Product key;
+key.id = 345;
+pr = setst_insert(setst, &key, Product);
+if (pr != NULL)
+    i_init(pr, 345, 100.45f);
+else
+    error("Already exists");
+fcode.
+
+func(setst_delete).Elimina un elemento del set.
+fret(bool_t).<c>TRUE</c> si el elemento ha sido eliminado, o <c>FALSE</c> si no existe un elemento con dicha clave.
+fpar(SetSt(type)*,set).El set.
+fpar(type*,key).Clave a eliminar. Es un puntero a un objeto donde solo los campos relevantes de la búsqueda deben ser inicializados.
+fpar(FPtr_remove,func_remove).Función 'remove'. Ver <lf>setst_destroy</lf>.
+fpar(,type).Tipo de objeto.
+fnote.Insertar o eliminar elementos invalida el iterador interno del set <lh>Iteradores</lh>. Debes inicializarlo con <lf>setst_first</lf>.
+fcode.
+Product key;
+key.id = 345;
+if (setst_delete(setst, &key, product_remove, Product) == FALSE)
+    error("Doesn't exists");
+fcode.
+
+func(setst_first).Obtiene el primer elemento del set e inicializa el iterador interno.
+fret(type*).Puntero al primer elemento o <c>NULL</c> si el set está vacío.
+fpar(SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fnote.<lh>Iteradores</lh>.
+
+func(setst_last).Obtiene el último elemento del set e inicializa el iterador interno.
+fret(type*).Puntero al último elemento o <c>NULL</c> si el set está vacío.
+fpar(SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fnote.<lh>Iteradores</lh>.
+
+func(setst_next).Obtiene el siguiente elemento del set, tras incrementar el iterador interno.
+fret(type*).Puntero al siguiente elemento o <c>NULL</c> si el iterador ha alcanzado el último.
+fpar(SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fnote.Utiliza <lf>setst_first</lf> para inicializar el iterador interno <lh>Iteradores</lh>.
+
+func(setst_prev).Obtiene el elemento anterior del set, tras decrementar el iterador interno.
+fret(type*).Puntero al elemento anterior o <c>NULL</c> si el iterador ha alcanzado el primero.
+fpar(SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fnote.Utiliza <lf>setst_last</lf> para inicializar el iterador interno en bucles revertidos <lh>Iteradores</lh>.
+
+func(setst_foreach).Recorre todos los elementos del set. Utiliza <lf>setst_fornext</lf> para cerrar el bucle.
+fpar(type*,elem).Nombre de la variable 'elemento' dentro del bucle. Añadiendo el sufijo <c>'_i'</c> obtenemos el índice.
+fpar(SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fcode.
+setst_foreach(product, set, Product)
+    bstd_printf("Position:%d, Id:%d\n", product_i, product->id);
+setst_fornext(product, set, Product)
+fcode.
+
+func(setst_fornext).Cierra el bucle abierto por <lf>setst_foreach</lf>, incrementando el iterador interno.
+fpar(type*,elem).Nombre de la variable 'elemento'. Debe ser el mismo que <c>setst_foreach</c>.
+fpar(SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+
+func(setst_foreach_rev).Recorre todos los elementos del set en orden inverso. Utiliza <lf>setst_forprev</lf> para cerrar el bucle.
+fpar(type*,elem).Nombre de la variable 'elemento' dentro del bucle. Añadiendo el sufijo <c>'_i'</c> obtenemos el índice.
+fpar(SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+fcode.
+// Now in reverse order
+setst_foreach_rev(product, set, Product)
+    bstd_printf("Position:%d, Id:%d\n", product_i, product->id);
+setst_forprev(product, set, Product)
+fcode.
+
+func(setst_forprev).Cierra el bucle abierto por <lf>setst_foreach_rev</lf>, decrementando el iterador interno.
+fpar(type*,elem).Nombre de la variable 'elemento'. Debe ser el mismo que <c>setst_foreach_rev</c>.
+fpar(SetSt(type)*,set).El set.
+fpar(,type).Tipo de objeto.
+

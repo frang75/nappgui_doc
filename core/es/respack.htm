@@ -1,0 +1,26 @@
+
+
+h1.Paquetes de recursos
+
+ep.Permite el acceso a paquetes de recursos. Más información en <lp>resources</lp>.
+
+func(respack_destroy).Destruye un paquete de recursos.
+fpar(ResPack**,pack).Paquete de recursos. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(respack_text).Obtiene un texto de un paquete de recursos.
+fret(const char_t*).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fpar(const ResPack*,pack).Paquete de recursos.
+fpar(const ResId,id).Identificador del recurso.
+
+func(respack_image).Obtiene una imagen de un paquete de recursos.
+fret(const Image*).Imagen.
+fpar(const ResPack*,pack).Paquete de recursos.
+fpar(const ResId,id).Identificador del recurso.
+fnote.Esta función es añadida por la librería <lp>draw2d</lp>, que es la que sabe manipular imágenes. No estará disponible para proyectos que dependan solo de <lp>core</lp>. En estos casos, es posible acceder al contenido del archivo de imagen mediante <lf>respack_file</lf>.
+
+func(respack_file).Obtiene un puntero al contenido de un archivo, incluido en un paquete de recursos.
+fret(const byte_t*).Puntero al contenido del archivo (bytes en bruto).
+fpar(const ResPack*,pack).Paquete de recursos.
+fpar(const ResId,id).Identificador del recurso.
+fpar(uint32_t*,size).Obtiene el tamaño del archivo en bytes.
+

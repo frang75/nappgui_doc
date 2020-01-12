@@ -1,0 +1,20 @@
+
+h1.Alternativa a STL 
+
+p.La <i>Standard Template Library</i> de C++ provee de contenedores y algoritmos genéricos como parte del lenguaje. El problema es que no se pueden utilizar desde código C "puro", por lo que NAppGUI proporciona una implementación de Arrays y Set al menos tan eficiente como las de las STL.
+
+code(text).Resultado en un i7-4970k Win10 x64
+NAppGUI Containers vs STL.
+- Created 2000000 elements of 328 bytes
+- Starting...
+- Add to ArrSt(Product) and sort: 2.160294
+- Add to vector<Product> and sort: 2.499203
+- Add to ArrPt(Product) and sort: 0.697777
+- Add to vector<Product*> and sort: 0.541828
+- Add to SetSt(Product): 2.386245
+- Add to set<Product>: 2.533197
+- Add to SetPt(Product): 2.861091
+- Add to set<Product*>: 2.919082
+code.
+
+codefile(howto/stlcmp/stlcmp.cpp).

@@ -1,0 +1,26 @@
+langrev.
+
+h1.Dates
+
+ep.Date manipulation functions.
+
+func(date_cmp).Compare two dates. The most recent date is considered greater.
+fret(int).Comparison result.
+fpar(const Date*,date1).First date to compare.
+fpar(const Date*,date2).Second date to compare.
+
+func(date_DD_MM_YYYY_HH_MM_SS).Convert a date to string, with the format <c>DD/MM/YYYY-HH:MM:SS</c>.
+fret(String*).String object with conversion.
+fpar(const Date*,date).Date.
+
+func(date_YYYY_MM_DD_HH_MM_SS).Convert a date to string, with the format <c>YYYY/MM/DD-HH:MM:SS</c>.
+fret(String*).String object with conversion.
+fpar(const Date*,date).Date.
+
+func(date_month_en).Get the name of the month, in English.
+fret(const char_t*).UTF8 string with the name (January, February, ...).
+fpar(const month_t,month).The month, usually obtained with <lf>btime_date</lf>.
+
+func(date_month_es).Get the name of the month, in Spanish.
+fret(const char_t*).UTF8 string with the name (Enero, Febrero, ...).
+fpar(const month_t,month).The month, usually obtained with <lf>btime_date</lf>.

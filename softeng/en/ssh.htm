@@ -1,0 +1,150 @@
+langrev.
+h1.Enable SSH
+
+# IMPORTANTE!!!!!
+# OJO!!!! Cuando en Windows no funciona el authorized_keys
+# https://stackoverflow.com/questions/16212816/setting-up-openssh-for-windows-using-public-key-authentication
+
+p.The basis of Continuous Integration is network communication or, more specifically, the possibility of executing commands remotely from one machine to another. Today the standard is SSH <i>(Secure Shell)</i>, a protocol and application that allows executing commands over a network, adding an encryption layer between sender and receiver <r>sshls</r> <r>ssh</r>. We must ensure that SSH is present and working on all machines of the <i>Build Grid</i>.
+
+code(text,sshls).Get the list of files from a remote machine using SSH.
+C:\Users>ssh fran@192.168.1.24 ls
+fran@192.168.1.24's password:
+Desktop
+Documents
+Downloads
+examples.desktop
+Music
+Pictures
+Public
+Templates
+Videos
+code.
+
+img(ssh.svg,480,.65).The SSH protocol encrypts the information exchanged by two nodes.
+Communication of two computers via SSH indicating the encryption of the information.
+
+h2.SSH in Windows
+
+p.Windows 10 includes support for SSH, but it is not active by default. You must activate it in <c>Settings->Apps->Manage Optional Features->Add a Feature->OpenSSH Client/Server</c> <r>sshwin</r>. To ensure that service is running, run <c>services.msc</c> and starts <c>OpenSSH SSH Server</c> if he is not running anymore.
+
+img(sshwin.png,480,.5).Activation of SSH in Windows.
+Capture SSH options in Windows 10.
+
+h2.SSH in macOS
+
+p.SSH is also included in Apple's operating systems. To activate it: 
+
+li.Opens <c>System Preferences</c>from the Apple menu and click on the <i>Sharing</i> panel.
+
+li.Activate the option <i>Remote Login</i> <r>sshmac</r>.
+
+li.This will instantly boot several services, including SFTP and SSH.
+
+p.For security reasons, SSH does not access all the bash shell environment variables in macOS. This can cause a remote command to fail, but typing from a terminal on the machine itself does work. For example, this occurs when trying to run <c>cmake</c> or <c>svn</c>remote form. To correct it:
+
+li.We add the necessary paths to the variable <c>PATH</c>in <c>/.ssh/environment</c>.
+
+code(text).Modification of <c>PATH</c>in <c>/.ssh/environment</c>
+PATH=$PATH:/bin:/usr/bin:/Applications/CMake.app/Contents/bin
+code.
+
+li.We edit the file <c>/etc/ssh/sshd_config</c>, enabling the variable <c>PermitUserEnvironment yes</c>.
+
+li.We stopped and re-launched the service by check <i>Remote Login</i> for <i>Sharing</i>.
+
+img(sshmac.png,-1,.55).SSH activation in macOS.
+Capture SSH options in macOS.
+
+h2.SSH in Linux
+
+p.By default, SSH is not included in Ubuntu. For this distribution and others based on Debian, the service is installed and activated with this command.
+
+code.
+sudo apt-get install openssh-server -y
+code.
+
+h2.SSH without password
+
+p.Once SSH is activated on all the machines in the network, we can already execute remote commands from the <i>Build Master</i> as we have seen in <r>sshls</r> . The problem is that SSH will continuously ask us for the password of the remote user, something that will hinder the automation of the CI system. To avoid this, we have to install the <i>rsa</i> certificate of the <i>Build Master</i> on all remote machines (the <i>Build Host</i> ) so that they recognize the issuer of the command and do not ask for a password.
+
+li.From the <i>Build Master</i>, open a terminal and type <c>ssh-keygen</c>. This will generate two <i>rsa</i> certificates in <c>.ssh</c> a private one, that will stay in the master and another public that will go to the host.
+
+code(text).Generating the rsa certificate in the Master.
+fran~>ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/fran/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/fran/.ssh/id_rsa.
+Your public key has been saved in /home/fran/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:Up6KjbnEV4Hgfo75YM393QdQsK3Z0aTNBz0DoirrW+c fran@192.168.1.24
+The key's randomart image is:
++---[RSA 2048]----+
+|    .      ..oo..|
+|   . . .  . .o.X.|
+|    . . o.  ..+ B|
+|   .   o.o  .+ ..|
+|    ..o.S   o..  |
+|   . %o=      .  |
+|    @.B...     . |
+|   o.=. o. . .  .|
+|    .oo  E. . .. |
++----[SHA256]-----+
+code.
+
+li.Copy the file <c>id_rsa.pub</c>in the user directory of each <i>Build Host</i>.
+
+code.Pass the rsa certificate from the Master to the Host
+cd .ssh
+scp id_rsa.pub fran@192.168.1.24:./.ssh
+code.
+
+li.Open a terminal on the Host and type:
+
+code.Installing the rsa certificate
+cd .ssh
+type id_rsa.pub >> authorized_keys   (Windows)
+...
+cd .ssh
+cat id_rsa.pub >> authorized_keys    (macOS/Linux)
+code.
+
+li.If everything went well, we can already execute a remote command without asking us for a password <r>remote</r>, since the SSH server running on the <i>Build Host</i> recognizes the <i>Build Master</i> computer.
+
+code(text).SSH without password.
+C:\Users>ssh fran@192.168.1.24 ls
+Desktop
+Documents
+Downloads
+examples.desktop
+Music
+Pictures
+Public
+Templates
+Videos
+code.
+
+img(remote.svg,-1,.65).Executing a command on a remote machine without using <i>password</i> .
+Ssh command on remote machine without password.
+
+h2.SSH from C
+
+p.The CI system must be able to launch SSH commands from the program itself instead of the terminal, in order to coordinate the <i>Build Host</i> to complete the tasks of the <i>Build Profile</i> . In <r>sshc</r> we see how to do it from the C language. In <lh>Launching processes</lh> you have more information about the NAppGUI multi-processing API.
+
+code(cpp,sshc).Executing an SSH command from a C procedure.
+Proc *proc = bproc_exec("ssh fran@192.168.1.24 ls", NULL, NULL);
+if (proc != NULL)
+{
+    byte_t buffer[512];
+    uint32_t rsize;
+    Stream *stm = stm_memory(1024);
+    while (bproc_read(proc, buffer, sizeof(buffer), &rsize, NULL) == TRUE)
+        stm_write(stm, buffer, rsize);
+
+    bproc_wait(proc);
+    bproc_close(&proc);
+    return stm;
+}
+code.

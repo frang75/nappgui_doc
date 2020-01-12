@@ -1,0 +1,27 @@
+
+h1.ImageView
+
+p.Los <b>ImageView</b> son vistas especializadas en visualizar imágenes y animaciones <b>GIF</b>.
+
+func(imageview_create).Crea un control de vista de imágenes.
+fret(ImageView*).La vista de imagen.
+
+func(imageview_size).Establece el tamaño por defecto del control.
+fpar(ImageView*,view).La vista.
+fpar(const S2Df,size).El tamaño.
+
+func(imageview_scale).Establece el escalado a aplicar a la imagen.
+fpar(ImageView*,view).La vista.
+fpar(const scale_t,scale).El escalado.
+
+func(imageview_image).Establece la imagen que se mostrará en el control.
+fpar(ImageView*,view).La vista.
+fpar(const Image*,image).La imagen a mostrar.
+
+func(imageview_OnClick).Establece un manejador para el evento clic sobre la imagen.
+fpar(ImageView*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará tras hacer clic.
+
+func(imageview_OnOverDraw).Permite dibujar un <i>overlay</i> sobre la imagen cuando el ratón esté encima de ella.
+fpar(ImageView*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando el ratón esté sobre la imagen. Aquí incluiremos el código de dibujo adicional.

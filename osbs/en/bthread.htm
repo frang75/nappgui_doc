@@ -1,0 +1,187 @@
+langrev.
+h1.Threads
+
+ep.The <i>threads</i> are parts of the same program that can run in parallel.
+
+p.The <b>threads</b> are different execution paths within the same process <r>threads</r>. They are also known as <b>light processes</b>, since they are more agile to create and manage than the processes themselves. They share code and memory space with the main program, so it is very easy to exchange information between them through memory variables. A thread starts its execution in a method known as <i>thread_main</i> and, at the moment it is launched, it runs in parallel with the main thread. Like the processes, they are objects controlled by the core of the system that will dictate, ultimately, whether the threads will be executed in another CPU core <i>(true multitasking)</i> or will share it <i>(context switch)</i>. 
+
+img(threads.svg,320,.45).A process with multiple threads of execution.
+Schematic of a process with multiple execution threads.
+
+h2.Throwing threads
+
+p.Each call to <lf>bthread_create</lf> will create a new thread in parallel starting at the function passed as a parameter <i>(thread_main)</i>. The "natural" way to end it is by returning from <i>thread_main</i>, although it is possible to abort it from the main thread.
+
+code.Basic code to launch a parallel execution thread.
+static uint32_t i_thread(ThData *data)
+{
+    // Do something
+    ...
+    // Thread execution ends
+    return 0;
+}
+
+Thread *thread = bthread_create(i_thread, data, ThData);
+// Main thread will continue here
+// Second thread will run 'i_thread'
+code.
+
+h2.Shared variables
+
+p.Each new thread has its own <lh>Stack Segment</lh> therefore, all automatic variables, function calls and dynamic allocations will be private to said thread. But it can also receive global data from the process through the <i>thread_main</i> <c>data</c> parameter. We must be careful when accessing global data through multiple concurrent threads, since modifications made by other threads can alter the logical code execution, producing errors that are very difficult to debug. The program <r>badcode</r> is correct for single-thread programs, but if the variable <c>vector</c> is accessed by two simultaneous threads, can lead to a <i>Segmentatin Fault</i> error if thread-1 frees memory while thread-2 is executing the loop.
+
+code(cpp,badcode).Dangerous access to shared variables.
+if (shared->vector != NULL)
+{
+    shared->total = 0;
+    for(i = 0; i < shared->n; i++)
+        shared->total += shared->vector[i];
+    bmem_free(shared->vector);
+    shared->vector = NULL;
+}
+code.
+
+p.To avoid this problem, we will have to protect the access to shared variables through a <lt>Mutex</lt> <r>okcode</r>. This <lp>bmutex</lp> mechanism guarantees that only one thread can access the resource in a moment of time. A thread will be stopped if it intends to execute the code located between <lf>bmutex_lock</lf> and <lf>bmutex_unlock</lf> if another thread is within this <i>critical section</i>.
+
+code(cpp,okcode).Secure access to shared variables.
+bmutex_lock(shared->mutex);
+if (shared->vector != NULL)
+{
+    shared->total = 0;
+    for(i = 0; i < shared->n; i++)
+        shared->total += shared->vector[i];
+    bmem_free(shared->vector);
+    shared->vector = NULL;
+}
+bmutex_unlock(shared->mutex);
+code.
+
+h2.Multi-thread example
+
+p.The tricky part of multi-threaded programming is to decompose a solution into parts that can run in parallel and organize the data structures so that this can be carried out in the most balanced way possible. In <r>threadlist</r> the program will run four times faster (x4) since a perfect division of the problem has been made <r>multi_vector</r>. This is just a theoretical example and this result will be very difficult to achieve in real situations. We must also minimize the number of shared variables and the time of the critical sections, otherwise the possible inter-blocks will reduce the gain.
+
+img(multi_vector.svg,380,.55).Collaboration of four threads in a vector calculation.
+Schematic of several threads collaborating in the calculation of a vector.
+
+code(cpp,threadlist).Multi-threaded processing of a very large vector.
+typedef struct _app_t App;
+typedef struct _thdata_t ThData;
+
+struct _app_t
+{
+    uint32_t total;
+    uint32_t n;
+    uint32_t *elems;
+    Mutex *mutex;
+};
+
+struct _thdata_t
+{
+    uint32_t thread_id;
+    uint32_t start;
+    uint32_t end;
+    uint64_t time;
+    App *app;
+};
+
+static uint32_t i_thead(ThData *data)
+{
+    uint32_t i, total = 0;
+    uint64_t t1 = btime_now();
+    for (i = data->start; i < data->end; ++i)
+    {
+        // Simulates processing
+        uint32_t time = bmath_randi(0, 100);
+        bthread_sleep(time);
+        total += data->app->elems[i];
+    }
+
+    // Mutual exclusion access to shared variable 'total'
+    bmutex_lock(data->app->mutex);
+    data->app->total += total;
+    bmutex_unlock(data->app->mutex);
+    data->time = (btime_now() - t1) / 1000;
+    return data->thread_id;
+}
+
+// Threads creating function
+uint32_t i, m;
+uint64_t t;
+App app;
+ThData thdata[4];
+Thread *thread[4];
+
+// App data vector
+i_init_data(&app);
+app.mutex = bmutex_create();
+m = app.n / 4;
+
+// Thread data
+for (i = 0; i < 4; ++i)
+{
+    thdata[i].thread_id = i;
+    thdata[i].app = &app;
+    thdata[i].start = i * m;
+    thdata[i].end = (i + 1) * m;
+}
+
+// Launching threads
+t = btime_now();
+for (i = 0; i < 4; ++i)
+    thread[i] = bthread_create(i_thead, &thdata[i], ThData);
+
+// Wait for threads end
+for (i = 0; i < 4; ++i)
+{
+    uint32_t thid = bthread_wait(thread[i]);
+    bstd_printf("Thread %d finished in %d ms.\n", thid, thdata[thid].time);
+    bthread_close(&thread[i]);
+}
+
+// Process total time
+t = (btime_now() - t) / 1000;
+bstd_printf("Proccessing result = %d in %d ms.\n", app.total, t);
+
+bmutex_close(&app.mutex);
+code.
+
+code(text,thresult).Resultado.
+Thread 0 finished in 13339 ms.
+Thread 1 finished in 12506 ms.
+Thread 2 finished in 12521 ms.
+Thread 3 finished in 12999 ms.
+Proccessing result = 499500 in 13344 ms.
+code.
+
+func(bthread_create).Create a new execution thread, which starts in <c>thmain</c>.
+fret(Thread*).Thread handle. If the function fails, return <c>NULL</c>.
+fpar(FPtr_thread_main,thmain).The thread start function <i>thread_main</i>. Shared data can be passed through the <i>data</i> pointer.
+fpar(type*,data).Data passed as a parameter to <c>thmain</c>.
+fpar(,type).Type of <c>data</c>.
+fnote.The thread will run in parallel until <c>thmain</c> return or call <lf>bthread_cancel</lf>. <lh>Throwing threads</lh>.
+
+func(bthread_current).Returns the handler of the current thread, that is, the one that is running when this function is called.
+fret(Thread*).Thread handler.
+
+func(bthread_close).Close the thread handler and free resources.
+fpar(Thread**,thread).Thread handle. It will be put to <c>NULL</c> after closing.
+fnote.If the thread is still running, this function does not finish it. Like any other object, a thread must always be closed, even if it has already finished its execution. <lh>Throwing threads</lh>.
+
+func(bthread_cancel).Force a thread termination.
+fpar(Thread*,thread).Thread handler.
+fnote.<b>It is not recommended to call this function</b>. There will be no "clean" exit of the thread. If it is within a critical section, it will not be released. Neither will it release the dynamic memory reserved privately by the thread. The correct way to end a thread of execution is to return <c>thmain</c>. Shared variables can be used (<lp>bmutex</lp>) to indicate to a thread that it should end cleanly.
+
+func(bthread_wait).Stops the thread that calls this function until <c>thread</c> finishes its execution.
+fret(uint32_t).The thread return value. If an error occurs, return <lt>UINT32_MAX</lt>.
+fpar(Thread*,thread).Thread handle to which we must wait.
+
+func(bthread_finish).Check if the thread is still running.
+fret(bool_t).<c>TRUE</c> if the thread has finished, <c>FALSE</c> otherwise.
+fpar(Thread*,thread).Thread handler.
+fpar(uint32_t*,code).The return value of the <i>thmain</i> function (if it has ended). Can be <c>NULL</c>.
+fnote.This function returns immediately.
+
+func(bthread_sleep).Suspends the execution of the current thread (the one that calls this function) for a certain number of milliseconds.
+fpar(const uint32_t,milliseconds).Time interval (in milliseconds) that the suspension will last.
+fnote.Performs a "passive" suspension, where no "empty loop" will be executed. The thread is dropped by the <i>scheduler</i> and reactivated later.
+

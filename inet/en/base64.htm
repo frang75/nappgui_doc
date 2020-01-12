@@ -1,0 +1,24 @@
+langrev.
+h1.Base64
+
+func(b64_encoded_size).Get the number of bytes needed to encode a memory block in format <b>base64</b>.
+fret(uint32_t).Base64 size.
+fpar(const uint32_t,data_size).The original block size.
+
+func(b64_decoded_size).Get the number of bytes needed to decode a block of memory in <b>base64</b> format.
+fret(uint32_t).The size in bytes.
+fpar(const uint32_t,data_size).The block size encoded in base64.
+
+func(b64_encode).Encode a block of memory in <b>base64</b>.
+fret(uint32_t).The size in bytes.
+fpar(const byte_t*,data).The data block.
+fpar(const uint32_t,size).Block size.
+fpar(char_t*,base64).The buffer where to store the result.
+fnote.The buffer <c>base64</c> must be at least the size returned by <lf>b64_encoded_size</lf>.
+
+func(b64_decode).De-encode a block <b>base64</b>.
+fret(uint32_t).The size in bytes.
+fpar(const char_t*,base64).The base64 block.
+fpar(const uint32_t,size).Block size.
+fpar(byte_t*,data).The buffer where to store the result.
+fnote.The buffer <c>data</c> must be at least the size returned by <lf>b64_decoded_size</lf>.

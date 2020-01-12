@@ -1,0 +1,30 @@
+langrev.
+h1.Common dialogs
+
+p.Common dialogs are default windows provided by the operating system to perform daily tasks such as: Open files <r>file_explorer_windows</r>, select colors, fonts, etc. Its use is doubly beneficial. On the one hand we avoid programming them as part of the application and, on the other, we take advantage of the user's previous knowledge since they will surely have been used in other programs.
+
+img(file_explorer_windows.png).File explorer in Windows.
+File Explorer Capture in Windows.
+
+img(file_explorer_macos.png).File explorer in macOS.
+File Explorer Capture in macOS.
+
+img(file_explorer_linux.png).File explorer in Linux.
+File Explorer Capture in Linux.
+
+func(comwin_open_file).Launch the open file dialog.
+fret(const char_t*).The name of the selected file or <c>NULL</c> if the user has aborted the dialog.
+fpar(Window*,parent).Parent window.
+fpar(const char_t**,ftypes).File types for the filter.
+fpar(const uint32_t,size).Number of file types.
+fpar(const char_t*,start_dir).Start directory of the dialog. It can be <c>NULL</c>.
+fnote.It will be launched in <b>modal</b>. <c>parent</c> will remain locked until the dialog is accepted.
+
+func(comwin_save_file).Launch the save file dialog.
+fret(const char_t*).The name of the selected file or <c> NULL </c> if the user has aborted the dialog.
+fpar(Window*,parent).Parent window.
+fpar(const char_t**,ftypes).File types for the filter.
+fpar(const uint32_t,size).Number of file types.
+fpar(const char_t*,start_dir).Start directory of the dialog. It can be <c>NULL</c>.
+fnote.It will be launched <b>modal</b>. <c>parent</c> will remain locked until the dialog is accepted.
+

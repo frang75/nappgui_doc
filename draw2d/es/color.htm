@@ -1,0 +1,176 @@
+
+h1.Colores
+
+p.Los colores en NAppGUI se codifican mediante un entero de 32 bits con los cuatro canales RGBA en Little-Endian: El rojo en el byte 0, verde en el 1, azul en el 2 y alfa (o transparencia) en el 3 <r>color_components</r>. En el caso particular de que el byte 3 sea igual a 0 (totalmente transparente), los tres primeros bytes no contendrán información RGB, sino un índice a un color especial.
+
+img(color_components.svg,360,.5).Estructura del tipo <lt>color_t</lt>.
+Entero de 32bits representando un valor RGBA.
+
+p.Puedes establecer los valores RGBA manipulando directamente los bits de una variable <lt>color_t</lt> o utilizar la función <lf>color_rgb</lf>. No obstante debes tener en cuenta, a la hora de utilizar colores en interfaces de usuario, que los valores RGB no suelen ser del todo "portables". Nuestro software debe estar preparado para correr en plataformas con diferentes temas de escritorio. Por ejemplo, en <r>labelbg</r> hemos cambiado el color de fondo de algunos componentes <lt>Label</lt>. El resultado se ve bien con temas claros, pero con temas oscuros se confunde con el color de texto predeterminado <r>rgb_effect</r>.
+
+code(cpp,labelbg).Cambio del color de fondo en <lt>Label</lt>.
+Label *label1 = label_create();
+Label *label2 = label_create();
+Label *label3 = label_create();
+label_text(label1, i_LABEL_01);
+label_text(label2, i_LABEL_02);
+label_text(label3, i_LABEL_03);
+label_bgcolor(label1, color_rgb(192, 255, 255));
+label_bgcolor(label2, color_rgb(255, 192, 255));
+label_bgcolor(label3, color_rgb(255, 255, 192));
+code.
+
+img(rgb_effect.png,605,.65).Portabilidad de interfaces con  colores RGB fijos.
+Comparativa de establecer colores RGB en temas de escritorio claros y oscuros.
+
+p.Para paliar este efecto, podemos establecer dos versiones alternativas de un mismo color: Una para temas claros y otra para temas oscuros <r>coloralt</r>. El valor RGB se hará efectivo en tiempo de ejecución en función del estilo de la ventana <r>color_alternative</r>.
+
+code(cpp,coloralt).Colores alternativos para temas oscuros.
+Label *label1 = label_create();
+Label *label2 = label_create();
+Label *label3 = label_create();
+color_t c1 = color_alt(color_rgb(192, 255, 255), color_rgb(48, 112, 112));
+color_t c2 = color_alt(color_rgb(255, 192, 255), color_rgb(128, 48, 112));
+color_t c3 = color_alt(color_rgb(255, 255, 192), color_rgb(112, 112, 48));
+label_text(label1, i_LABEL_01);
+label_text(label2, i_LABEL_02);
+label_text(label3, i_LABEL_03);
+label_bgcolor(label1, c1);
+label_bgcolor(label2, c2);
+label_bgcolor(label3, c3);
+code.
+
+img(color_alternative.png,605,.65).Adaptación de colores alternativos para entornos de ventanas oscuros.
+Ventana de interfaz en un tema de escritorio oscuro.
+
+p.NAppGUI también proveé acceso a una serie de colores predeterminados del sistema. Por ejemplo, <lt>kCOLOR_LABEL</lt> indica el color de las etiquetas de texto en función del tema activo. El uso de estos colores nos será muy útil a la hora de crear controles personalizados que se integren perfectamente en la estética del sistema sin preocuparnos por cuestiones de portabilidad. En <lp>colorview</lp> tienes una aplicación de ejemplo que muestra estos colores en función de la plataforma donde se ejecute el programa <r>colorview_light</r> <r>colorview_dark</r>.
+
+img(colorview_light.png,520,.65).Vista de colores en temas claros.
+Captura de una aplicación que muestra los colores del sistema en un tema de escritorio claro.
+
+img(colorview_dark.png,520,.65).Vista de colores en temas oscuros.
+Captura de una aplicación que muestra los colores del sistema en un tema de escritorio oscuro.
+
+const(color_t,kCOLOR_TRANSPARENT).Color totalmente transparente, ausencia de color o color nulo.
+
+const(color_t,kCOLOR_LABEL).Color por defecto de las etiquetas de texto <lt>Label</lt>.
+
+const(color_t,kCOLOR_VIEW).Color de fondo en controles  <lt>View</lt>.
+
+const(color_t,kCOLOR_LINE).Color de líneas en tablas o elementos separadores de ventanas.
+
+const(color_t,kCOLOR_LINK).Color del texto en hiperenlaces.
+
+const(color_t,kCOLOR_TEXT).Color del texto en tablas o controles.
+
+const(color_t,kCOLOR_SELTEXT).Color del texto seleccionado en tablas o controles.
+
+const(color_t,kCOLOR_BKTEXT).Color del fondo de texto en tablas o controles.
+
+const(color_t,kCOLOR_BKSELTEXT).Color del fondo de texto seleccionado en tablas o controles.
+
+const(color_t,kCOLOR_HEADER).Color del texto en cabeceras de tablas.
+
+const(color_t,kCOLOR_ROW1).Color del fondo de las filas impares en tablas o componentes similares.
+
+const(color_t,kCOLOR_ROW2).Color del fondo de las filas pares en tablas o componentes similares.
+
+const(color_t,kCOLOR_BLACK).Color NEGRO rgb(0,0,0).
+
+const(color_t,kCOLOR_WHITE).Color BLANCO rgb(255,255,255).
+
+const(color_t,kCOLOR_RED).Color ROJO rgb(255,0,0).
+
+const(color_t,kCOLOR_GREEN).Color VERDE rgb(0,255,0).
+
+const(color_t,kCOLOR_BLUE).Color AZUL rgb(0,0,255).
+
+const(color_t,kCOLOR_YELLOW).Color AMARILLO rgb(255,255,0).
+
+const(color_t,kCOLOR_CYAN).Color CIANO rgb(0,255,255).
+
+const(color_t,kCOLOR_MAGENTA).Color MAGENTA rgb(255,0,255).
+
+func(color_rgb).Crea un color a partir de los canales <b>R</b> (red), <b>G</b> (green) y <b>B</b> (blue).
+fret(color_t).Color.
+fpar(const uint8_t,r).El canal rojo.
+fpar(const uint8_t,g).El canal verde.
+fpar(const uint8_t,b).El canal azul.
+fnote.El canal alpha se establece a 255 (totalmente opaco).
+
+func(color_rgba).Crea un color a partir de los canales <b>R</b> (red), <b>G</b> (green), <b>B</b> (blue) y <b>A</b> (alpha).
+fret(color_t).Color.
+fpar(const uint8_t,r).El canal rojo.
+fpar(const uint8_t,g).El canal verde.
+fpar(const uint8_t,b).El canal azul.
+fpar(const uint8_t,a).El canal alpha (transparencia).
+fnote.No se admite <c>a=0</c>, utilizar <lt>kCOLOR_TRANSPARENT</lt> en esos casos.
+
+func(color_rgbaf).Crea un color a partir de los canales RGBA normalizados de 0 a 1.
+fret(color_t).Color.
+fpar(const real32_t,r).El canal rojo.
+fpar(const real32_t,g).El canal verde.
+fpar(const real32_t,b).El canal azul.
+fpar(const real32_t,a).El canal alpha (transparencia).
+fnote.No se admite <c>a=0</c>, utilizar <lt>kCOLOR_TRANSPARENT</lt> en esos casos.
+
+func(color_bgr).Crea un color a partir de un valor de 32 bits BGR. El byte 0 corresponde al canal <b>B</b>, el 1 al <b>G</b> y el 2 al <b>R</b>. El byte de mayor orden se ignora (se fija a 255).
+fret(color_t).Color.
+fpar(const uint32_t,bgr).El valor bgr de 32bits.
+fnote.Este orden de bytes es el típico en colores Web.
+
+func(color_html).Crea un color a partir de una cadena en formato HTML o CSS.
+fret(color_t).El color transformado a RGB.
+fpar(const char_t*,html).La cadena de texto con el color HTML.
+fcode.
+color_t c1 = color_html("#FF0000"); // Red
+color_t c2 = color_html("#000080"); // Navy
+fcode.
+
+func(color_alt).Crea un color con dos versiones alternativas.
+fret(color_t).Color.
+fpar(const color_t,light_color).Color para temas CLAROS de escritorio.
+fpar(const color_t,dark_color).Color para temas OSCUROS de escritorio.
+fnote.El sistema establecerá el color final en función de la "claridad" de los colores del gestor de ventanas (Light/Dark). NO SE PERMITEN colores alternativos anidados. Los valores <c>light</c> y <c>dark</c> deben ser colores RGB o de sistema.
+
+func(color_to_html).Convierte un color al formato HTML o CSS (#RRGGBB).
+fpar(const color_t,color).El color a convertir.
+fpar(char_t*,html).Búfer donde escribir el resultado.
+fpar(const uint32_t,size).Tamaño del búfer resultado.
+
+func(color_get_rgb).Devuelve los valores RGB del color.
+fpar(const color_t,color).Color.
+fpar(uint8_t*,r).El canal rojo.
+fpar(uint8_t*,g).El canal verde.
+fpar(uint8_t*,b).El canal azul.
+fnote.En colores de sistema o indexados, hace efectivo el valor RGB.
+
+func(color_get_rgbf).Devuelve los valores RGB del color, normalizados de 0 a 1.
+fpar(const color_t,color).Color.
+fpar(real32_t*,r).El canal rojo.
+fpar(real32_t*,g).El canal verde.
+fpar(real32_t*,b).El canal azul.
+fnote.En colores de sistema o indexados, hace efectivo el valor RGB.
+
+func(color_get_rgba).Devuelve los valores RGBA del color.
+fpar(const color_t,color).Color.
+fpar(uint8_t*,r).El canal rojo.
+fpar(uint8_t*,g).El canal verde.
+fpar(uint8_t*,b).El canal azul.
+fpar(uint8_t*,a).El canal alfa (transparencia).
+fnote.En colores de sistema o indexados, hace efectivo el valor RGBA.
+
+func(color_get_rgbaf).Devuelve los valores RGBA del color, normalizados de 0 a 1.
+fpar(const color_t,color).Color.
+fpar(real32_t*,r).El canal rojo.
+fpar(real32_t*,g).El canal verde.
+fpar(real32_t*,b).El canal azul.
+fpar(real32_t*,a).El canal alfa (transparencia).
+fnote.En colores de sistema o indexados, hace efectivo el valor RGBA.
+
+func(color_get_alpha).Extrae el componente alfa (transparencia) del color.
+fret(uint8_t).El componente alfa. Si es igual 0 significa que el color es indexado (no contiene valores RGB).
+
+func(color_dark_mode).Determina si el entorno de ventanas tiene un tema claro u oscuro.
+fret(bool_t).<c>TRUE</c> para <i>Dark mode</i>, <c>FALSE</c> para <i>light mode</i>.
+fnote.Se calcula en función del color del fondo de las ventanas.

@@ -1,0 +1,84 @@
+
+h1.Label
+
+p.Los controles <b>Label</b> sirven para insertar pequeños bloques de texto en ventanas y formularios. Son de formato uniforme, es decir, los atributos de fuente y color se aplicarán a la totalidad del texto. En la mayoría de ocasiones el contenido estará limitado a una sola línea, aunque es posible mostrar bloques que se extiendan en varias líneas. El tamaño del control se ajustará al del texto que contiene <r>label_control</r>. En <lh>¡Hola Label!</lh> tienes un ejemplo de uso.
+
+img(label_control.png,0,.75).Control Label. Se ha asignado color de fondo para apreciar los límites del control.
+Captura de una ventana con varios controles label.
+
+p.En el caso que la columna del <lt>Layout</lt> tenga un ancho menor que el texto, se mostrarán unos puntos (elípsis) indicando que el texto ha sido cortado <r>label_fixed_width</r>, salvo en labels multilínea, que se expandirán verticalmente para dar cabida a todo el texto <r>label_multiline</r>.
+
+li.Utiliza <lf>label_create</lf> para crear un control de texto.
+
+li.Utiliza <lf>label_multiline</lf> para crear un control multilínea.
+
+li.Utiliza <lf>label_align</lf> para establecer la alineación interna del texto dentro del control.
+
+img(label_fixed_width.png,0,.5).Ajuste del texto al reducir el ancho del control.
+Controles label con el ancho menor que el texto.
+
+img(label_multiline.png,0,.5).Los Labels multilínea se expandirán verticalmente para dar cabida a todo el texto.
+Controles label multilínea.
+
+p.En <r>simple_form</r> tenemos un ejemplo del uso de <i>Label</i> en formularios. Si fuera necesario, podemos hacer que los textos sean sensibles al ratón variando su estilo y colores <r>mouse_label</r>.  
+
+li.Utiliza <lf>label_style_over</lf> para cambiar el estilo de la fuente.
+
+li.Utiliza <lf>label_color_over</lf> para cambiar color del texto.
+
+li.Utiliza <lf>label_bgcolor_over</lf> para cambiar color del fondo.
+
+li.Utiliza <lf>label_OnClick</lf> para responder a un clic en el texto.
+
+img(simple_form.png,0,.5).Uso de <i>Label</i> simples y multilínea en formularios.
+Captura de un sencillo formulario.
+
+img(mouse_label.png,0,.35).Controles <i>Label</i> sensibles al ratón.
+Varias etiquetas de texto con el puntero del ratón sobre una de ellas.
+
+func(label_create).Crea un control de texto.
+fret(Label*).El nuevo Label.
+
+func(label_multiline).Crea un control de texto multilínea.
+fret(Label*).El nuevo Label.
+
+func(label_OnClick).Establece el manejador del evento <c>OnClick</c>.
+fpar(Label*,label).El Label.
+fpar(Listener*,listener).Manejador del evento.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(label_text).Establece el texto que mostrará la etiqueta.
+fpar(Label*,label).El Label.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(label_font).Establece la fuente del texto.
+fpar(Label*,label).El Label.
+fpar(const Font*,font).Fuente tipográfica.
+
+func(label_style_over).Establece los modificadores de fuente, cuando el ratón está sobre el control.
+fpar(Label*,label).El Label.
+fpar(const uint32_t,style).Combinación de valores <lt>fstyle_t</lt>.
+
+func(label_align).Establece la alineación horizontal del texto con respecto al tamaño del control.
+fpar(Label*,label).El Label.
+fpar(const align_t,align).La alineación.
+
+func(label_color).Establece el color del texto.
+fpar(Label*,label).El Label.
+fpar(const color_t,color).El color.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(label_color_over).Establece el color del texto, cuando el ratón está sobre el control.
+fpar(Label*,label).El Label.
+fpar(const color_t,color).El color.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(label_bgcolor).Establece el color de fondo del texto.
+fpar(Label*,label).El Label.
+fpar(const color_t,color).El color.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(label_bgcolor_over).Establece el color de fondo del texto, cuando el ratón está sobre el control.
+fpar(Label*,label).El Label.
+fpar(const color_t,color).El color.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.

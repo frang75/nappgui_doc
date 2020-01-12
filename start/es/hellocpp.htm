@@ -1,0 +1,335 @@
+
+h1.¡Hola, C++!
+
+desc.Escribiremos un ¡Hola Mundo! en C++ con interfaz gráfica, paso a paso.
+
+ep.Los servidores web están escritos en C y, si no lo están, están escritos en Java o C++, que son derivados de C, o en Python o Ruby, que se implementan en C.
+<i>Rob Pike</i>
+
+p.La programación orientada a objetos (encapsulación, herencia y polimorfismo) es una herramienta muy poderosa para modelar cierto tipo de problemas. Sin embargo, en NAppGUI creemos que es incorrecto imponer una jerarquía de clases a nivel de SDK, ya que este es un nivel demasiado bajo. El SDK está más cerca del sistema operativo y de la máquina que de los problemas del mundo real resueltos por las aplicaciones, donde una estrategia orientada a objetos puede ser más acertada.
+
+p.Aunque NAppGUI ha sido diseñado para crear aplicaciones en C "puro", es posible utilizar C++ o combinar ambos lenguajes. Daremos algunos consejos, portando nuestra aplicación <lp>hello</lp> a C++ <r>hello_cpp_win</r>.
+
+img2(hello_cpp_win.png, hello_cpp_macos.png).Migración de <i>¡Hola, mundo!</i> a C++.
+Captura del programa ¡Hola, mundo! en C++, versión Windows.
+Captura del programa ¡Hola, mundo! en C++, versión macOS.
+
+h2.Encapsulación
+
+p.NAppGUI no impone ninguna jerarquía de clases, lo que deja al programador la libertad de realizar la encapsulación mediante sus propias clases. Evidentemente, dado que C++ incluye a C, podremos llamar a cualquier función C del SDK dentro de una función miembro. Por ejemplo, podemos encapsular la ventana principal de esta manera.
+
+code.
+class MainWindow
+{
+public:
+    MainWindow();
+    ~MainWindow();
+
+private:
+    static void i_OnClose(MainWindow *window, Event *e);
+    static void i_OnButton(MainWindow *window, Event *e);
+    Panel *i_panel(void);
+
+    Window *window;
+    TextView *text;
+    uint32_t clicks;
+};
+code.
+
+p.Como puedes ver, con respecto a la versión C, <c>i_panel</c> ya no necesita parámetros, ya que usa el puntero implícito <c>this</c> para acceder a los miembros de la clase.
+
+h2.Callbacks de clase
+
+p.Los manejadores de evento son funciones C cuyo primer parámetro es un puntero al objeto que recibe el mensaje. Esto funciona de la misma manera usando funciones estáticas dentro de una clase de C++:
+
+code.
+...
+static void i_OnClose(MainWindow *window, Event *e);
+...
+window_OnClose(this->window, listener(this, i_OnClose, MainWindow));
+...
+code.
+
+p.Sin embargo, es posible que queramos utilizar funciones miembro como manejadores del evento, usando el puntero <b>this</b> como receptor. Para hacer esto, derivamos nuestra <c>MainWindow</c> de la interfaz <c>IListener</c> y usamos la macro <lf>listen</lf> en lugar de <c>listener()</c>.
+
+code.
+class MainWindow : public IListener
+{
+...
+    void i_OnClose(Event *e);
+    void i_OnButton(Event *e);
+...
+};
+
+void MainWindow::i_OnButton(Event *e)
+{
+    String *msg = str_printf("Button click (%d)\n", this->clicks);
+    ...
+}
+...
+button_OnClick(button, listen(this, MainWindow, i_OnButton));
+...
+code.
+
+bq.<c>IListener</c> es una interfaz C++ que permite utilizar métodos miembro de una clase como manejadores de evento.
+
+p.También es posible dirigir el evento a un objeto diferente (y de diferente clase) a la dueña control. Para ello indicamos el receptor como primer parámetro de <c>listen</c>, como vemos a continuación. La pulsación del botón de cierre será procesada en la clase <c>App</c> y no en <c>MainWindow</c>.
+
+code.
+class App : public IListener
+{
+public:
+    App();
+    ~App();
+    void i_OnClose(Event *e);
+
+private:
+    MainWindow *main_window;
+};
+
+class MainWindow : public IListener
+{
+public:
+    MainWindow(App *app);
+}
+
+MainWindow::MainWindow(App *app)
+{
+   ...
+   window_OnClose(this->window, listen(app, App, i_OnClose));
+   ...
+}
+
+void App::i_OnClose(Event *e)
+{
+    osapp_finish();
+}
+code.
+
+bq.Podemos establecer como receptor de eventos, cualquier objeto que implemente la interfaz <c>IListener</c>.
+
+h2.Combinar módulos C y C++
+
+p.Un proyecto C/C++ selecciona el compilador en función de la extensión del archivo. Para <b>*.c</b> se utilizará el compilador C y para <b>*.cpp</b> el compilador C++. El mismo proyecto puede combinar módulos en ambos lenguajes si consideramos lo siguiente.
+
+h3.Uso de C desde C++
+
+p.No hay problema si las declaraciones de funciones la cabecera de C están entre las macros: <c>__EXTERN_C</c> y <c>__END_C</c>.
+
+code.
+__EXTERN_C
+
+real32_t mymaths_add(const real32_t a, const real32_t b);
+
+real32_t mymaths_sub(const real32_t a, const real32_t b);
+
+__END_C
+code.
+
+bq.<c>__EXTERN_C</c> y <c>__END_C</c> son alias para <c>extern "C" {}</c>. Esto le dice al compilador de C ++ que no use <l>https://en.wikipedia.org/wiki/Name_mangling''name mangling</l> con funciones en C.
+
+h3.Uso de C++ desde C
+
+p.C no entiende la palabra clave <c>class</c> y dará un error de compilación al incluir cabeceras de C++. Es necesario definir una interfaz en C sobre código C++.
+
+code.mywindow.h
+__EXTERN_C
+
+typedef struct _mywin_t MyWindow;
+
+MyWindow *mywindow_create();
+
+void mywindow_move(MyWindow *window, const real32_t x, const real32_t y);
+
+__END_C
+code.
+
+code.mywindow.cpp
+class MainWindow
+{
+public:
+    MainWindow();
+    void move(const real32_t x, const real32_t y);
+};
+
+MyWindow *mywindow_create()
+{
+    return (MyWindow*)new MainWindow();
+}
+
+void mywindow_move(MyWindow *window, const real32_t x, const real32_t y)
+{
+    ((MainWindow*)window)->move(x, y);
+}
+code.
+
+h2.Sobrecarga de new y delete
+
+p.C++ utiliza los operadores <c>new</c> y <c>delete</c> para crear instancias dinámicas de objetos. Podemos hacer que las reservas se realicen a través de <c>Heap</c>, el gestor de <lp>heap</lp> que incorpora NAppGUI, con el fin de optimizar C++ y controlar los <i>Memory Leaks</i>.
+
+code.
+class MainWindow : public IListener
+{
+    ...
+    void *operator new(size_t size) 
+    { 
+        return (void*)heap_malloc((uint32_t)size, "MainWindow"); 
+    }
+
+    void operator delete(void *ptr, size_t size) 
+    { 
+        heap_free((byte_t**)&ptr, (uint32_t)size, "MainWindow");
+    }
+    ...
+};
+code.
+
+h2.Hola C++ completo
+
+codefile(demo/hellocpp/main.cpp).
+
+h2.Plantillas matemáticas C++
+
+p.En NAppGUI existen dos versiones para todas las funciones y tipos matemáticos <r>mathhead</r>: <c>float (real32_t)</c> y <c>double (real64_t)</c>. Podemos utilizar unos u otros según convenga en cada caso.
+
+code(cpp,mathhead).Cabecera <c>bmath.h</c> (parcial).
+/* Math funcions */
+
+#include "osbs.hxx"
+
+__EXTERN_C
+
+real32_t bmath_cosf(const real32_t angle);
+
+real64_t bmath_cosd(const real64_t angle);
+
+real32_t bmath_sinf(const real32_t angle);
+
+real64_t bmath_sind(const real64_t angle);
+
+extern const real32_t kBMATH_PIf;
+extern const real64_t kBMATH_PId;
+extern const real32_t kBMATH_SQRT2f;
+extern const real64_t kBMATH_SQRT2d;
+
+__END_C
+code.
+
+bq.Todas las funciones y tipos en simple precisión acaban con el sufijo <c>"f"</c> y las de doble precisión en <c>"d"</c>.
+
+p.Cuando implementamos funciones geométricas o algebraicas más complejas, no es fácil tener claro de antemano cual es la precisión correcta. Ante la duda siempre podemos optar por utilizar <c>double</c>, pero esto tendrá un impacto en el rendimiento, sobre todo por el uso del ancho de banda de memoria. Pensemos en el caso de mallas 3D con miles de vértices. Sería estupendo disponer de ambas versiones y poder utilizar una u otra según cada caso concreto.
+
+p.Por desgracia el lenguaje C "puro" no permite programar con tipos genéricos, al margen de utilizar horribles e interminables macros. Deberemos implementar ambas versiones (<c>float</c> y <c>double</c>), con el coste de mantenimiento asociado. C++ resuelve el problema gracias a las plantillas (<c>template<<><>></c>). La contrapartida es que, normalmente, debemos "abrir" la implementación e incluirla en la cabecera <c>.h</c>, ya que el compilador no sabe generar el código máquina hasta que la plantilla se instancia con un tipo de dato concreto. Esto choca de frente con nuestros <lh>Estándares</lh>, sobre todo en la parte relativa a la encapsulación de información. A continuación veremos como utilizar las <c>templates</c> de C++ para obtener lo mejor de ambos casos: Programación genérica, ocultar implementaciones y mantener las cabeceras "limpias".
+
+p.Al igual que existe una cabecera <c>*.h</c> para cada módulo matemático, existe una contrapartida <c>*.hpp</c> utilizable únicamente desde módulos C++ <r>mathpp</r>. 
+
+code(cpp,mathpp).Cabecera <c>bmath.hpp</c> (parcial).
+/* Math funcions */
+
+#include "osbs.hxx"
+
+template<typename real>
+struct BMath
+{
+    static real(*cos)(const real angle);
+
+    static real(*sin)(const real angle);
+
+    static const real kPI;
+    static const real kSQRT2;
+};
+code.
+
+p.Estas plantillas contienen punteros a función, cuyas implementaciónes están ocultas en <c>bmath.cpp</c>. En <r>circle</r> tenemos un ejemplo de uso.
+
+code(cpp,circle).Implementación de un algoritmo genérico.
+#include "bmath.hpp"
+
+template<typename real>
+static void i_circle(const real r, const uint32_t n, V2D<real> *v)
+{
+    real a = 0, s = (2 * BMath<real>::kPI) / (real)n;
+    for (uint32_t i = 0; i < n; ++i, a += s)
+    {
+        v[i].x = r * BMath<real>::cos(a);
+        v[i].y = r * BMath<real>::sin(a);
+    }
+}
+code.
+
+p.Este algoritmo está implementado dentro de un módulo C++ <r>cppimp</r>, pero queremos poder llamarlo desde otros módulos, tanto C como C++. Para ello definiremos los dos tipos de cabecera: <c>*.h</c> <r>headc</r> y <c>*.hpp</c> <r>headcpp</r>.
+
+code(cpp,cppimp).<c>mymath.cpp</c>. Implementación.
+#include "mymath.h"
+#include "mymath.hpp"
+#include "bmath.hpp"
+
+template<typename real>
+static void i_circle(const real r, const uint32_t n, V2D<real> *v)
+{
+    real a = 0, s = (2 * BMath<real>::kPI) / (real)n;
+    for (uint32_t i = 0; i < n; ++i, a += s)
+    {
+        v[i].x = r * BMath<real>::cos(a);
+        v[i].y = r * BMath<real>::sin(a);
+    }
+}
+
+void mymath_circlef(const real32_t r, const uint32_t n, V2Df *v)
+{
+    i_circle<real32_t>(r, n, (V2D<real32_t>*)v);
+}
+
+void mymath_circled(const real64_t r, const uint64_t n, V2Dd *v)
+{
+    i_circle<real64_t>(r, n, (V2D<real64_t>*)v);
+}
+
+template<>
+void(*MyMath<real32_t>::circle)(const real32_t, const uint32_t, V2D<real32_t>*) = i_circle<real32_t>;
+
+template<>
+void(*MyMath<real64_t>::circle)(const real64_t, const uint32_t, V2D<real64_t>*) = i_circle<real64_t>;
+code.
+
+code(cpp,headc).<c>mymath.h</c>. Cabecera C.
+#include "geom2d.hxx"
+
+__EXTERN_C
+
+void mymath_circlef(const real32_t r, const uint32_t n, V2Df *v);
+
+void mymath_circled(const real64_t r, const uint64_t n, V2Dd *v);
+
+__END_C
+code.
+
+code(cpp,headcpp).<c>mymath.hpp</c>. Cabecera C++.
+#include "v2d.hpp"
+
+template<typename real>
+struct MyMath
+{
+    void (*circle)(const real r, const uint32_t n, V2D<real> *v);
+};
+code.
+
+p.Ahora podemos utilizar nuestra librería matemática en C y C++, tanto en <c>float</c> como en <c>double</c> precisión <r>usecircle</r>.
+
+code(cpp,usecircle).Uso de <c>mymaths</c> en algoritmos genéricos C++.
+#include "mymath.hpp"
+#include "t2d.hpp"
+
+template<typename real>
+static void i_ellipse(const real r1, const real r2, const uint32_t n, V2D<real> *v)
+{
+    T2D<real> transform;
+    T2D<real>::scale(&transform, r1, r2);
+
+    MyMath<real>::circle(1, n, v);
+
+    for (uint32_t i = 0; i < n; ++i)
+        T2D<real>::vmult(&transform, &v[i]);
+}
+code.
+

@@ -1,0 +1,295 @@
+langrev.
+h1.Resources
+
+p.Resources are data necessary for the application but do not reside in the executable area. In other words, they are not directly accessible through the program variables, but must be preloaded to be able to use them. The most common are the texts and the images used in the user interface, although any type of file can become a resource (sounds, fonts, 3d models, html pages, etc). We will continue working on the application <lp>die</lp> <r>die_application</r>, this time deepening the use of resources.
+
+img(die_application.png,0,.65).Die application.
+Capture the sample application Die.
+
+h2.Resource types
+
+li.<b>Texts</b>: Although it is very easy to include texts in the code as variables of C, in practice this is not advisable for two reasons: The first is that, normally, it is not the programmers who write the messages that the program shows. By separating them into a separate file, other team members can review and edit them without having to access the code directly. The second reason is internationalization. It is an almost indispensable requirement today to be able to change the language of the program and this may involve several members of the team, as well as the fact that several text strings will refer to the same message. Therefore, extracting them from the source code will be almost indispensable.
+
+li.<b>Images</b>: It is not usual for the icons of the program to change according to the language, although this may be the case. The tricky thing here is to transform a .jpg or .png file into a C variable <r>serialimg</r>. You have to serialize the file and paste it into the code, something very tedious and difficult for the programmer to maintain. It is preferable to have the images in a separate folder and access them at runtime.
+
+code(cpp,serialimg)..png image embedded in the source code.
+const uint32_t IMG_SIZE = 1262;
+
+const byte_t IMG[] = { 
+            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 
+            ... };
+code.
+
+li.<b>Files</b>: Apart from text and images, any file can become a resource. In this case, the application will receive a block of bytes with the contents thereof, which must know how to interpret.
+
+h2.Create resources
+
+p.If we go to the source directory of the application (<c>C:\nappgui\die</c>), we see that there is a folder called <c>res</c> added by CMake when creating the project. Inside there are several icons <c>logo.*</c> and a <c>license.txt</c>. Now create a subfolder within <c>res</c> who calls <b>all</b> and, within it, creates the file <c>strings.msg</c>. Open it and add these lines:
+
+codefile(demo/die/res/all/strings.msg).Die message file.
+
+p.Then, copy in the folder <c>all</c> the image <c>cards.png</c> and the icons <c>spain.png</c> and <c>usa.png</c>. This newly created directory is a <b>resource package</b>, and all its content will be loaded at once by the application <r>resfolder</r>. 
+
+img(resfolder.png, 0, .6).Resource package in <c>src/die/res/all</c>.
+Windows Explorer capture showing the application resource directory.
+
+bq.Each subfolder within <c>res</c> will be considered a different resource package and may be loaded or released at runtime by the program.
+
+p.Each line within the file <c>strings.msg</c> defines a new message and consists of an identifier (eg <c>TEXT_FACE</c>) followed by the text that will be displayed in the program (<i>Face</i> in this case). Text is considered from the first non-blank character after the identifier to the end of the line. It is not necessary to put it in quotation marks (<c>"Face"</c>) as in C:
+
+code(text).
+BILLY   Billy "the Kid" was an American Old West outlaw.
+OTHER   Other text.
+code.
+
+p(noindent).Neither do you have to use escape sequences, with the sole exception of <c>'\n'</c> for multiline messages:
+
+code(text).
+TWO_LINES   This is the first line\nAnd this is the second.
+code.
+
+p(noindent).The identifier of the message follows the rules of the C identifiers, except that the letters must be uppercase:
+
+code(text).
+_ID1    Ok
+0ID2    Wrong!!
+id3     Wrong!!
+ID3     Ok
+code.
+
+p(noindent).The messages accept any Unicode character. We can divide the texts into so many files <c>*.msg</c> as necessary and should be stored in <b>UTF8 format</b>.
+
+bq.Visual Studio does not save the files in UTF8 by default. Make sure you do it at each <c>*.msg</c> contains non-US-ASCII characters. <c>File->Save As->Save with encoding-> Unicode (UTF8 Without Signature) - Codepage 65001</c>.
+
+h2.Resources location
+
+p.We have used English as the main language of the program. Now we are going to include a translation into the Spanish language. For this we return to the folder <c>die/res/all</c>, where we will create the subdirectory <c>es_es</c> and we copy the file <c>strings.msg</c> <r>resfolder_localized</r>. We press <c>[Generate]</c> and we see that in Visual Studio has appeared a new subfolder with a new version of <c>strings.msg</c>. From here we can translate the texts <r>edit_spanish</r>. When you are ready, again, <c>[Generate]</c>.
+
+img(resfolder_localized.png, 0, .5).Subdirectory of localized resources, <b><c>src/die/res/all/es_es</c></b>.
+Windows explorer capture showing the subdirectory of resources translated into Spanish.
+
+img(edit_spanish.png,560,.8).Translation of texts into Spanish. The identifiers must be the same as in English.
+Visual Studio capture showing the translated message file in Spanish.
+
+p.We must take into account some simple rules when locating resources:
+
+li.If the local version of a resource does not exist, the global version of it will be used. CMake will warn if there are <b>untranslated texts</b> <lh>Resource warnings</lh>.
+
+li.Those resources only present in localized folders will be ignored. It is imperative that the global version exists.
+
+li.No "subpackets" of resources are allowed. Only two levels will be processed: <c>/res/pack</c> for the global and <c>/res/pack/local</c> for those localized.
+
+li.The existing resources in the root folder (<c>/res</c>) will be ignored. All resources must be linked to a package.
+
+li.The localized texts must have the same identifier as their global corresponding. Otherwise, different messages are considered.
+
+li.To create the localized version of an image or another file, include it in its corresponding localized folder (eg <c>/es/all/es_es/cards.png</c>) using <b>the same file name</b> as the global version.
+
+li.To name the localized folders, use the two-letter language code <l>https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes''ISO 639-1</l> (en, es, fr, de, zh, ...) and, optionally, the two-letter country code <l>https://en.wikipedia.org/wiki/ISO_3166-1''ISO-3166</l> (en_us, en_gb, ...).
+
+h2.Loading and translation
+
+p.For each resource package, CMake has created a <c>*.h</c> with the same name as the folder: <c>all.h</c> in this case <r>reshead</r>. This file contains the resource identifiers, as well as a function that allows us to access them <c>all_respack ()</c> . In <r>autotra</r> we see the actions to be taken to use these resources in our program.
+
+code(cpp,reshead).Header file <c>all.h</c>.
+/* Automatic generated by NAppGUI Resource Compiler (nrc-r1490) */
+
+#include "core.hxx"
+
+__EXTERN_C
+
+/* Messages */
+extern ResId TEXT_FACE;
+extern ResId TEXT_PADDING;
+extern ResId TEXT_CORNER;
+extern ResId TEXT_RADIUS;
+extern ResId TEXT_ONE;
+extern ResId TEXT_TWO;
+extern ResId TEXT_THREE;
+extern ResId TEXT_FOUR;
+extern ResId TEXT_FIVE;
+extern ResId TEXT_SIX;
+extern ResId TEXT_TITLE;
+extern ResId TEXT_INFO;
+extern ResId TEXT_LANG;
+extern ResId TEXT_ENGLISH;
+extern ResId TEXT_SPANISH;
+
+/* Files */
+extern ResId CARDS_PNG;
+extern ResId SPAIN_PNG;
+extern ResId USA_PNG;
+
+ResPack *all_respack(const char_t *local);
+
+__END_C
+code.
+
+code(cpp,autotras).Load and use of resources.
+#include "all.h"
+
+gui_respack(all_respack);
+gui_language("");
+...
+label_text(label1, TEXT_FACE);
+imageview_image(vimg, CARDS_PNG);
+...
+static void i_OnLang(App *app, Event *e)
+{
+    const EvButton *params = event_params(e, EvButton);
+    const char_t *lang = params->index == 0 ? "en_us" : "es_es";
+    gui_language(lang);
+    unref(app);
+}
+code.
+
+li.Line 1 includes the resource package header <r>reshead</r>, which has been generated automatically by CMake.
+
+li.Line 3 registers the package in <lp>gui</lp>, the library in charge of the graphic interface. If the application had more resource packages we would add them in the same way.
+
+li.Line 4 sets the default language (English).
+
+li.Lines 6 and 7 assign a text and an image to two controls respectively. The identifiers are defined in <c>"all.h"</c>, as we have just seen.
+
+li.Line 13 translates the entire interface in response to a change in control <lp>popup</lp> <r>die_translated</r>.
+
+img(die_translated.gif,0,.65).Translation of the Die application, without destroying the window or restarting.
+Animation of the Die application, translating the interface at run time.
+
+p.Basically, a call to <lf>gui_language</lf>, involves coordinating three actions:
+
+li.Load localized resources and replace them with current ones.
+
+li.Assign new texts and images to all program controls and menus.
+
+li.Resize windows and menus, since changing text and images will influence the size of controls.
+
+h2.Editing resources
+
+p.To add new resource files or delete any of the existing ones, we just have to go to the folder <c>res/all</c> through the file browser and do it there directly. The message files <c>*.msg</c> can be edited from Visual Studio, since CMake includes them within the IDE <r>edit_resources</r>. After making any changes to the resource folder or editing a file <c>*.msg</c>, we must press <c>[Generate]</c> in CMake so that these modifications can be integrated into the project. After each update, the identifiers of the new resources will be created and those whose associated resource will have disappeared will be eliminated, which will produce compilation errors that will facilitate the correction of the code.
+
+img(edit_resources.png,560,.8).Edit resources within Visual Studio.
+Capture Visual Studio by editing a message file.
+
+h2.Manual management
+
+p.Although the usual will be to delegate the management of resources in the library <c>gui</c>, it is possible to access the content of the packages directly, as we see in <r>directres</r>.
+
+code(cpp,directres).Direct access to resources.
+#include "all.h"
+
+ResPack *pack = all_respack("es_es");
+...
+label_text(label1, respack_text(pack, TEXT_FACE));
+imageview_image(vimg, respack_image(pack, CARDS_PNG));
+...
+respack_destroy(&pack);
+code.
+
+li.Line 1 includes the resource package header.
+
+li.Line 3 creates an object with the content of the package in Spanish language. Each resource package will provide its own constructor, whose name will begin with that of its folder <c>xxxx_</c>respack().
+
+li.Lines 5 and 6 get a text and an image respectively to assign them to the interface controls.
+
+li.Line 8 destroys the resource package, at the end of its use.
+
+p.There is a big difference between allocating resources through <c>ResId</c> or by functions <c>respack_</c> <r>diffres</r>. In the first case, the label control will be "sensitive" to the language changes made by <lf>gui_language</lf>. However, in cases 2 and 3 a constant text has been assigned to the control, which will not be affected by this function. We will be responsible for changing the text, if necessary.
+
+code(cpp,diffres).Different ways of accessing resources.
+label_text(label1, TEXT_FACE);
+label_text(label1, respack_text(pack, TEXT_FACE));
+label_text(label1, "Face");
+code.
+
+p.The choice of one or the other access mode will depend on the requirements of the program. We remind you that in order to carry out the automatic translations, resources must be registered with <lf>gui_respack</lf>.
+
+h2.Resource processing
+
+p.Let's see in a little more detail how NAppGUI generates the resource modules. When establishing <c>NRC_EMBEDDED</c> in the command <c>desktopApp()</c>, we tell CMake to process the resources of the Die project. We can also choose the option <c>NRC_PACKED</c> of which we will speak next. When we press <c>[Generate]</c> CMake traverses the subfolders within the directory <c>res</c> of each project, calling the <b>nrc</b> utility <i>(NAppGUI Resource Compiler)</i> <r>resources</r>. This program is in the folder <c>prj/scripts</c> of the distribution of the SDK. For each resource package, <i>nrc</i> creates two source files (one <c>.c</c> and a <c>.h</c>) and links them to the project. The <c>.h</c> contains the identifiers and the constructor that we have seen in <r>reshead</r>. For its part, the <c>.c</c> performs the package implementation based on the content of each folder and the <c>nrcMode</c> modality.
+
+img(resources.svg,-1,.75).Processing resources using CMake and nrc.
+Schema showing how the nrc compiler processes the resource folders.
+
+bq.Files created by <i>nrc</i> are considered generated code and are not saved in the folder <c>src</c> but in the folder <c>build</c>. They will be updated every time you press <c>[Generate]</c> in CMake, regardless of the platform on which we are working. On the contrary, the original resource files (located in the folder <c>res</c>) are considered part of the source code.
+
+h2.Resources distribution
+
+p.In the previous chapter, when creating the Visual Studio solution, we indicated that we had to use the constant <c>NRC_EMBEDDED</c> in the sentence <c>desktopApp()</c> inside the file <c>CMakeLists.txt</c>. There are two other modalities more related to the management of resources and that can be configured separately within each command <c>desktopApp()</c>:
+
+li.<c>NRC_NONE</c>: CMake will ignore the contents of the folder <c>res</c>, except for the icon of the application. No resource packages will be generated even if there is content within this folder.
+
+li.<c>NRC_EMBEDDED</c>: The resources, with all their translations, are integrated as part of the executable <r>embedded_resources</r>. It is a very interesting option for applications of small or medium size, since in a single file <c>*.exe</c> we will supply the entire program. You will not need an installer and we will have the certainty that the software will not fail due to the lack of an external file. The downside is that, obviously, the size of the executable will grow considerably so it is not advisable in programs with many resources, very heavy, or with a multitude of translations.
+
+li.<c>NRC_PACKED</c>: For each resource package, a <c>*.res</c> file will be created external to the executable that will be loaded and released at runtime as needed <r>packed_resources</r>. The advantages of this method are the disadvantages of the previous one and vice versa: Smaller executables, but with external dependencies (the own ones <c>.res</c>) that must be distributed together. The use of memory will also be optimized, being able to load the <c>*.res</c> on demand.
+
+img(embedded_resources.png, 560, .85).Distribution of a macOS application with embedded resources.
+Capture of the macOS distribution with embedded resources.
+
+img(packed_resources.png, 560, .85).Distribution of the same macOS application with packaged resources.
+Capture of the macOS distribution with packaged resources.
+
+p.CMake manages the location of the resource packages for us. In Windows and Linux applications, it will copy all <c>*.res</c> in the executable directory. In macOS it will place them in the folder <c>resources</c> of the bundle. A very important fact is that <b>we do not have to modify the source code</b> when going from one modality to another. <i>nrc</i> is already responsible for managing the load according to the type of package. Something logical can be to start with <c>NRC_EMBEDDED</c>, and if the project grows, change to <c>NRC_PACKED</c>. We just have to press again <c>[Generate]</c> (as we always do) and recompile the project so that the change becomes effective.
+
+bq.In Windows and Linux files <c>*.res</c> they must always be installed in the same directory as the executable. In the case of macOS, CMake generates a bundle ready for distribution and installs the resource packages in the directory <c>/resources</c> of said bundle.
+
+h2.Resource warnings
+
+p.<i>nrc</i> is a silent script whose work is integrated into CMake's <i>build process</i>, going unnoticed in most cases. But there are times that it detects anomalies in the resource directories and it must inform us in some way. In these cases, a red line will appear in the CMake console indicating the project and affected package(s) <r>nrc_warnings</r>. The details dumps in the file <c>NRCLog.txt</c> located in the generated resources folder (CMake shows the complete path).  
+
+img(nrc_warnings.png, 0, 1).<i>nrc</i> has encountered anomalies when processing resources.
+Capture of CMake showing anomalies detected in the processing of resources by nrc.
+
+p.If the failures are critical, <i>nrc</i> will not be able to generate the <c>*.h</c> and <c>*.c</c> associated to the package, preventing the application from being compiled (in essence it does not stop being a compilation error). Other times they are mere <i>warnings</i> that should be fixed, but they allow you to continue compiling. Specifically, the <b>critical errors</b> that affect <i>nrc</i> are the following: (we show them in English as they are written in <c>NRCLog.txt</c>).
+
+li.MsgError (%s:%d): Comment not closed (%s).
+
+li.MsgError (%s:%d): Invalid TEXT_ID (%s).
+
+li.MsgError (%s:%d): Unexpected end of file after string ID (%s).
+
+li.Duplicate resource id in '%s' (%s).
+
+li.Can't load resource file '%s'.
+
+li.Error reading '%s' resource directory.
+
+li.Error reading '%s' subdirectories.
+
+li.Error creating '%s' header file.
+
+li.Error creating '%s' source file.
+
+li.Error creating '%s' packed file.
+
+p(noindent).Por otro lado, los avisos no-críticos:
+
+li.Empty message file '%s'.
+
+li.Ignored localized text '%s' in '%s'. Global resource doesn't exists.
+
+li.Ignored localized file '%s' in '%s'. Global resource doesn't exists.
+
+li.There is no localized version of the text '%s' in '%s'.
+
+li.Localized directory '%s' is empty or has invalid resources.
+
+h2.Application icon
+
+p.When we create a new project, CMake establishes a default icon for the application, which it places in the directory <c>/res</c>, with the name <c>logo*</c>. This image will be "embedded" in the executable and the operating system will use it to represent the application on the desktop <r>app_icons</r>. Windows and Linux also use it in the title bar of the window. We have three versions:
+
+li.<b>logo256.ico</b>: Version for Windows Vista and later. They should include the resolutions: 256x256, 48x48, 32x32 and 16x16.
+
+li.<b>logo48.ico</b>: Version for Linux and Visual Studio 2008 and 2005, which do not support resolutions of 256x256. This version only includes: 48x48, 32x32 and 16x16.
+
+li.<b>logo.icns</b>: Version for macOS. Resolutions 512x512, 256x256, 128x128, 32x32 and 16x16 both in normal resolution (@1x) and Retina Display (@2x).
+
+img(app_icons.png,0,.8).Application icons in the Windows taskbar.
+Capture the Windows taskbar with various application icons.
+
+p.CMake is already responsible for using the appropriate version of the icon according to the platform we are compiling. To change the default icon, open the files <c>logo*</c> with some graphic editor <r>icon_editor</r>, make the changes and press again <c>[Generate]</c> in CMake. <b>Very important:</b> do not change the names of the files, they should always be <c>logo256.ico</c>, <c>logo48.ico</c> and <c>logo.icns</c>.
+
+img(icon_editor.png, 500, .65).Editing <c>logo.ico</c>.
+Capture of an image editor, modifying the program icon.
+

@@ -1,0 +1,42 @@
+langrev.
+h1.MenuItem
+
+func(menuitem_create).Create a new item for a menu.
+fret(MenuItem*).The newly item.
+
+func(menuitem_separator).Create a new separator for a menu.
+fret(MenuItem*).The newly item.
+
+func(menuitem_OnClick).Set an event handle for item click.
+fpar(MenuItem*,item).The item.
+fpar(Listener*,listener).<i>Callback</i> function to be called after clicking.
+fnote.See <lh>GUI Events</lh>.
+
+func(menuitem_enabled).Enables or disables a menu item.
+fpar(MenuItem*,item).The item.
+fpar(const bool_t,enabled).Enabled or not.
+
+func(menuitem_visible).Show or hide a menu item.
+fpar(MenuItem*,item).The item.
+fpar(const bool_t,enabled).Enabled or not.
+
+func(menuitem_text).Set the item text.
+fpar(MenuItem*,item).The item.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(menuitem_image).Set the icon that will display the item.
+fpar(MenuItem*,item).The item.
+fpar(const Image*,image).Image.
+
+func(menuitem_key).Set a keyboard shortcut to select the menu item.
+fpar(MenuItem*,item).The item.
+fpar(const vkey_t,key).Key code.
+fpar(const uint32_t,modifiers).Modifiers.
+
+func(menuitem_submenu).Assign a drop-down submenu when selecting the item.
+fpar(MenuItem*,item).The item.
+fpar(Menu**,submenu).The submenu.
+
+func(menuitem_state).Set the status of the item, which will be reflected with a mark next to the text.
+fpar(MenuItem*,item).The item.
+fpar(const state_t,state).State.

@@ -1,0 +1,15 @@
+
+
+h1.Tiempo
+
+ep.Acceso al reloj interno del computador.
+
+func(btime_now).Obtiene el número de micro-segundos trascurridos desde el 1 de Enero de 1970 hasta este preciso momento. Utiliza la diferencia entre instantes para saber el tiempo consumido por un proceso.
+fret(uint64_t).El número de micro-segundos transcurridos, es decir, el número de intervalos de 1/1000000 segundos.
+fnote.El instante inicial es el 1 de Enero de 1970 en sistemas Unix/Linux y el 1 de Enero de 1601 en Windows ya que es el primer año del ciclo Gregoriano en el que fue activado Windows NT. Esta función equipara ambos inicios, devolviendo siempre el tiempo Unix.
+
+func(btime_date).Obtiene la fecha actual del sistema.
+fpar(Date*,date).La fecha actual.
+
+func(btime_year).Obtiene el año actual.
+fret(uint16_t).El año actual.

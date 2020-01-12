@@ -1,0 +1,604 @@
+
+
+h1.Streams
+
+ep.El agua puede fluir, arrastrarse, gotear o estrellarse, sé agua amigo mío.
+<i>Bruce Lee</i>
+
+p.Un <i>stream</i> es un flujo de datos que corre desde un origen a un destino. Piensa en una llamada telefónica. Tenemos un origen (la persona que habla), un destino (la persona que escucha) y un canal (la propia línea). En programación, el stream es el equivalente a la línea telefónica, es la tubería que une la aplicación con un origen o destino de datos <r>streams</r> y por la que circula información binaria, secuencias de bits. Al igual que ocurre con cualquier otro canal de comunicación, la información es volátil, disponible por un tiempo muy limitado. Una vez que llega al receptor, desaparece.
+
+img(streams.svg,420,.5).Los streams conectan al proceso con la máquina y con el mundo.
+Dibujo de un proceso conectando su E/S mediante streams.
+
+p.En esencia, son tres las operaciones elementales a realizar cuando trabajamos con streams:
+
+li.Crear el stream. Define el tipo de canal de acuerdo con sus extremos.
+
+li.Escribir datos al canal.
+
+li.Leer datos desde el canal.
+
+h2.Tipos de stream
+
+p.En realidad, es más correcto hablar de tipos de interlocutores (origen y destino) que de tipos de stream. Desde la perspectiva del programador, un stream es un tipo abstracto que presenta la misma funcionalidad independientemente de los extremos que conecta. Por tanto, al hablar de <i>tipo de stream</i> nos estamos refiriendo al tipo de constructor.
+
+h3.File stream
+
+p.En <i>File streams</i> <r>file_streams</r>, el origen es la memoria del proceso y el destino un archivo en disco. Lo contrario también puede ocurrir, el origen es el archivo y el destino la memoria. Dependerá de como abramos el canal. No será posible realizar operaciones de escritura en un archivo abierto para lectura o viceversa <r>filestm</r>. <lp>bfile</lp>.
+
+img(file_streams.svg,420,.5).Los <i>File streams</i> permiten la comunicación con el sistema de archivos.
+Dibujo de un proceso accediendo a disco mediante streams.
+
+li.Utiliza <lf>stm_from_file</lf> para abrir un archivo y leer de él.
+
+li.Utiliza <lf>stm_to_file</lf> para crear un archivo y escribir en él.
+
+li.Utiliza <lf>stm_append_file</lf> para añadir contenido a un archivo existente.
+
+code(cpp,filestm).Ejemplo de escritura en un archivo.
+Stream *stm = stm_to_file("C:\Users\user\john\out.txt", NULL);
+if (stm != NULL)
+{
+    stm_writef(stm, "One ");
+    stm_writef(stm, "Two ");
+    stm_writef(stm, "Three");
+    stm_writef(stm, ".");
+    stm_close(&stm);
+    // 'out.txt' is closed = "One Two Three."
+}
+code.
+
+h3.Socket stream
+
+p.Un <i>socket</i> es un canal de comunicación entre dos procesos a través de Internet <r>socket_streams</r>. A diferencia de los <i>file streams</i>, los sockets permiten la comunicación bidireccional <i>(full-duplex)</i>, es decir, ambos extremos pueden enviar y recibir información. La secuencia de intercambio de mensajes entre interlocutores está determinada por el protocolo <r>sockstm</r>, siendo HTTP, FTP, SMTP o LDAP algunos de los más utilizados para las transmisiones por Internet. <lp>bsocket</lp>.
+
+img(socket_streams.svg,420,.5).Un <i>socket stream</i> abre un canal de comunicación por Internet.
+Dibujo de un proceso accediendo accediendo a Internet mediante streams.
+
+li.Utiliza <lf>stm_socket</lf> para conectar con un proceso remoto.
+
+code(cpp,sockstm).Descarga de una página web, mediante el protocolo HTTP.
+uint32_t ip;
+Stream *stm;
+bsocket_host_ip("www.google.com", &ip, NULL);
+stm = stm_socket(ip, 80, NULL);
+stm_writef(stm, "GET / HTTP/1.1\r\n");
+stm_writef(stm, "Host: www.google.com\r\n");
+stm_writef(stm, "\r\n");
+stm_lines(line, stm)
+    bstd_printf(line);
+    bstd_printf("\n");
+stm_next(line, stm);
+stm_close(&stm);
+code.
+
+h3.Block stream
+
+p.Los <i>block streams</i> se utilizan para leer datos con formato a partir de un bloque de memoria genérico. <r>fromblock_stream</r>. Esta zona de memoria se considera de solo lectura y no será modificada, por lo que no se permitirán operaciones de escritura en este tipo de streams. Cuando todo el bloque haya sido leído, se activará el estado <lt>ekSTEND</lt>.
+
+li.Utiliza <lf>stm_from_block</lf> para leer desde zonas de memoria.
+
+img(fromblock_stream.svg,420,.5).Con <i>block streams</i> leeremos datos con formato desde áreas de memoria.
+Dibujo de un proceso leyendo desde un bloque de memoria mediante streams.
+
+h3.Memory stream
+
+p.Los <i>memory streams</i> son canales de lectura/escritura que permiten implementar el modelo productor/consumidor <r>memory_streams</r>. En primer lugar, la información es escrita en el stream que la almacena en un búfer interno de memoria. Posteriormente, dicha información puede ser leída por otra función, hebra o proceso. El concepto es similar al de las tuberías <i>(IPC-Pipes)</i>, con la salvedad de que no existe un límite de tamaño para el búfer, sino que crecerá bajo demanda.
+
+li.Utiliza <lf>stm_memory</lf> para crear un stream en memoria.
+
+img(memory_streams.svg,480,.5).Modelo productor/consumidor implementado con <i>memory streams</i>.
+Dibujo de un proceso compartiendo datos entre hebras mediante streams.
+
+bq.A pesar que este tipo de stream soporta operaciones de lectura y escritura no se considera <i>full-duplex</i>. La lectura se hace sobre datos escritos previamente, pero no puede "contestar" al interlocutor. No es una "conversación".
+
+h3.Standard stream
+
+p.La <lp>bstd</lp> puede ser gestionada mediante <i>streams</i> utilizando tres objetos predefinidos <r>standard_streams</r>. Estos objetos se crean al iniciar el programa y se liberarán automáticamente al terminar.
+
+li.<lt>kSTDIN</lt>: Para leer de la entrada estándar.
+
+li.<lt>kSTDOUT</lt>: Para escribir en la salida estándar.
+
+li.<lt>kSTDERR</lt>: Para escribir en la salida de errores.
+
+img(standard_streams.svg,480,.5).Acceso a la E/S estándar a través de streams.
+Dibujo de un proceso accediendo a la E/S estándar mediante streams.
+
+code.
+real64_t value;
+const char_t *line;
+value = stm_read_r64(kSTDIN);
+line = stm_read_line(kSTDIN);
+stm_printf(kSTDOUT, "Value = %.4f", value);
+code.
+
+h3.Text stream
+
+p.Por un stream siempre viajan datos binarios genéricos. Como estos datos sean interpretados depende de los interlocutores y de su protocolo de comunicación. Los streams de texto son un caso particular donde se asume que la información binaria representa códigos de caracteres <i>(codepoints)</i> <r>text_streams</r>. No hay que hacer nada especial al crear un stream para indicar que es de tipo texto, sino utilizar las funciones del API especializadas en este tipo de información.
+
+li.Utiliza <lf>stm_printf</lf> o <lf>stm_writef</lf> para escribir texto en un stream.
+
+li.Utiliza <lf>stm_read_char</lf>, <lf>stm_read_line</lf> o <lf>stm_read_delim</lf> para leer texto desde un stream. Si precisas de un mayor nivel de detalle en la interpretación de los textos, puedes utilizar el stream con el analizador léxico <lp>lex</lp> con el fin de fragmentar el texto en <i>tokens</i> <lf>lexscn_token</lf>.
+
+li.Utiliza <lf>stm_set_read_utf</lf> o <lf>stm_set_write_utf</lf> para cambiar las <lh>Codificaciones UTF</lh> de entrada o salida de textos.
+
+img(text_streams.svg,480,.5).En streams de texto la información se puede leer directamente.
+Dibujo de un proceso grabando texto en disco mediante streams.
+
+bq.Los streams no tienen porqué ser de texto o binarios "puros". Pueden combinar ambos tipos de representaciones.
+
+h2.Ventajas de los streams
+
+p.A pesar que es posible leer o escribir directamente en los canales E/S (<lp>bmem</lp>, <lp>bfile</lp>, <lp>bsocket</lp>, <lp>bstd</lp>), hacerlo a través de objetos <lt>Stream</lt> tiene ciertas ventajas. Por esto recomendamos utilizarlos en lugar de las API de bajo nivel por los siguientes motivos:
+
+h3.Unificar la serialización
+
+p.Los streams ofrecen una interfaz uniforme, independientemente del origen y destino de los datos <r>all_streams</r>. Para la serialización de objetos tan solo debemos escribir un lector y un escritor, sin preocuparnos si objeto será guardado en disco, transmitido por Internet o almacenado temporalmente en memoria <r>serialstm</r>.
+
+code(cpp,serialstm).(De)serialización de un objeto mediante streams.
+typedef struct _product_t
+{
+    type_t type;
+    String *code;
+    String *description;
+    Image *image64;
+    real32_t price;
+} Product;
+
+void product_write(Stream *stm, Product *product)
+{
+    stm_write_enum(stm, product->type, type_t);
+    str_write(stm, product->code);
+    str_write(stm, product->description);
+    image_write(stm, product->image64);
+    stm_write_r32(stm, product->price);
+}
+
+void product_read(Stream *stm, Product *product)
+{
+    product->type = stm_read_enum(stm, type_t);
+    product->code = str_read(stm);
+    product->description = str_read(stm);
+    product->image64 = image_read(stm);
+    product->price = stm_read_r32(stm);
+}
+code.
+
+img(all_streams.svg,420,.5).Por medio de streams manejamos todos los canales E/S con la misma interfaz.
+Unificación de canales E/S gracias a los streams.
+
+h3.Mayor elegancia
+
+p.Los canales E/S solo trabajan con bloques de bytes. Los streams implementan funciones de alto nivel para textos y tipos binarios. Esto hará nuestro código mucho más legible <r>legstm</r>.
+
+code(cpp,legstm).Escritura de un objeto en disco directamente o a través de un stream.
+void product_write(File *file, Product *product)
+{
+    uint32_t size = str_len(product->description);
+    const char_t *data = tc(product->description);
+    bfile_write(file, (byte_t*)&product->id, sizeof(uint32_t), NULL, NULL);
+    bfile_write(file, (byte_t*)&product->price, sizeof(real64_t), NULL, NULL);
+    bfile_write(file, (byte_t*)&size, sizeof(uint32_t), NULL, NULL);
+    bfile_write(file, (byte_t*)data, size, NULL, NULL);
+}
+
+void product_write(Stream *stream, Product *product)
+{
+    stm_write_u32(stream, product->id);
+    stm_write_r64(stream, product->price);
+    str_write(stream, product->description);
+}
+code.
+
+h3.Mayor productividad
+
+p.Relacionada con la anterior, los streams pueden "parsear" cadenas de texto directamente. Se pueden obtener caracteres, palabras o líneas sin tener que escanear la entrada carácter a carácter <r>linestm</r>. Para mayor nivel de detalle, podemos utilizar el analizador léxico <lp>lex</lp>.
+
+code(cpp,linestm).Leer una línea de texto directamente o a través de un stream.
+String *getline(File *file)
+{
+    /* Potentially unsafe. */
+    /* Risk of buffer overflow. */
+    char_t buffer[MAXBUFF];
+    uint32_t i = 0;
+    char_t c;
+
+    bfile_read(file, (byte_t*)&c, 1, NULL, NULL);
+    while (c != '\n')
+    {
+        buffer[i] = c;
+        i += 1;
+        bfile_read(file, (byte_t*)&c, 1, NULL, NULL);
+    }
+
+    buffer[i] = '\0';
+    return str_c(buffer);
+}
+
+String *getline(Stream *stream)
+{
+    /* Totally safe. */
+    /* line is in dynamic cache. */
+    const char_t *line = stm_read_line(stream);
+    return str_c(line);
+}
+code.
+
+h3.Mayor rendimiento
+
+p.<i>File streams</i> y <i>socket streams</i> implementan una caché interna. Esto permite acceder menos veces al canal con un mayor volumen de datos, lo que implica mayor velocidad de proceso <r>stream_cache</r>.
+
+li.Utiliza <lf>stm_flush</lf> para vaciar la caché y volcar los datos en el canal.
+
+img(stream_cache.svg,620,.8).Los streams implementan memoria caché, lo que incrementa el rendimiento.
+Dibujo de los streams utilizando caché de datos.
+
+h3.Orden de bytes
+
+p.Al leer o escribir datos binarios de un canal E/S hay que prestar especial atención al orden de los bytes en tipos de datos de 16, 32 o 64 bits lo que se conoce como <i>endianness</i>. En máquinas <i>litte endian</i>, como es el caso de la familia de procesadores Intel x86/x64, el byte de menor orden se ubicará en la dirección de memoria más baja. En el caso de los <i>big endian</i> (Motorola 68000, PowerPC) ocurre al contrario, irá en en la más alta. Por ejemplo, si escribimos un entero de 32-bits en un archivo o <i>socket</i> desde una máquina <i>little endian</i> y lo leemos desde una <i>big endian</i> los datos estarán corrompidos al alterar el orden interno de bits <r>stream_endian</r>. Los objetos <c>Stream</c> ajustan automáticamente el <i>endianness</i> en cada operación de lectura/escritura. Por defecto se establece <lt>ekLITEND</lt>, salvo en <i>sockets</i> que será <lt>ekBIGEND</lt> por ser el convenio aceptado para las comunicaciones en red. No obstante, puede cambiarse si es necesario.
+
+li.Utiliza <lf>stm_set_write_endian</lf> para establecer el <i>endianness</i> del canal de salida. Los datos pasarán de <i>CPU endian</i> a <i>Stream endian</i> antes de ser escritos.
+
+li.Utiliza <lf>stm_set_read_endian</lf> para establecer el <i>endianness</i> del canal de entrada. Los datos pasarán de <i>Stream endian</i> a <i>CPU endian</i> en el momento de ser leídos.
+
+img(stream_endian.svg,480,.5).Debemos tener en cuenta el <i>endianness</i> a la hora de compartir datos entre máquinas de diferente arquitectura.
+Dibujo de streams teniendo en cuenta el orden de bytes.
+
+bq.El <i>endianness</i> no influye en las cadenas de texto <lh>UTF-8</lh>, pero sí en las <lh>UTF-16</lh> y <lh>UTF-32</lh>.
+
+h2.Estado del stream
+
+p.Un stream puede verse afectado por dos tipos de problemas. Por un lado la <b>corrupción de datos</b> que queda patente cuando leemos datos binarios desde el stream. Un claro ejemplo sería leer un booleano mediante <lf>stm_read_bool</lf> y obtener un valor de <c>129</c> cuando, evidentemente, este valor debería ser <c>0 (TRUE)</c> ó <c>1 (FALSE)</c>. Normalmente, un stream se corrompe debido a la falta de coordinación entre el escritor y el lector y, por lo general, esta situación debe resolverse depurando y corrigiendo la serialización de objetos o el protocolo de datos. Por otro lado, pueden existir errores físicos en el canal (archivo eliminado, perdida de conexión a Internet, permisos, etc). En ambos casos el stream quedará "bloqueado" y serán ignoradas las operaciones de lectura o escritura que efectuemos sobre el mismo.
+
+li.Utiliza <lf>stm_state</lf> para conocer el estado actual del canal.
+
+li.Utiliza <lf>stm_file_err</lf> para obtener información extendida del error en streams de disco.
+
+li.Utiliza <lf>stm_sock_err</lf> para obtener información extendida del error en <i>sockets</i>.
+
+li.Utiliza <lf>stm_corrupt</lf> para marcar un stream como <lt>ekSTCORRUPT</lt>. En ocasiones es el propia aplicación la que detecta que el dato no es correcto (pe. fuera de rango).
+
+const(Stream,kSTDIN,,noconst).Stream conectado a la entrada estándar <c>stdin</c>.
+const(Stream,kSTDOUT,,noconst).Stream conectado a la salida estándar <c>stdout</c>.
+const(Stream,kSTDERR,,noconst).Stream conectado a la salida de errores <c>stderr</c>.
+
+func(stm_from_block).Crea un stream de lectura a partir de un bloque de memoria ya existente.
+fret(Stream*).El objeto stream.
+fpar(const byte_t*,data).Puntero al bloque de memoria.
+fpar(const uint32_t,size).Tamaño en bytes del bloque de memoria.
+fnote.El bloque original no será modificado (solo lectura). Cuando se alcance el final del bloque <lf>stm_state</lf> devolverá <lt>ekSTEND</lt>. <lh>Block stream</lh>.
+
+func(stm_memory).Crea un stream de lectura/escritura en memoria.
+fret(Stream*).El objeto stream.
+fpar(const uint32_t,size).Tamaño inicial del búfer (en bytes). Crecerá si es necesario.
+fnote.Puede utilizarse como tubería interna para el intercambio de información entre funciones o hilos. Se comporta como un búfer FIFO <i>(First In Fist Out)</i>. Para acceso multi-hilo debe estar protegido con un <lt>Mutex</lt>. <lh>Memory stream</lh>.
+
+func(stm_from_file).Crea un stream para leer desde un archivo en disco.
+fret(Stream*).El objeto stream o <c>NULL</c> si falla la apertura del archivo.
+fpar(const char_t*,pathname).<i>Pathname</i> del archivo. <lh>Filename y pathname</lh>.
+fpar(ferror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.<lh>File stream</lh>.
+
+func(stm_to_file).Crea un stream para escribir datos a un archivo en disco.
+fret(Stream*).El objeto stream o <c>NULL</c> si falla la creación del archivo.
+fpar(const char_t*,pathname).<i>Pathname</i> del archivo. <lh>Filename y pathname</lh>.
+fpar(ferror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.Si el archivo ya existe será sobrescrito. <lh>File stream</lh>.
+
+func(stm_append_file).Crea un stream para escribir datos al final de un archivo existente.
+fret(Stream*).El objeto stream o <c>NULL</c> si falla la apertura del archivo.
+fpar(const char_t*,pathname).<i>Pathname</i> del archivo. <lh>Filename y pathname</lh>.
+fpar(ferror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.Fallará si el archivo no existe (no lo crea). <lh>File stream</lh>.
+
+func(stm_socket).Crea un stream y conecta con un host remoto.
+fret(Stream*).El objeto stream o <c>NULL</c> si falla la conexión.
+fpar(const uint32_t,ip).La dirección IPv4 de 32-bit. <lf>bsocket_host_ip</lf>.
+fpar(const uint16_t,port).El puerto de conexión.
+fpar(const SockOpt*,opts).Opciones de conexión.
+fpar(serror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.<lh>Socket stream</lh>.
+
+func(stm_close).Cierra el stream. Todos los recursos como descriptores de archivos o <i>sockets</i> serán liberados. Previamente al cierre, se escribirán en el canal los datos en caché <lf>stm_flush</lf>.
+fpar(Stream**,stm).El objeto stream. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(stm_get_write_endian).Obtiene el orden de bytes actual al escribir en el stream.
+fret(endian_t).El <lh>Orden de bytes</lh>.
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_get_read_endian).Obtiene el orden de bytes actual al leer del stream.
+fret(endian_t).El <lh>Orden de bytes</lh>.
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_set_write_endian).Establece el orden de bytes al escribir en el stream, a partir de ahora.
+fpar(Stream*,stm).El objeto stream.
+fpar(const endian_t,endian).El <lh>Orden de bytes</lh>.
+fnote.Por defecto es <lt>ekLITEND</lt>, salvo en sockets que será <lt>ekBIGEND</lt>.
+
+func(stm_set_read_endian).Establece el orden de bytes al leer del stream, a partir de ahora.
+fpar(Stream*,stm).El objeto stream.
+fpar(const endian_t,endian).El <lh>Orden de bytes</lh>.
+fnote.Por defecto es <lt>ekLITEND</lt>, salvo en sockets que será <lt>ekBIGEND</lt>.
+
+func(stm_get_write_utf).Obtiene la codificación UTF con la que se están escribiendo los textos en el stream.
+fret(unicode_t).<lh>Codificaciones UTF</lh>.
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_get_read_utf).Obtiene la codificación UTF con la que se están leyendo los textos en el stream.
+fret(unicode_t).<lh>Codificaciones UTF</lh>.
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_set_write_utf).Establece la codificación UTF al escribir textos en el stream, a partir de ahora.
+fpar(Stream*,stm).El objeto stream.
+fpar(const unicode_t,format).<lh>Codificaciones UTF</lh>.
+
+func(stm_set_read_utf).Establece la codificación UTF al leer textos en el stream, a partir de ahora.
+fpar(Stream*,stm).El objeto stream.
+fpar(const unicode_t,format).<lh>Codificaciones UTF</lh>.
+
+func(stm_bytes_written).Obtiene el total de bytes escritos en el stream desde su creación.
+fret(uint64_t).El número total de bytes escritos.
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_bytes_readed).Obtiene el total de bytes leídos desde el stream desde su creación.
+fret(uint64_t).El número total de bytes leídos.
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_state).Obtiene el estado actual del stream.
+fret(sstate_t).El <lh>Estado del stream</lh>.
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_file_err).Obtiene información adicional sobre el error, en streams de disco.
+fret(ferror_t).Error de archivo.
+fpar(const Stream*,stm).El objeto stream.
+fnote.Solo es relevante en <lh>File stream</lh> con el estado <lt>ekSTBROKEN</lt>.
+
+func(stm_sock_err).Obtiene información adicional sobre el error, en streams de red.
+fret(serror_t).Error de socket.
+fpar(const Stream*,stm).El objeto stream.
+fnote.Solo es relevante en <lh>Socket stream</lh> con el estado <lt>ekSTBROKEN</lt>.
+
+func(stm_corrupt).Establece el estado del stream a <lt>ekSTCORRUPT</lt>.
+fpar(Stream*,stm).El objeto stream.
+fnote.En ocasiones, es la aplicación la que detecta que los datos están corruptos ya que la semántica de los mismos no coincide con lo esperado.
+
+func(stm_str).Crea un string con el contenido actual del búfer interno. Solo es válido para stream en memoria. <lf>stm_memory</lf>.
+fret(String*).El string con el contenido del búfer.
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_buffer).Obtiene un puntero al contenido actual del búfer interno. Solo es válido para stream en memoria. <lf>stm_memory</lf>.
+fret(const byte_t*).Puntero al búfer interno.
+fpar(const Stream*,stm).El objeto stream.
+fnote.Este puntero es de solo lectura. Escribir aquí tendrá consecuencias indeseadas.
+
+func(stm_buffer_size).Obtiene el tamaño actual del búfer interno. Solo es válido para stream en memoria. <lf>stm_memory</lf>.
+fret(uint32_t).El tamaño del búfer interno (en bytes).
+fpar(const Stream*,stm).El objeto stream.
+
+func(stm_write).Escribe bytes en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const byte_t*,data).Puntero al bloque de datos a escribir.
+fpar(const uint32_t,size).Número de bytes a escribir.
+fnote.El bloque se escribe tal cual llega, sin tener en cuenta el <lh>Orden de bytes</lh> ni las <lh>Codificaciones UTF</lh>.
+
+func(stm_write_char).Escribe un carácter Unicode en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const uint32_t,codepoint).El código <lp>unicode</lp> del carácter.
+fnote.La codificación se puede cambiar con <lf>stm_set_write_utf</lf>.
+
+func(stm_printf).Escribe texto en el stream, utilizando el formato del <c>printf</c>.
+fret(uint32_t).El número de bytes escritos.
+fpar(Stream*,stm).El objeto stream.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+fnote.El carácter nulo final (<c>'\0'</c>) no será escrito. La codificación se puede cambiar con <lf>stm_set_write_utf</lf>.
+fcode.
+stm_printf(stream, Code: %-10s Price %5.2f\n", code, price);
+fcode.
+
+func(stm_writef).Escribe una cadena C UTF8 en el stream.
+fret(uint32_t).El número de bytes escritos.
+fpar(Stream*,stm).El objeto stream.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fnote.El carácter nulo final (<c>'\0'</c>) no será escrito. Está función es más rápida que <lf>stm_printf</lf> cuando la cadena es constante y no necesita formato. Para objetos <lt>String</lt> utiliza <lf>str_writef</lf>. La codificación se puede cambiar con <lf>stm_set_write_utf</lf>.
+
+func(stm_write_bool).Escribe una variable <c>bool_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const bool_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros".
+
+func(stm_write_i8).Escribe una variable <c>int8_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const int8_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros".
+
+func(stm_write_i16).Escribe una variable <c>int16_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const int16_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_write_i32).Escribe una variable <c>int32_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const int32_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_write_i64).Escribe una variable <c>int64_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const int64_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_write_u8).Escribe una variable <c>uint8_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const uint8_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros".
+
+func(stm_write_u16).Escribe una variable <c>uint16_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const uint16_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_write_u32).Escribe una variable <c>uint32_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const uint32_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_write_u64).Escribe una variable <c>uint64_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const uint64_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_write_r32).Escribe una variable <c>real32_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const real32_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_write_r64).Escribe una variable <c>real64_t</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const real64_t,value).Variable a escribir.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_write_enum).Escribe una variable <c>enum</c> en el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const type,value).Variable a escribir.
+fpar(,type).El tipo del <c>enum</c>.
+fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read).Lee bytes desde el stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(byte_t*,data).Puntero al búfer donde se escribirán los datos leídos.
+fpar(const uint32_t,size).La cantidad de bytes a leer (tamaño del búfer).
+
+func(stm_skip).Salta e ignora los próximos bytes del stream.
+fpar(Stream*,stm).El objeto stream.
+fpar(const uint32_t,size).La cantidad de bytes a saltar.
+
+func(stm_read_char).Lee un carácter de texto desde el stream.
+fret(uint32_t).El código Unicode del carácter.
+fpar(Stream*,stm).El objeto stream.
+fnote.La codificación del texto de entrada puede ajustarse con <lf>stm_set_read_utf</lf>.
+
+func(stm_read_chars).Lee varios caracteres desde el stream.
+fret(const char_t*).Puntero a la cadena C UTF8 leída. Terminará con el carácter nulo <c>'\0'</c>.
+fpar(Stream*,stm).El objeto stream.
+fpar(const uint32_t,n).La cantidad de caracteres a leer.
+fnote.El puntero devuelto es temporal y será sobrescrito en la próxima lectura. Si es necesario, haz una copia con <lf>str_c</lf>. La codificación del texto de entrada puede ajustarse con <lf>stm_set_read_utf</lf>.
+
+func(stm_read_line).Lee caracteres del stream hasta alcanzar un final de línea <c>'\n'</c>.
+fret(const char_t*).Puntero a la cadena C UTF8 leída. Terminará con el carácter nulo <c>'\0'</c>. Los caracteres <c>'\n'</c> o <c>'\r\n'</c> serán eliminados.
+fpar(Stream*,stm).El objeto stream.
+fnote.El puntero devuelto es temporal y será sobrescrito en la próxima lectura. Si es necesario, haz una copia con <lf>str_c</lf>. La codificación del texto de entrada puede ajustarse con <lf>stm_set_read_utf</lf>.
+
+func(stm_read_delim).Lee caracteres del stream hasta alcanzar un carácter delimitador.
+fret(const char_t*).Puntero a la cadena C UTF8 leída. Terminará con el carácter nulo <c>'\0'</c>.
+fpar(Stream*,stm).El objeto stream.
+fpar(const uint32_t,codepoint).El carácter delimitador.
+fnote.Útil para leer <i>tokens</i> sencillos desde streams de texto. Si necesitas mayor control sobre los <i>tokens</i> utiliza <lf>lexscn_token</lf>. El carácter delimitador será eliminado del stream y no incluido en el resultado. El puntero devuelto es temporal y será sobrescrito en la próxima lectura. Si es necesario, haz una copia con <lf>str_c</lf>. La codificación del texto de entrada puede ajustarse con <lf>stm_set_read_utf</lf>.
+
+func(stm_read_trim).Lee la siguiente <i>token</i> delimitado por espacios en blanco.
+fret(const char_t*).Puntero a la cadena C UTF8 leída. Terminará con el carácter nulo <c>'\0'</c>.
+fpar(Stream*,stm).El objeto stream.
+fnote.Útil para leer <i>tokens</i> sencillos desde streams de texto. Ignorará todos los espacios en blanco iniciales y leerá caracteres hasta encontrar el primer blanco (<c>' ', '\\t', '\\n', '\\v', '\\f', '\\r'</c>). Si necesitas mayor control sobre los <i>tokens</i> utiliza <lf>lexscn_token</lf>. El puntero devuelto es temporal y será sobrescrito en la próxima lectura. Si es necesario, haz una copia con <lf>str_c</lf>. La codificación del texto de entrada puede ajustarse con <lf>stm_set_read_utf</lf>.
+
+func(stm_read_bool).Lee una variable <c>bool_t</c> desde el stream.
+fret(bool_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros".
+
+func(stm_read_i8).Lee una variable <c>int8_t</c> desde el stream.
+fret(int8_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros".
+
+func(stm_read_i16).Lee una variable <c>int16_t</c> desde el stream.
+fret(int16_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read_i32).Lee una variable <c>int32_t</c> desde el stream.
+fret(int32_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read_i64).Lee una variable <c>int64_t</c> desde el stream.
+fret(int64_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read_u8).Lee una variable <c>uint8_t</c> desde el stream.
+fret(uint8_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros".
+
+func(stm_read_u16).Lee una variable <c>uint16_t</c> desde el stream.
+fret(uint16_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read_u32).Lee una variable <c>uint32_t</c> desde el stream.
+fret(uint32_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read_u64).Lee una variable <c>uint64_t</c> desde el stream.
+fret(uint64_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read_r32).Lee una variable <c>real32_t</c> desde el stream.
+fret(real32_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read_r64).Lee una variable <c>real64_t</c> desde el stream.
+fret(real64_t).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_read_enum).Lee una variable <c>enum</c> desde el stream.
+fret(type).Variable leída.
+fpar(Stream*,stm).El objeto stream.
+fpar(,type).El tipo del <c>enum</c>.
+fnote.Es una lectura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
+
+func(stm_flush).Escribe en el canal la información existente en la caché.
+fpar(Stream*,stm).El objeto stream.
+fnote.Para mejorar el rendimiento, las operaciones de escritura en streams de disco o sockets se almacenan en una caché interna del stream. Esta función fuerza la escritura en el canal y limpia el búfer. Será útil con protocolos <i>full-duplex</i> donde el receptor espera contestación para continuar.
+
+func(stm_pipe).Conecta dos streams, leyendo datos de uno y escribiéndolos en otro.
+fpar(Stream*,from).El objeto stream de entrada (para leer).
+fpar(Stream*,to).El objeto stream de salida (para escribir).
+fpar(const uint32_t,n).La cantidad de bytes a trasvasar.
+fnote.El trasvase se realizará sobre datos "en bruto", sin tener en cuenta <lh>Orden de bytes</lh> o <lh>Codificaciones UTF</lh>. Si tienes claro que esto no afecta, es mucho más rápido que utilizar operaciones atómicas de lectura/escritura. 
+fcode.
+// This example is based in a private protocol.
+// Read from socket n-bytes and write them to file.
+uint32_t ip;
+uint32_t size;
+Stream *sockstm;
+Stream *filestm;
+bsocket_host_ip("www.myserver.com", &ip, NULL);
+sockstm = stm_socket(ip, 1647, NULL);
+filestm = stm_to_file("C:\Users\peter\image.png", NULL);
+stm_writef(sockstm, "Give me file 'peter.png'");
+size = stm_read_u32(sockstm, NULL);
+stm_pipe(sockstm, filestm, size);
+stm_close(&sockstm);
+stm_close(&filestm);
+fcode.
+
+func(stm_lines).Itera sobre todas las líneas en un <lh>Text stream</lh>. Debes usar <lf>stm_next</lf> para cerrar el bucle.
+fpar(const char_t*,line).Nombre de la variable que albergará temporalmente la línea. Utiliza una caché interna del stream, por lo que deberás hacer una copia con <lf>str_c</lf> si necesitas conservarla.
+fpar(Stream*,stm).Stream.
+fcode.
+uint32_t i = 1;
+Stream *stm = stm_from_file("/home/john/friends.txt", NULL);
+stm_lines(line, stm)
+    bstd_printf("Friend %d, name %s\n", i++, line);
+stm_next(line, stm);
+stm_close(&stm);
+fcode.
+
+func(stm_next).Cierra un bucle abierto por <lf>stm_lines</lf>.
+fpar(const char_t*,line).Nombre de la variable línea.
+fpar(Stream*,stm).Stream.

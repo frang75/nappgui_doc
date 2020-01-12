@@ -1,0 +1,22 @@
+
+h1.UpDown
+
+p.Los <b>UpDown</b> son controles tipo botón divididos horizontalmente dos partes <r>updown</r>. Cada parte tiene impresa una pequeña flecha y se utilizan, normalmente, para realizar incrementos discretos en valores numéricos asociados a controles <lp>edit</lp>. En <lh>¡Hola Edit y UpDown!</lh> tienes un ejemplo de uso.
+
+li.Utiliza <lf>updown_create</lf> para crear un botón updown.
+
+img(updown.png,0,.5).UpDown en Windows, macOS y Linux.
+Ventana donde aparecen varios controles updowns junto a editbox.
+
+func(updown_create).Crea un control updown.
+fret(UpDown*).El updown.
+
+func(updown_OnClick).Establece un manejador para la pulsación del botón.
+fpar(UpDown*,updown).El updown.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará tras hacer clic.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(updown_tooltip).Establece un tooltip para el botón. Es un pequeño texto explicativo que aparecerá cuando el ratón esté sobre el control.
+fpar(UpDown*,updown).El updown.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+

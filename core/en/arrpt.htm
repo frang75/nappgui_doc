@@ -1,0 +1,138 @@
+langrev.
+h1.Arrays of pointers
+
+ep.Structure that stores pointers in contiguous memory positions. For object arrays use <lp>arrst</lp>.
+
+func(arrpt_create).Create an empty array of pointers.
+fret(ArrPt(type)*).The new array.
+fpar(,type).Object type.
+
+func(arrpt_destroy).Destroy an array and all its elements.
+fpar(ArrPt(type)**).The array. It will be set to <c>NULL</c> after destruction.
+fpar(FPtr_destroy,func_destroy).Function to destroy an element <lh>Destructors</lh>. If <c>NULL</c> only the array will be destroyed, but not its elements.
+fpar(,type).Object type.
+
+func(arrpt_clear).Delete the contents of the array, without destroying the container that will be left with zero elements.
+fpar(ArrPt(type)*,array).The array.
+fpar(FPtr_destroy,func_destroy).Destructor function. See <lf>arrpt_destroy</lf>.
+fpar(,type).Object type.
+
+func(arrpt_read).Create an array by reading its contents from a <lp>stream</lp> (de-serialization).
+fret(ArrPt(type)*).The array readed.
+fpar(Stream*,stream).A read <i>stream</i>.
+fpar(FPtr_read,func_read).Constructor to create an object from the data obtained from a stream. <lh>Serialization</lh>.
+fpar(,type).Object type.
+
+func(arrpt_write).Write an array in a <lp>stream</lp> (serialization).
+fpar(Stream*,stream).A write <i>stream</i>.
+fpar(const ArrPt(type)*,array).The array.
+fpar(FPtr_write,func_write).Function that writes the content of an element in a stream <lh>Serialization</lh>.
+fpar(,type).Object type.
+
+func(arrpt_size).Get the number of elements in an array.
+fret(uint32_t).Number of elements.
+fpar(const ArrPt(type)*,array).The array.
+fpar(,type).Object type.
+
+func(arrpt_get).Get a pointer to the item in <c>pos</c> position.
+fret(type*).Item Pointer.
+fpar(const ArrPt(type)*,array).The array.
+fpar(const uint32_t,pos).Item position or index.
+fpar(,type).Object type.
+
+func(arrpt_last).Get a pointer to the last element of the array.
+fret(type*).Item Pointer.
+fpar(const ArrPt(type)*,array).The array.
+fpar(,type).Object type.
+
+func(arrpt_all).Get a pointer to the internal memory of the array, which gives access to all the elements.
+fret(type**).Base pointer. Increasing it one by one we will iterate over the elements.
+fpar(const ArrPt(type)*,array).The array.
+fpar(,type).Object type.
+fnote.Use <lf>arrpt_foreach</lf> to iterate over all elements in a more secure and elegant way.
+
+func(arrpt_grow).Append <c>n</c> elements, not initialized, at the end of the array.
+fret(type**).Pointer to the first item added.
+fpar(ArrPt(type)*,array).The array.
+fpar(const uint32_t,n).Number of items to add.
+fpar(,type).Object type.
+
+func(arrpt_append).Adds a pointer to the end of the array.
+fpar(ArrPt(type)*,array).The array.
+fpar(type*,value).Pointer to the item to append.
+fpar(,type).Object type.
+
+func(arrpt_prepend).Insert a pointer at the beginning of the array. The rest of the elements will be shifted to the right.
+fpar(ArrPt(type)*,array).The array.
+fpar(type*,value).Pointer to the element to insert.
+fpar(,type).Object type.
+
+func(arrpt_insert).Insert a pointer in an arbitrary array position.
+fpar(ArrPt(type)*,array).The array.
+fpar(const uint32_t,pos).Position where it will be inserted. The current item in <c>pos</c> and following will be shifted to the right.
+fpar(type*,value).Pointer to the element to insert.
+fpar(,type).Object type.
+
+func(arrpt_delete).Remove a pointer from the array.
+fpar(ArrPt(type)*,array).The array.
+fpar(const uint32_t,pos).Position of the item to be deleted. The current item in <c>pos+1</c> and following will be shifted to the left.
+fpar(FPtr_destroy,func_destroy).Element destructor. See <lf>arrpt_destroy</lf>.
+fpar(,type).Object type.
+
+func(arrpt_pop).Remove the last pointer from the array.
+fpar(ArrPt(type)*,array).The array.
+fpar(FPtr_destroy,func_destroy).Element destructor. See <lf>arrpt_destroy</lf>.
+fpar(,type).Object type.
+
+func(arrpt_sort).Sort the array elements using Quicksort.
+fpar(ArrPt(type)*,array).The array.
+fpar(FPtr_compare,func_compare).Function to compare two elements. <lh>Sort and search</lh>.
+fpar(,type).Object type.
+
+func(arrpt_find).Search for a specific pointer in the array.
+fret(uint32_t).The position of the pointer if it exists, or <lt>UINT32_MAX</lt> if not.
+fpar(const ArrPt(type)*,array).The array.
+fpar(type*,elem).Pointer to find.
+fpar(,type).Object type.
+
+func(arrpt_search).Search for an element in the array linearly <c>O(n)</c>.
+fret(type*).Pointer to the first element that matches the search criteria or <c>NULL</c> if none exists.
+fpar(ArrPt(type)*,array).The array.
+fpar(FPtr_compare,func_compare).Comparison function. The first parameter is the element, the second the search key. <lh>Sort and search</lh>.
+fpar(ktype,key).Search key. Pointer to a data type that may be different from the type of array element.
+fpar(uint32_t*,pos).Position of the element in the array (if it exists), or <c>UINT32_MAX</c> if it does not exist. Can be <c>NULL</c>.
+fpar(,type).Object type.
+fpar(,ktype).Key type.
+
+func(arrpt_bsearch).Search for an element in the array logarithmically <c>O(logn)</c>.
+fret(type*).Pointer to the first element that matches the search criteria or <c>NULL</c> if none exists.
+fpar(ArrPt(type)*,array).The array.
+fpar(FPtr_compare,func_compare).Comparison function. The first parameter is the element, the second the search key. <lh>Sort and search</lh>.
+fpar(ktype,key).Clave a buscar. Puntero a un tipo de dato que puede ser diferente al tipo de elemento del array.
+fpar(uint32_t*,pos).Position of the element in the array (if it exists), or <c>UINT32_MAX</c> if it does not exist. Can be <c>NULL</c>.
+fpar(,type).Object type.
+fpar(,ktype).Key type.
+fnote.The array must be sorted according to the same criteria as the search. If not, the result is unpredictable.
+
+func(arrpt_foreach).Iterate on all array elements. Uses <c>arrpt_end</c> to close the loop.
+fpar(type*,elem).Name of the 'element' variable within the loop. Adding the suffix <c>'_i'</c> we get the index.
+fpar(ArrPt(type)*,array).The array.
+fpar(,type).Object type.
+fcode.
+arrpt_foreach(product, array, Product)
+    bstd_printf("Index:%d, Id:%d\n", product_i, product->id);
+arrpt_end()
+fcode.
+
+func(arrpt_foreach_rev).Iterate on all array elements backward, from the last to the first. Uses <c>arrpt_end</c> to close the loop.
+fpar(type*,elem).Name of the 'element' variable within the loop. Adding the suffix <c>'_i'</c> we get the index.
+fpar(ArrPt(type)*,array).The array.
+fpar(,type).Object type.
+fcode.
+// Now in reverse order
+arrpt_foreach_rev(product, array, Product)
+    bstd_printf("Index:%d, Id:%d\n", product_i, product->id);
+arrpt_end()
+fcode.
+
+func(arrpt_end).Close the loop opened by <lf>arrpt_foreach</lf> or <lf>arrpt_foreach_rev</lf>.

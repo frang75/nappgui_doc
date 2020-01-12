@@ -1,0 +1,494 @@
+langrev.
+h1.Portability
+
+ep.It's hard to write software that runs correctly and efficiently. So once a program works in one environment, you don't want to repeat much of the effort if you move it to a different compiler or processor or operating system. <b>Ideally, it should need no changes whatsoever</b>.
+Kernighan & Pike - The Practice of Programming.
+
+p.In <lp>newprj</lp> we use Visual Studio 2019 to compile and debug the <i>Die</i> application within the <i>NAppGUI</i> solution. Then we saw how to add resources and organize the code through libraries. The time has come to migrate the project to other platforms and operating systems. We're not going to touch a single line of code, we'll just use <b>CMake</b> and the appropriate compiler/IDE for each case.
+
+li.<l>https://developer.apple.com/xcode/''Xcode</l> to compile under macOS.
+
+li.<l>https://www.eclipse.org/cdt/''Eclipse CDT</l> to compile under Linux. Only GCC/Make tools are really necessary, but we recommend Eclipse as a development environment for Linux.
+
+h2.Version control
+
+p.First of all we should be able to move the project folder (remember <c>C:/nappgui</c>) to different machines in an agile way, since we will have to compile the source code in several operating systems. The ideal is to use a version control system where you can manage all code changes <r>multiplatform_infraestructure</r>, since this will allow any machine to be updated and compile the latest version of the project.
+
+img(multiplatform_infraestructure.svg,520,.75).Basic infrastructure for cross-platform development, centered on the code repository. 
+Three Windows, MacOS and Linux computers connected in network to the same source code repository.
+
+p.Nowadays there are numerous alternatives of online repositories, such as <l>https://github.com/''GitHub</l>, whose main advantage is that programmers in different locations can collaborate in the same project. Without going any further, the SDK itself is hosted on GitHub, as we saw in <lp>quick</lp>. If we are concerned about privacy or all the computers are in the same local network we can choose to install our own Git, Subversion or any other server.
+
+bq.We strongly recommend hosting our project in a repository managed by a version control system.
+
+p.For the rest of the chapter we will consider that in each machine we have a local copy of the directory <c>C:\nappgui</c> with which we have been working until now. It contains both the packages that make up the SDK and the projects <c>Die</c>, <c>Dice</c> and <c>casino</c> that we have developed in previous chapters.
+
+h2.Visual Studio Platform Toolset
+
+p.We can use any version of Visual Studio from 2005 <r>vsvers</r> to compile under Windows. To select one or the other we open CMake and press <c>File->Delete cache</c>. Later:
+
+table(vsvers).Visual Studio versions supported by NAppGUI.
+row.
+p.
+p.Version
+p.Platform Toolset
+row.
+img(vs2019.png,32,.05).
+p.VS2019
+p.v142
+row.
+img(vs2017.png,32,.05).
+p.VS2017
+p.v141/v141_xp
+row.
+img(vs2015.png,32,.05).
+p.VS2015
+p.v140/v140_xp
+row.
+img(vs2013.png,32,.05).
+p.VS2013
+p.v120/v120_xp
+row.
+img(vs2012.png,32,.05).
+p.VS2012
+p.v110/v110_xp
+row.
+img(vs2010.png,32,.05).
+p.VS201 0
+p.v100
+row.
+img(vs2008.png,32,.05).
+p.VS2008
+p.v90
+row.
+img(vs2005.png,32,.05).
+p.VS2005
+p.v80
+table.
+
+li.<b>Where is the source code:</b> <c>C:\nappgui</c>.
+
+li.<b>Where to build the binaries:</b> <c>C:\nappgui_build</c>.
+
+p.Then we press <c>[Configure]</c> that will show the wizard again with the list of available compilers <r>cmake_depends_link</r>. We press again <c>[Generate]</c> to create the new solution, compatible with the version of Visual Studio that we have chosen. We press <c>[Open Project]</c>, compile <c>Build->Build Solution</c> and debug <c>Debug->Start Debugging</c>.
+
+img(cmake_depends_link.svg,560,.65).Selecting the Visual Studio version from the CMake wizard.
+Drop list that shows the different versions of Visual Studio with which we can compile. 
+
+p.Normally, libraries compiled with a version of Visual Studio can not link to generated applications with another version, so CMake is already responsible for linking the appropriate version of NAppGUI depending on the selected compiler. In <r>vs2010_debug</r> we have compiled <i>Die</i> with Visual Studio 2010.
+
+img(vs2010_debug.png,620,.80).Debugging the <i>Die</i> application in Visual Studio 2010.
+Visual Studio 2010 debugging a C application.
+
+bq.To change the version of Visual Studio again we have to clear the CMake cache or change the destination directory: <b>Where to build the binaries</b>. It is possible to have different solutions from the same code in several directories, each with its own version of Visual Studio.
+
+p.Starting with Visual Studio 2010, a dissociation occurs between the editor and the compiler. The term <i>Plaform Toolset</i> identifies the compiler and the Microsoft libraries that can be used with more modern IDEs. If we do not indicate anything, CMake will use the toolset included by default in each version of VS, but it can be changed from <i>Optional toolset to use</i>. For example, we can combine <c>Visual Studio 15 2017</c> with the VS2013 toolset <c>v120_xp</c> <r>optional_toolset</r>.
+
+img(optional_toolset.png,-1,.70).Using the toolset <c>v120_xp</c> with the editor of VS2017.
+Optional toolset to use in CMake.
+
+h3.Visual C++ Redistributable
+
+p.By default, Visual Studio dynamically links the functions of the C library, which causes the <c>.exe</c> may not work on machines that do not have the <c>VC++</c> DLLs <r>vc_redistributable_error</r>. This forces applications to include a copy of <c>MSVCRT.dll</c>, <c>VCRUNTIME.dll</c>, ... or install the famous <i>Visual C ++ Redistributable</i> packages to ensure the application can run smoothly.
+
+img(vc_redistributable_error.png,600,.90).Error due to lack of VC++ DLLs.
+Error message caused by the lack of VC ++ libraries.
+
+p.NAppGUI uses a small set of the C library, and directly accesses the Windows API whenever possible (more details in <lh>Standard C library</lh>). For this reason, all applications created with NAppGUI perform a static link (option <c>/MT</c>) of the stdlib functions that need, avoiding dependencies at the expense of slightly increasing (a few Kb) the size of the final executable. This ensures that applications will run smoothly on all Windows machines without the need for additional DLLs and without having to install the <i>VC++ Redistributable</i>.
+
+bq.NAppGUI applications do not require the Visual C++ Redistributable. Neither do they use the MFC "Microsoft Foundation Classes" nor the .NET platform.
+
+h3.WindowsXP support
+
+p.From VS2012, the <i>Platform Toolset</i> generates executables that are not compatible with WindowsXP. If we want our applications to run on this system, we must select the alternative toolset finished in <c>_xp</c>: <c>V141_xp</c>, <c>V140_xp</c>, <c>V120_xp</c>, <c>V110_xp</c>. Or, <c>v100</c>, <c>v90</c> or <c>v80</c>, that do support XP <r>vs2005_debug</r>.
+
+bq.Support for WindowsXP has been permanently removed in Visual Studio 2019. Platform Toolset v142_xp does not exist.
+
+img(vs2005_debug.png,800,.80).Debugging the <i>Die</i> application in WindowsXP with VS2005 (toolset v80).
+Using Visual Studio 2005 in WindowsXP by debugging an application written in C.
+
+bq.NAppGUI does not work on Windows prior to XP or with Visual Studio prior to 2005.
+
+h2.Xcode
+
+p.Compiling on Apple computers follows the same philosophy as in Windows, we will only need CMake and Xcode. As we have already done in Windows, we open CMake and assign the directories <r>cmake_macos</r>:
+
+li.<b>Where is the source code:</b> <c>/Users/fran/nappgui/src</c> (or your <c>WORKING_DIR/nappgui/src</c>).
+
+li.<b>Where to build the binaries:</b> <c>/Users/fran/nappgui_build</c>. Directory where the generated code will go.
+
+img(cmake_macos.png,0,.80).Generating the solution in macOS.
+Generating the Xcode solution using CMake in macOS.
+
+p.Press <c>[Configure]</c>. The first time CMake will ask us to select the compiler. Unlike Visual Studio, it only offers a version of Xcode <r>cmake_xcode</r>. We accept, we press <c>[Generate]</c> and then <c>[Open Project]</c>.
+
+img(cmake_xcode.png,0,.55).Selection of the Xcode generator in CMake.
+Selecting Xcode from the CMake wizard.
+
+p.When opening the Xcode solution <c>(NAppGUI.xcodeproj)</c>, we see the different projects that compose it, including <i>Die</i> and <i>Dice</i>. We select <i>Die</i> in the upper left drop-down and then press <c>Play</c> or <c>Product->Run</c> <r>xcode_debug</r>. This will compile the program and launch it in debug mode, where we can establish breakpoints to inspect the stack and the value of the variables.
+
+img(xcode_debug.png,0,.80).Debugging the <i>Die</i> application in Xcode.
+Debugging the Die application from Xcode 10.2.1.
+
+h3.Base SDK
+
+p.Each year, Apple releases a new version of macOS, which comes with a new SDK and the Xcode update that includes the SDK. NAppGUI applications will work on OSX Snow Leopard systems and later <r>snow_leopard_debug</r>. You have the complete list of the supported Xcode versions in <r>xcodevers</r>. <b>Base SDK</b> are the libraries with which a program links at compile time (a concept similar to the <i>Platform Toolset</i>) and that depend on the version of Xcode that we are using. If we want to have access to the latest features of the system we must use the latest version of the development environment.
+
+table(xcodevers).Xcode versions supported by NAppGUI. Only the latest minor version is displayed.
+row.
+p.
+p.Version
+p.Base SDK
+p.macOS
+p.Deployment target
+row.
+img(mojave.png,32,.05).
+p.Xcode 10.2.1
+p.10.14
+p.Mojave
+p.10.14-10.9
+row.
+img(high_sierra.png,32,.05).
+p.Xcode 9.4.1
+p.10.13
+p.High Sierra
+p.10.13-10.9
+row.
+img(sierra.png,32,.05).
+p.Xcode 8.3.3
+p.10.12
+p.Sierra
+p.10.12-10.9
+row.
+img(el_capitan.png,32,.05).
+p.Xcode 7.3.1
+p.10.11
+p.El Capitan
+p.10.11-10.6
+row.
+img(yosemite.png,32,.05).
+p.Xcode 6.4
+p.10.10
+p.Yosemite
+p.10.10-10.6
+row.
+img(mavericks.png,32,.05).
+p.Xcode 6.2
+p.10.9
+p.Mavericks
+p.10.9-10.6
+row.
+img(mountain_lion.png,32,.05).
+p.Xcode 5.1.1
+p.10.8
+p.Mountain Lion
+p.10.8-10.6
+row.
+img(lion.png,32,.05).
+p.Xcode 4.6.3
+p.10.7
+p.Lion
+p.10.7-10.6
+row.
+img(snow_leopard.png,32,.05).
+p.Xcode 3.2.6
+p.10.6
+p.Snow Leopard
+p.10.6
+table.
+
+img(snow_leopard_debug.png,0,.80).Debugging <i>Die</i> in Xcode 3.2.6 Snow Leopard.
+Debugging the Die application from Xcode in Snow Leopard.
+
+h3.Deployment target
+
+p.The <i>Deployment target</i> indicates the minimum version of the operating system required by the application, which may be lower than the Base SDK. It is possible to edit it through the parameter <c>CMAKE_DEPLOYMENT_TARGET</c> inside the list of CMake properties as we saw in <r>cmake_macos</r>. For example if we use Xcode 10 (Base SDK 10.14) with Deployment Target <c>10.9</c> means that the application will work on macOS 10.9 (Mavericks) and later. In <r>deployment_target</r> we have compiled Die with <i>Deployment target</i> 10.14, which means that it will work only on macOS Mojave and later.
+
+
+bq.Xcode 8 considers Deployment Target to be less than 10.9 obsolete <r>deprecated_10_9</r>. Use Xcode 7 if you want support for Mac OSX 10.8 Mountain Lion and earlier. 
+
+img(deprecated_10_9.png,-1,.45).Deployment Target 10.9 obsolete from Xcode 8.
+Warning osx 10.9 deprecated.
+
+h3.xcode-select
+
+p.It is possible to have several versions of Xcode on the same machine, each one within its own <c>Xcode.app</c> <i>bundle</i>, but only one will be active at any time. This is why CMake does not offer us different options for the Xcode generator, as it did with Visual Studio, since it uses the active version of the compiler. It can be configured using the utility <c>xcode-select</c>:
+
+code.Check the current version of Xcode.
+xcode-select -p
+/Applications/Xcode.app/Contents/Developer
+code.
+
+code.Change of the active version of Xcode.
+sudo xcode-select -s /Applications/Xcode8.app/Contents/Developer
+code.
+
+code.Set the default version of Xcode.
+sudo xcode-select -r
+code.
+
+h2.GCC
+
+p.In the Linux world, the <c>gcc</c> compiler and <c>make</c> tool are used to generate the binaries, but there is no an "official" development environment. We will use Eclipse CDT but there are other alternatives, including working directly with a terminal. The work methodology does not change at all. We open CMake, select the directories, press <c>[Configure]</c> and then <c>[Generate]</c> <r>cmake_linux</r>.
+
+img(cmake_linux.png,0,.80).Configuring CMake on Linux.
+Configure the CMake directories on Linux.
+
+p.In Linux we must use the CMake <c>Unix Makefiles</c> generator, which will create a series of <c>Makefile</c> scripts in <c>/home/fran/nappgui_build</c> (or the binary directory that we have selected). These <c>Makefile</c> contain the necessary commands to compile and link all the projects of the solution. We open a terminal:
+
+code(text).Generate the solution through <c>make</c>.
+cd /home/fran/nappgui_build
+make
+[ 15%] Building C object games/die/CMakeFiles/Die.dir/dgui.c.o
+[ 30%] Building C object games/die/CMakeFiles/Die.dir/die.c.o
+[ 45%] Building C object games/die/CMakeFiles/Die.dir/draw/ddraw.c.o
+[ 60%] Building C object games/die/CMakeFiles/Die.dir/resgen/all.c.o
+[ 75%] Linking CXX executable Debug/Die
+[ 95%] Built target Die
+code.
+
+code(text).Launch the <i>Die</i> application.
+./die/Debug/Die
+code.
+
+code(text).Debugging <i>Die</i> with <i>gdb</i> <r>debug_gdb</r>.
+gdb ./die/Debug/Die
+(gdb) run
+...
+code.
+
+img(debug_gdb.png,0,.80).Debugging <i>Die</i> with GDB from the terminal.
+Using GDB to debug a C application.
+
+h3.Eclipse CDT
+
+p.Working directly with the terminal gives us the freedom to use the editor we want. With returning to the console and typing <c>make</c> everything necessary will be re-compiled. However, the use of <c>GDB</c> directly will be quite tedious, so we will make the leap to Eclipse CDT. This environment will allow us to program with a methodology similar to that of Visual Studio and Xcode: Situate breakpoints, inspect the stack and variables, search for files within the code directory, multiple editions, mass searches, etc..
+
+p.The only difference is that we must use the generator <c>Eclipse CDT4 - Unix Makefiles</c> in CMake <r>make_generators</r> that in addition to <c>Makefile</c> will create the files <c>.cproject</c> and <c>.project</c> needed to import the project into Eclipse.
+
+img(make_generators.png,0,.65).Generators based on <c>Makefile</c>. 
+CMake Generators for Linux based on Makefile.
+
+p.We open Eclipse and we do <c>File->Import->Existing Projects into Workspace</c>. A dialog box will appear where we indicate the <i>build</i> directory that we have configured in CMake (<c>/home/fran/nappgui_build</c>). Eclipse will open the project placing a tree with all the files on the left and we'll compile with <c>Project->Build All</c>. At the time of debugging (Die in this case) we will create a profile from <c>Run->Debug Configurations->C/C++ Application</c>. We press <c>[Search Project...]</c> and select <i>Die</i> from the drop-down list. Finally we press <c>[Debug]</c> to debug the application interactively <r>eclipse_debug</r>.
+
+img(eclipse_debug.png,0,.80).Debugging the <i>Die</i> application with Eclipse.
+Debugging the Die application from Eclipse.
+
+h3.update-alternatives
+
+p.NAppGUI supports the GCC compiler since version 4.3 (2008). Given the number of existing Linux distributions and that each one includes its own version of GCC, we will use Ubuntu as the reference operating system <r>gccvers</r>.
+
+table(gccvers).GCC versions.
+row.
+p.
+p.GCC
+p.Ubuntu
+row.
+img(ubuntu_logo.png,32,.05).
+p.8.3.0
+p.18.10
+row.
+img(ubuntu_logo.png,32,.05).
+p.7.3.0
+p.18.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.5.3.1
+p.16.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.4.8.2
+p.14.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.4.6.3
+p.12.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.4.4
+p.10.04 LTS
+table.
+
+p.It is possible to have several versions of GCC installed on the same machine and to alternate between them in a similar way as we did with <c>xcode-select</c>, through utility <c>update-alternatives</c> of Linux. We assume that we are in Ubuntu 18.04:
+
+code(text).Version of gcc installed.
+gcc --version
+gcc 7.3.0
+code.
+
+code(text).Install gcc-6.
+sudo apt-get install gcc-6 g++-6
+code.
+
+code(text).Registry gcc-7 and gcc-6.
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 50 --slave /usr/bin/g++ g++ /usr/bin/g++-6
+code.
+
+code(text).Switch to gcc-6.
+sudo update-alternatives --set gcc /usr/bin/gcc-6
+gcc --version
+gcc 6.5.0
+g++ --version
+g++ 6.5.0
+code.
+
+code(text).Return to the default version of gcc.
+sudo update-alternatives --auto gcc
+gcc --version
+gcc 7.3.0
+g++ --version
+g++ 7.3.0
+code.
+
+h3.Toolkits
+
+p.Unlike Windows and macOS, in Linux you can create user interfaces using different libraries (or <i>toolkits</i>) with GTK and Qt being the two most famous. NAppGUI uses GTK+3 for the graphical part in Linux (see <lh>Dependencies</lh>), although in the future it is possible that it also incorporates support for Qt, since it is the basis of the KDE desktop system, used in Kubuntu.
+
+p.GTK+3 is found naturally in Ubuntu and many other distributions, although to compile it is necessary to install the developer version.
+
+code(text).Install the development version of GTK+3.
+sudo apt-get install libgtk-3-dev
+code.
+
+h2.Architecture x86
+
+p.The architecture <l>https://en.wikipedia.org/wiki/X86-64''x86_64</l>, based on the famous Intel i386, is the undisputed queen in the world of desktops, laptops and servers today. Although less and less, there are still 32bit machines or 32bit Windows/Linux operating systems that do not allow to execute x86_64 code. For these models, we may be interested in distributing a 32bit version, although we must bear in mind some peculiarities. 
+
+p.To begin, the way to generate code x86_64 or i386 depends on the platform:
+
+li.In Visual Studio, we can choose the destination architecture (x64/x86) through the <i>Optional platform for generator</i> option <r>generator_platform</r>.
+
+img(generator_platform.png,0,.80).Selection of the architecture in the generator panel.
+CMake Optional platform for generator.
+
+li.In macOS and Linux, we will select the architecture through the property <c>CMAKE_ARCHITECTURE</c> <r>cmake_architecture</r>. 
+
+img(cmake_architecture.png,0,.80).Selecting the architecture from the properties panel.
+CMake Architecture from panel.
+
+h3.SSE support
+
+p.With the Pentium III, Intel incorporated an additional set of instructions for floating-point operations called SSE <i>Streaming SIMD Extensions</i>. This allows optimizing mathematical calculations at the cost of losing compatibility, since applications that use SSE will not work on Pentium II or earlier models. In NAppGUI the toolset have been reserved <c>v80_x86</c> and <c>v90_x86</c> of Visual Studio to create applications compatible with older processors <r>ssevers</r>. From <c>v100_x86</c>, SSE2 will be used in all the toolset.
+
+table(ssevers).SSE support
+row.
+p.Toolset
+p.SSE
+p.Minimum CPU
+row.
+p.v80_x86
+p.x87 (no SSE)
+p.Pentium II/AMD K6
+row.
+p.v90_x86
+p.SSE
+p.Pentium III/AMD Duron
+row.
+p.v100_x86
+p.SSE2
+p.Pentium IV/AMD Sempron
+row.
+p.v110_x86
+p.SSE2
+p.Pentium IV/AMD Sempron
+row.
+p....
+p.SSE2
+p....
+table.
+
+bq.SSE support is only disabled in 32-bit (x86) architectures. All 64-bit (x64) CPUs incorporate SSE2.
+
+h3.macOS 32bits
+
+p.Since the macOS High Sierra version, Apple has <l>https://support.apple.com/en-us/HT208436''declared obsolete</l> the architecture of 32 bits, issuing warnings to the users in the case of detecting executables <c>i386</c> <r>macos_32bit_warnings</r>. From Xcode 10, you can not compile in this architecture <r>macos_i386_error</r>.
+
+img(macos_32bit_warnings.png,-1,.80).MacOS warnings in 32bit applications. 
+Warning of macOS when trying to run 32bit applications.
+
+img(macos_i386_error.png,520,.80).Error in Xcode 10 when trying to compile in 32bits.
+Error message in Xcode 10 when compiled in 32bits.
+
+p.This makes some sense since all models of Intel iMac incorporate 64-bit processors, with the exception of a few 2006 models in white polycarbonate that mounted the 32-bit Intel Core Duo <r>imac32bits</r>. These iMac admitted at most the Mac OSX 10.6 Snow Leopard, being fundamental requirement from 10.7 Lion, the have a 64-bit CPU. To compile without problems in 32bits you have to use, at most, Xcode 6.
+
+img(imac32bits.png,520,.65).Unique Apple models with Intel 32bit processor.
+iMac, macBook and macMini with Intel 32bit processors.
+
+h3.GTK 32bits
+
+p.To compile 32bit applications from an Ubuntu 64bits system it is necessary to install the package <c>multilib</c>:
+
+code(text).
+sudo apt-get install gcc-multilib
+code.
+
+p.But now there are <l>https://ubuntuforums.org/showthread.php?t=2038875''problems</l> to perform cross-compilation that includes the GTK+ library, so it will not be possible to use the same development machine to generate in both architectures, as in Windows. Console applications or libraries that do not access GTK can be compiled in 32bits from a 64bit computer.
+
+bq.It is not possible to compile in 32bits from an Ubuntu system of 64bit applications that use GTK+3. 
+
+h2.ARM architecture
+
+p.The architecture <l>https://en.wikipedia.org/wiki/ARM_architecture''ARM</l> <i>Advanced RISC Machine</i> is the predominant in the market of embedded devices such as smartphones and tablets. Currently, NAppGUI does not offer support for the development of iOS/Android mobile applications, but for other types of boards that support versions of Linux ARM "desktop", such as the Raspberry PI with Raspbian. To carry our code to Raspberry Pi you have to follow the same steps as in Ubuntu Linux <r>raspberry_debug</r>. Both distributions are based on Debian, so we have GCC, CMake and Eclipse directly through <c>apt-get</c>. 
+
+img(raspberry_debug.png,0,.80).Debugging the <i>Die</i> application on a Raspberry Pi. 
+Debugging a C application on a Raspberry Pi, using Eclipse.
+
+h2.Configurations
+
+p.An NAppGUI application can be compiled in three different configurations, depending on the level of debugging we need.
+
+li.<i>Debug</i>: Includes debug information in the binaries and code optimizations are not performed. It is the version for the developer.
+
+li.<i>Release</i>: The debug information is removed and all possible optimizations are made. It is the version for the user. 
+
+li.<i>ReleaseWithAssert</i>: It is the Release version, but leaving the statements active <lp>cassert</lp>. It is aimed at the end user, but in cases where it is necessary to obtain detailed information of possible anomalies, at the cost of a decrease in the overall performance of the program.
+
+p.Both Visual Studio and Xcode are multi-configuration environments, that is, we can alternate between them directly from the editor itself. In Visual Studio we have a drop-down at the top of the editor <r>config_vs</r>.
+
+img(config_vs.png,0,.65).Changing settings in Visual Studio.
+Configuration selection menu in Visual Studio.
+
+p.In Xcode is a bit more hidden. We make <c>Product->Scheme->Edit Scheme</c>. A pop-up window will appear. We select <c>Run->Info->Build Configuration</c> <r>config_xcode</r>.
+
+img(config_xcode.png,0,.65).Change of configuration in Xcode.
+Xcode configuration selection menu.
+
+p.Unfortunately, <c>Unix make</c> does not support multiple configurations. This forces us to enter the property <c>CMAKE_BUILD_CONFIG</c> <r>config_cmake</r> to set the configuration in CMake before generating the <c>Makefile</c>. We will have to press again <c>[Configure]</c> and <c>[Generate]</c> for the new configuration to take effect.
+
+img(config_cmake.png,0,.80).Changing settings in CMake (Unix Makefile).
+Configuration selection menu in CMake.
+
+h2.Installers
+
+p.The last step, once a program has been created and refined, will be to create a package/installer that contains the executable and its possible dependencies, to distribute it comfortably to the final user. This packaging process has been automated in NAppGUI thanks to CPack, a utility included with CMake. The process is simple, you just have to follow three steps:
+
+li.Indicate that we want to package an application through the last parameter of the command <c>desktopApp</c> (<c>CMakeLists.txt</c>), that we already saw in <lh>Solutions and projects</lh>. We changed <c>NO</c> by <c>YES</c>.
+
+code(text).
+desktopApp(Die die "" NRC_EMBEDDED YES)
+code.
+
+bq.The packaging of a program consumes time. Switch to <c>YES</c> only when we go to distribute. During the development process maintain the value <c>NO</c>.
+
+li.In CMake there is a variable called <c>CMAKE_PACKAGE_PATH</c> in which we must establish the directory in which they will store the generated packages.
+
+li.Select the type of packaging through the variable <c>CMAKE_PACKAGE_GEN</c> that admits three values:
+
+lili.<c>TGZ</c>: Create a compressed package <c>.tar.gz</c> that can be opened with any utility <c>.zip</c> installed on the computer <r>pack_tgz</r>. 
+
+img(pack_tgz.png,0,.80).Packaging .tar.gz in Linux.
+Packaging an application with .tar.gz.
+
+lili.<c>DragNDrop</c>: (Only macOS). Create a <c>dmg</c> unit with a bundle <c>.app</c> and a link to the folder <c>/Applications</c> <r>pack_drag_n_drop</r>.
+
+img(pack_drag_n_drop.png,0,.80).Packaging dmg in macOS.
+Packaging an application with .tar.gz.
+
+lili.<c>NSIS</c>: (Windows only). Create an installer using the <i>Nullsoft scriptable install system</i> utility <r>pack_nsis</r>. It is necessary to have the software installed <l>https://nsis.sourceforge.io/Download''NSIS</l> (only to create the installer). The user who receives the package does not need to have this software installed.
+
+img(pack_nsis.png,0,.80).NSIS Installer.
+NSIS installer with the application that we just created.
+
+p.Each package includes a copy of the license with which we will distribute the application. The content of it can be edited from the file <c>/res/license.txt</c> included in the resource directory of each project. 
+

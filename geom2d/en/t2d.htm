@@ -1,0 +1,260 @@
+langrev.
+h1.2D Transformations
+
+p.Affine transformations are a type of mathematical operation that allows coordinate changes between different reference systems. For example in <r>coord_system</r> <b>(a)</b> we construct a polygon expressing the coordinates of its vertices in a Cartesian system: [ (4,1), (2,5), (-3,5), (-4,2), (0, -3) ]. Now let's imagine that we want to draw several instances of our model on a plane, each with a different position, orientation and size <r>coord_system</r> <b>(b)</b>. We would need to calculate the coordinates of the points of the polygon in the new locations, in order to correctly draw the lines that delimit them.
+
+img(coord_system.svg,700,.8).Geometric model (a) Expressed in a Cartesian system. (b) After applying transformations.
+Drawing of a polygon in a Cartesian system and drawing of the same polygon in different positions and orientations.
+
+p.Vector Algebra gives us a powerful tool with which the relationship between two systems can be expressed using six real numbers <r>affine_transform</r>. The first four values correspond to a 2x2 matrix with the coordinates of the vectors X=[1,0] and Y=[0,1] in the new reference system. This matrix integrates a possible rotation and scaling of the axes. The last two values indicate a displacement in the origin of coordinates. In <r>aplin</r> we have the mathematical development to transform the point [4.1] to a new base rotated 25° with respect to the origin and displaced 11 units on the X axis and -5 on the Y axis. Applying the same operation to all points, we would transform the object.
+
+img(affine_transform.svg,700,.8).Change of base. Relationship of a point in two different reference systems.
+Geometric representation of a point expressed in two reference systems.
+
+math(aplin).Point [4,1] transformation.
+\begin{eqnarray*}
+\begin{bmatrix}
+	x' \\
+	y'
+\end{bmatrix}
+& = & 
+\begin{bmatrix}
+	i.x & j.x \\
+	i.y & j.y
+\end{bmatrix}
+\begin{bmatrix}
+	x \\
+	y
+\end{bmatrix}
++
+\begin{bmatrix}
+	p.x \\
+	p.y
+\end{bmatrix}\\
+& = &
+\begin{bmatrix}
+	0.906 & -0.423 \\
+	0.423 & 0.906
+\end{bmatrix}
+\begin{bmatrix}
+	4 \\
+	1
+\end{bmatrix}
++
+\begin{bmatrix}
+	11 \\
+	-5
+\end{bmatrix}\\
+& = &
+\begin{bmatrix}
+	3.2 \\
+	2.6
+\end{bmatrix}
++
+\begin{bmatrix}
+	11 \\
+	-5
+\end{bmatrix}\\
+& = &
+\begin{bmatrix}
+	14.2 \\
+	-2.4
+\end{bmatrix}
+\end{eqnarray*}
+math.
+
+h2.Elementary transformations
+
+p.In principle, any combination of values [ix, iy, jx, jy, px, py] provides a valid transformation, although if we do not choose them with certain criteria we will obtain aberrations little useful in real applications. Three are the most used transformations in graphic and engineering applications <r>elemental_transform</r> <r>elemtras</r>:
+
+li.Translation <b>(a)</b>: Moves the origin of the object to another point.
+
+li.Rotation <b>(b)</b>: Rotates the object on the origin of its local system.
+
+li.Scaling <b>(c)</b>: Change the size. If <i>sx</i> <<> 1, reduce. <i>sx</i> <>> 1, increase. <i>sx</i> = 1, does not vary. In non-uniform scales, <i>sx</i> and <i>sy</i> have different values, which will produce a distortion in the aspect ratio.
+
+li.Identity <b>(d)</b>: It is the null transformation. When applied, the vectors remain unchanged.
+
+img(elemental_transform.svg,700,.8).Elementary affine transformations.
+Geometric representation of a translation, rotation, scaling and identity.
+
+math(elemtras).Translation, Rotation, Scaling and Identity.
+\begin{eqnarray*}
+\begin{bmatrix}
+	x' \\
+	y'
+\end{bmatrix}
+& = & 
+\begin{bmatrix}
+	1 & 0 \\
+	0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+	x \\
+	y
+\end{bmatrix}
++
+\begin{bmatrix}
+	p.x \\
+	p.y
+\end{bmatrix}\\
+\begin{bmatrix}
+	x' \\
+	y'
+\end{bmatrix}
+& = &
+\begin{bmatrix}
+	cos\theta & -sin\theta \\
+	sin\theta & cos\theta
+\end{bmatrix}
+\begin{bmatrix}
+	x \\
+	y
+\end{bmatrix}
++
+\begin{bmatrix}
+	0 \\
+	0
+\end{bmatrix}\\
+\begin{bmatrix}
+	x' \\
+	y'
+\end{bmatrix}
+& = & 
+\begin{bmatrix}
+	sx & 0 \\
+	0 & sy
+\end{bmatrix}
+\begin{bmatrix}
+	x \\
+	y
+\end{bmatrix}
++
+\begin{bmatrix}
+	0 \\
+	0
+\end{bmatrix}\\
+\begin{bmatrix}
+	x' \\
+	y'
+\end{bmatrix}
+& = & 
+\begin{bmatrix}
+	1 & 0 \\
+	0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+	x \\
+	y
+\end{bmatrix}
++
+\begin{bmatrix}
+	0 \\
+	0
+\end{bmatrix}\\
+\end{eqnarray*}
+math.
+
+h2.Composition of transformations
+
+p.It is possible to compose or accumulate transformations by matrix multiplication <r>trcompose</r>. The usual thing in 2d models will be to obtain the final location of an object from the elementary transformations translation, rotation and scaling. The accumulation is also useful for positioning elements in hierarchical structures, where the location of each object depends directly on that of its upper node (parent).
+
+math(trcompose).Composition of two arbitrary transformations.
+\begin{eqnarray*}
+\begin{bmatrix}
+	x' \\
+	y'
+\end{bmatrix}
+& = & 
+\begin{bmatrix}
+	i_d.x & j_d.x \\
+	i_d.y & i_d.y
+\end{bmatrix}
+\begin{bmatrix}
+	x \\
+	y
+\end{bmatrix}
++
+\begin{bmatrix}
+	p_d.x \\
+	p_d.y
+\end{bmatrix}\\
+i_d.x & = & i_1.x \cdot i_2.x + j_1.x \cdot i_2.y\\
+i_d.y & = & i_1.y \cdot i_2.x + j_1.y \cdot i_2.y\\
+j_d.x & = & i_1.x \cdot j_2.x + j_1.x \cdot j_2.y\\
+j_d.y & = & i_1.y \cdot j_2.x + j_1.y \cdot j_2.y\\
+p_d.x & = & i_1.x \cdot p_2.x + j_1.x \cdot p_2.y + p_1.x\\
+p_d.y & = & i_1.y \cdot p_2.x + j_1.y \cdot p_2.y + p_1.y\\	
+\end{eqnarray*}
+math.
+
+li.Use <lf>t2d_movef</lf> to add a displacement to an existing transformation.
+
+li.Use <lf>t2d_rotatef</lf> to add a rotation.
+
+li.Use <lf>t2d_scalef</lf> to add a scaling.
+
+li.Use <lf>t2d_multf</lf> to add a transformation.
+
+li.Use <lf>t2d_vmultf</lf> to apply a transformation to a vector.
+
+li.Use <lf>t2d_vmultnf</lf> to apply a transformation to several vectors.
+
+p.Matrix multiplication is not commutative, but the order in which the operations are applied will affect the final result. For example in <r>transform_compose</r> <b>(a)</b>, the origin has been moved and then applied a rotation. In <r>transform_compose</r> <b>(b)</b> it has been done on the contrary, first rotate and then move.
+
+code(cpp,acumtras).Acumulación de transformaciones.
+// (a) First move, then rotate
+T2D t2d;
+t2d_movef(&t2d, kT2D_IDENTITYf, 11, 0);
+t2d_rotatef(&t2d, &t2d, kBMATH_PIf / 4);
+
+// (b) First rotate, then move
+T2D t2d;
+t2d_rotatef(&t2d, kT2D_IDENTITYf, kBMATH_PIf / 4);
+t2d_movef(&t2d, &t2d, 11, 0);
+code.
+
+img(transform_compose.svg,600,.7).Effect of the order of application of transformations.
+Geometric representation of applying a translation and a rotation. And on the contrary, rotation and translation.
+
+func(T2D,move).Multiply a transformation by a translation <c>t2d = src * move(x,y)</c>.
+fpar(T2D*,dest).Result transformation.
+fpar(const T2D*,src).Initial transformation.
+fpar(const real,x).X coordinate of displacement.
+fpar(const real,y).Y coordinate of displacement.
+fnote.<c>dest</c> and <c>src</c> can point to the same matrix.
+
+func(T2D,rotate).Multiply a transformation by a rotation <c>dest = src * rotate(a)</c>.
+fpar(T2D*,dest).Result transformation.
+fpar(const T2D*,src).Initial transformation.
+fpar(const real,a).Rotation angle in radians. Positive angles are those that rotate from the X axis to the Y axis.
+fnote.<c>dest</c> and <c>src</c> can point to the same matrix.
+
+func(T2D,scale).Multiply a transformation by an scale <c>dest = src * scale(sx,sy)</c>.
+fpar(T2D*,dest).Result transformation.
+fpar(const T2D*,src).Initial transformation.
+fpar(const real,sx).Scaling on the x axis.
+fpar(const real,sy).Scaling on the y axis.
+fnote.<c>dest</c> and <c>src</c> can point to the same matrix.
+
+func(T2D,mult).Multiply two transformations <c>dest = src1 * src2</c>.
+fpar(T2D*,dest).Result transformation.
+fpar(const T2D*,src1).First operating.
+fpar(const T2D*,src2).Second operating.
+fnote.<c>dest</c>, <c>src1</c> and <c>src2</c> can point to the same matrix.
+
+func(T2D,vmult).Transform a vector <c>dest = t2d * src</c>.
+fpar(V2D*,dest).Transformed vector.
+fpar(const T2D*,t2d).Transformation.
+fpar(const V2D*,src).Original vector.
+fnote.<c>dest</c> and <c>src</c> can point to the same vector.
+
+func(T2D,vmultn).Transform a vector list <c>dest[i] = t2d * src[i]</c>.
+fpar(V2D*,dest).Transformed vector array.
+fpar(const T2D*,t2d).Transformation.
+fpar(const V2D*,src).Original vector array.
+fpar(const uint32_t,n).Number of vectors in <c>src</c>.
+fnote.<c>dest</c> and <c>src</c> can point to the same array.
+
+const(T2D,IDENTITY).Represents the identity transformation.
+

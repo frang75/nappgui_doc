@@ -1,0 +1,209 @@
+
+h1.Memoria dinámica
+
+ep.Gestor de memoria optimizado y control de <i>leaks</i>.
+
+p.<b>Heap</b> es gestor y auditor de memoria dinámica muy eficiente incluido en la librería <i>core</i> y disponible para todos los programas basados en NAppGUI (línea de comandos y escritorio). Es habitual que las aplicaciones soliciten gran cantidad de pequeños bloques de memoria para albergar diferentes objetos (cadenas de caracteres, controles de interfaz, instancias de estructuras, búfer E/S, etc). La estrategia detrás de <i>heap</i> no es otra que pedir al sistema operativo páginas de memoria de cierto tamaño (64kb) mediante <lf>bmem_malloc</lf> y utilizarlas para resolver varias solicitudes. Con esto perseguimos varios objetivos:
+
+li.Rendimiento: Una llamada a <lf>heap_malloc</lf> se resuelve tan solo incrementando el valor de un contador. <lf>heap_free</lf> únicamente actualiza la cabecera de la página afectada.
+
+li.Localidad: Dos llamadas consecutivas a <c>heap_malloc()</c> son ubicadas en posiciones físicas de memoria contiguas. Esto reduce el número de fallos de caché ya que, según el principio de localidad, hay una gran probabilidad de que dos objetos que se crean juntos se utilicen juntos.
+
+li.Memory leaks: <i>heap</i> apunta las reservas y liberaciones por tipo de objeto. Llegado el caso, avisará al programador por medio de <lp>cassert</lp> o <lp>log</lp> de que existen objetos no liberados. La gran ventaja de este auditor sobre otras herramientas es que siempre se está ejecutando como parte del programa. Esto explota la coherencia temporal, ya que si tras un cambio se detectan <i>leaks</i> donde antes no había, es muy probable que podamos acotar y detectar el error, ya que será algo en lo que acabamos de trabajar.
+
+li.Estadísticas: Podemos obtener perfiles del uso de memoria (tiempo/bytes). Esto puede ayudarnos a detectar cuellos de botella (especialmente en el arranque) u optimizar el tamaño de página.
+
+h2.Como funciona Heap
+
+p.Al iniciar el programa, <i>heap</i> crea una página de memoria por defecto. Los primeros bytes se reservan como cabecera, una pequeña estructura que controla el estado de la página. Cada petición se asigna secuencialmente dentro de la misma página, incrementando el valor de un puntero <r>heap_malloc</r>. Cuando la página se queda sin espacio, se crea una nueva mediante <lf>bmem_malloc</lf>, que es enlazada con la anterior y etiquetada como la nueva <b>página por defecto</b> <r>heap_new_page</r>. Cada llamada a <lf>heap_free</lf> actualiza la cabecera con el número de bloques/bytes liberados <r>heap_free</r>. Estos bloques <b>no son reutilizados</b>, de lo contrario se complicaría la lógica de <i>heap</i> volviéndolo más lento. La dirección de la cabecera es guardada al final de cada bloque, por lo que no hay que iterar para localizarlo. Cuando todos los bloques de la página han sido liberados, la página entera es destruida por <lf>bmem_free</lf> y los punteros entre páginas vecinas restaurados <r>heap_delete_page</r>.
+
+img(heap_malloc.svg,420,.6).Reserva de un nuevo bloque de memoria con <c>heap_malloc()</c>.
+Esquema de una página de memoria al ejecutar malloc.
+
+img(heap_new_page.svg,420,.6).Petición al sistema operativo de una nueva página vacía.
+Petición al sistema operativo de una nueva página de memoria.
+
+img(heap_free.svg,420,.6).Liberando un bloque de memoria (solo actualiza la cabecera).
+Esquema de una página de memoria al ejecutar free.
+
+img(heap_delete_page.svg,420,.6).Destruyendo la página entera.
+Destrucción de una página de memoria cuando todos sus elementos han sido liberados.
+
+p.<i>Heap</i> también contabiliza el número de reversas/liberaciones por tipo de objeto mediante el parámetro <c>name</c> de <lf>heap_malloc</lf>. Al finalizar la ejecución del programa, si la aplicación carece de <i>memory leaks</i>, escribirá en <lp>log</lp> un mensaje como este:
+
+code(text).
+[12:58:08] [OK] Heap Memory Staticstics
+[12:58:08] ============================
+[12:58:08] Total a/dellocations: 1126, 1126
+[12:58:08] Total bytes a/dellocated: 74611, 74611
+[12:58:08] Max bytes allocated: 54939
+[12:58:08] Effective reallocations: (0/34)
+[12:58:08] Real allocations: 2 pages of 65536 bytes
+[12:58:08] ============================
+code.
+
+p(noindent).Pero si tras la ejecución, la aplicación tiene memoria por liberar, el mensaje será distinto:
+
+code(text).
+[13:00:35] [FAIL] Heap Object Leaks!!!
+[13:00:35] ===========================
+[13:00:35] 'App' a/deallocations: 1, 0 (1 leaks)
+[13:00:35] 'String' a/deallocations: 414, 410 (4 leaks)
+[13:00:35] ===========================
+[13:00:35] [FAIL] Heap Global Memory Leaks!!!
+[13:00:35] ==================================
+[13:00:35] Total a/dellocations: 1161, 1156 (5 leaks)
+[13:00:35] Total bytes a/dellocated: 75704, 75596 (108 bytes)
+[13:00:35] Max bytes allocated: 54939
+[13:00:35] ==================================
+code.
+
+p(noindent).Que advierte que tenemos un objeto <c>App</c> y cuatro <c>String</c> sin liberar. Si en la ejecución anterior no había <i>leaks</i>, es muy probable que podamos acotar el error sin demasiada dificultad.
+
+bq.El auditor de <i>heap</i> no pretende sustituir a herramientas más avanzadas de testeo de memoria, tan solo es un primer filtro que nos avisa constantemente durante la fase de desarrollo y test. A pesar de que la sobrecarga que produce en tiempo de ejecución es mínima, el auditor se deshabilita complemente en la configuración <c>Release</c>.
+
+func(heap_malloc).Reserva un bloque de memoria con la alineación por defecto <c>sizeof(void*)</c>.
+fret(byte_t*).Puntero al nuevo bloque. Debe ser liberado con <lf>heap_free</lf> cuando ya no sea necesario.
+fpar(const uint32_t,size).Tamaño en bytes del bloque.
+fpar(const char_t*,name).Texto de referencia para el auditor.
+fnote.Usa esta función para bloques genéricos. Para tipos utiliza <lf>heap_new</lf>.
+fcode.
+byte_t *mem = heap_malloc(1024 * 768, "PixelBuffer");
+...
+heap_free(&mem, 1024 * 768, "PixelBuffer");
+fcode.
+
+func(heap_calloc).Igual que <lf>heap_malloc</lf>, pero inicializando el bloque con 0s.
+fret(byte_t*).Puntero al nuevo bloque. Debe ser liberado con <lf>heap_free</lf> cuando ya no sea necesario.
+fpar(const uint32_t,size).Tamaño en bytes del bloque.
+fpar(const char_t*,name).Texto de referencia para el auditor.
+fnote.Usa esta función para bloques genéricos. Para tipos utiliza <lf>heap_new</lf>.
+fcode.
+byte_t *mem = heap_calloc(256 * 256, "DrawCanvas");
+/* mem = {0, 0, 0, 0, ..., 0}; */
+...
+heap_free(&mem, 256 * 256, "DrawCanvas");
+fcode.
+
+func(heap_realloc).Realoja un bloque de memoria existente debido a la expansión o reducción del mismo. Garantiza que se conserva el contenido previo del bloque <c>min(size, new_size)</c>. Intenta hacerlo sin mover memoria (in situ), pero si no es posible busca una nueva zona. También garantiza la alineación por defecto <c>sizeof(void*)</c> si hay que reservar un nuevo bloque.
+fret(byte_t*).Puntero al bloque realojado. Será el mismo que el puntero original <c>mem</c> si la reubicación "in-situ" ha tenido éxito. Debe ser liberado con <lf>heap_free</lf> cuando ya no sea necesario.
+fpar(byte_t*,mem).Puntero al bloque original a realojar.
+fpar(const uint32_t,size).Tamaño en bytes del bloque original <c>mem</c>.
+fpar(const uint32_t,new_size).Nuevo tamaño requerido, en bytes.
+fpar(const char_t*,name).Texto de referencia para el auditor. Debe ser el mismo que el utilizado en <lf>heap_malloc</lf>.
+fcode.
+byte_t *mem = heap_malloc(64, "ArrayData");
+...
+mem = heap_realloc(mem, 64, 128, ArrayData);
+...
+heap_free(&mem, 128, "ArrayData");
+fcode.
+fnote.Usa esta función para bloques genéricos. Para tipos utiliza <lf>heap_realloc_n</lf>.
+
+func(heap_aligned_malloc).Reserva un bloque de memoria con alineación.
+fret(byte_t*).Puntero al nuevo bloque. Debe ser liberado con <lf>heap_free</lf> cuando ya no sea necesario.
+fpar(const uint32_t,size).Tamaño en bytes del bloque.
+fpar(const uint32_t,align).Alineación. Debe ser potencia de 2.
+fpar(const char_t*,name).Texto de referencia para el auditor.
+fcode.
+byte_t *sse_data = heap_aligned_malloc(256 * 16, 16, "Vectors");
+...
+heap_free(&mem, 256 * 16, "Vectors");
+fcode.
+
+func(heap_aligned_calloc).Igual que <lf>heap_aligned_malloc</lf>, pero inicializando el bloque con 0s.
+fret(byte_t*).Puntero al nuevo bloque. Debe ser liberado con <lf>heap_free</lf> cuando ya no sea necesario.
+fpar(const uint32_t,size).Tamaño en bytes del bloque.
+fpar(const uint32_t,align).Alineación. Debe ser potencia de 2.
+fpar(const char_t*,name).Texto de referencia para el auditor.
+fcode.
+byte_t *sse_data = heap_aligned_calloc(256 * 16, 16, "Vectors");
+/* see_data = {0, 0, 0, 0, ..., 0}; */
+...
+heap_free(&mem, 256 * 16, "Vectors");
+fcode.
+
+func(heap_aligned_realloc).Igual que <lf>heap_realloc</lf>, pero garantizando la alineación de memoria.
+fret(byte_t*).Puntero al bloque realojado. Debe ser liberado con <lf>heap_free</lf> cuando ya no sea necesario.
+fpar(byte_t*,mem).Puntero al bloque original a realojar.
+fpar(const uint32_t,size).Tamaño en bytes del bloque original <c>mem</c>.
+fpar(const uint32_t,new_size).Nuevo tamaño requerido, en bytes.
+fpar(const uint32_t,align).Alineación. Debe ser potencia de 2.
+fpar(const char_t*,name).Texto de referencia para el auditor. Debe ser el mismo que el utilizado en <lf>heap_aligned_malloc</lf>.
+fcode.
+byte_t *sse_data = heap_aligned_malloc(256 * 16, 16, "Vectors");
+...
+sse_data = heap_aligned_realloc(sse_data, 256 * 16, 512 * 16, 16, "Vectors");
+...
+heap_free(&mem, 512 * 16, "Vectors");
+fcode.
+
+func(heap_free).Libera la memoria apuntada por <c>mem</c>, previamente reservada por <lf>heap_malloc</lf>, <lf>heap_realloc</lf> o sus equivalentes con alineación.
+fpar(byte_t**,mem).Doble puntero al bloque a liberar. Será puesto a <c>NULL</c> tras la liberación.
+fpar(const uint32_t,size).Tamaño del bloque de memoria.
+fpar(const char_t*,name).Texto de referencia para el auditor, debe ser el mismo que el utilizado en <lf>heap_malloc</lf>.
+fnote.Usa esta función para bloques de memoria genéricos. Para tipos utiliza <lf>heap_delete</lf>.
+
+func(heap_new).Reserva memoria para un objeto. El puntero de retorno es convertido a <c>type</c>.
+fret(type*).Puntero al objeto creado. Debe ser destruido por <lf>heap_delete</lf> cuando ya no sea necesario.
+fpar(,type).Tipo de objeto.
+fcode.
+MyAppCtrl *ctrl = heap_new(MyAppCtrl);
+...
+heap_delete(&ctrl, MyAppCtrl);
+fcode.
+
+func(heap_new0).Igual que <lf>heap_new</lf>, pero inicializando el objeto con 0s.
+fret(type*).Puntero al objeto creado. Debe ser destruido por <lf>heap_delete</lf> cuando ya no sea necesario.
+fpar(,type).Tipo de objeto.
+fcode.
+MyAppModel *model = heap_new0(MyAppModel);
+/* model = {0} */
+...
+heap_delete(&model, MyAppModel);
+fcode.
+
+func(heap_new_n).Reserva memoria para <c>n</c> objetos. El puntero de retorno es convertido a <c>type</c>.
+fret(type*).Puntero al array recién creado. Debe ser destruido por <lf>heap_delete_n</lf> cuando ya no sea necesario.
+fpar(const uint32_t,n).Número de objetos a crear.
+fpar(,type).Tipo de objeto.
+fcode.
+Car *cars = heap_new_n(10, Car);
+...
+heap_delete_n(&cars, 10, Car);
+fcode.
+
+func(heap_new_n0).Igual que <lf>heap_new_n</lf>, pero inicializando el array con 0s.
+fret(type*).Puntero al array recién creado. Debe ser destruido por <lf>heap_delete_n</lf> cuando ya no sea necesario.
+fpar(const uint32_t,n).Número de objetos a crear.
+fpar(,type).Tipo de objeto.
+fcode.
+Car *cars = heap_new_n0(10, Car);
+/* cars = {0, 0, 0, ..., 0}; */
+...
+heap_delete_n(&cars, 10, Car);
+fcode.
+
+func(heap_realloc_n).Realoja un array de objetos creados dinámicamente con <lf>heap_new_n</lf> o <lf>heap_new_n0</lf>. Garantiza que los objetos previos permanezcan inalterados <c>min(size, new_size)</c>.
+fret(type*).Puntero al array realojado. Debe ser destruido por <lf>heap_delete_n</lf> cuando ya no sea necesario.
+fpar(type*,mem).Puntero al array a realojar.
+fpar(const uint32_t).Número de elementos del array original <c>mem</c>.
+fpar(const uint32_t,new_size).Nuevo tamaño requerido (en elementos).
+fpar(,type).Tipo de objeto.
+fcode.
+Car *cars = heap_new_n(10, Car);
+...
+cars = heap_realloc_n(cars, 10, 20, Car);
+/* cars[0]-[9] remains untouched. */
+...
+heap_delete_n(&cars, 20, Car);
+fcode.
+
+func(heap_delete).Libera el objeto apuntado por <c>obj</c>, previamente reservado por <lf>heap_new</lf> o <lf>heap_new0</lf>.
+fpar(type**,obj).Doble puntero al objeto a liberar. Será puesto a <c>NULL</c> tras la liberación.
+fpar(,type).Tipo de objeto.
+
+func(heap_delete_n).Libera <c>n</c> objetos apuntados por <c>obj</c>, previamente reservado por <lf>heap_new_n</lf>, <lf>heap_new_n0</lf>.
+fpar(type**,obj).Doble puntero al array a liberar. Será puesto a <c>NULL</c> tras la liberación.
+fpar(const uint32_t,n).Número de objetos a liberar, el mismo que en la reserva.
+fpar(,type).Tipo de objeto.

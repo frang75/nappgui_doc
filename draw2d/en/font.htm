@@ -1,0 +1,182 @@
+langrev.
+h1.Typography fonts
+
+p.Typography fonts are graphic objects (files) that contain the characters and symbols we see on a monitor. We remember that a <lp>unicode</lp> string only stores the character codes <i>(codepoints)</i> without any information on how they should be drawn. The graph associated with a character is known as <b>glyph</b> and, in a font file, there are as many glyphs as <i>codepoints</i> can represent the typography. The matching between <i>codepoints</i> and their corresponding glyphs is carried out by the operating system graphic sub-system <r>drawtext</r> <r>text_representation</r>.
+
+code(cpp,drawtext).Drawing a text string.
+Font *font = font_create("Comic Sans MS" 28, 0);
+draw_font(context, font);
+draw_text(context, ekFILL, "Hello World", 200, 250);
+font_destroy(&font);
+code.
+
+img(text_representation.svg,520,.65).Text representation: <i>codepoints</i> + glyphs.
+Graph that relationships Unicode characters with glyphs and fonts.
+
+h2.Create fonts
+
+p.When displaying texts on graphic interfaces it is necessary to establish a typography, otherwise the system would not know how to render it. There will always be some fount defined by default, but we can change it when customizing the appearance of our texts. 
+
+li.Use <lf>font_create</lf> to create a new font.
+
+li.Use <lf>draw_font</lf> to set the font in <lp>dctx</lp>.
+
+li.Use <lf>label_font</lf> to change the font associated with a <lt>Label</lt> control.
+
+p.The most representative feature of a typeface design is the family to which it belongs <i>(font family)</i> <r>typefaces</r>. Each computer has a series of families installed that do not have to coincide with those incorporated in another machine. This is an important fact to keep in mind since, for portability, we should not assume that a certain typeface family will be present on all machines that run the program. Sentences like:
+
+code.
+Font *font = font_create("Comic Sans MS", 28, 0);
+code.
+
+p(noindent).they will not be completely portable, since we are not sure that the <i>Comic Sans MS</i> typeface is installed in all computers. We have two alternatives to guarantee the existence of a certain font:
+
+img(typefaces.svg,360,.5).Different typographic families.
+Hello World text written using different fonts.
+
+li.Use <lf>font_system</lf> to get the default font of the operating system. It will always be available but its appearance will be different according to platforms.
+
+li.Use <lf>font_installed_families</lf> to obtain the list of families installed in the machine and choose the one that best suits our purposes.
+
+h2.System font
+
+p.As we just mentioned, there is always a default font associated with the window environment and that, in a way, gives part of its personality. Using this font guarantees us the correct integration of our program in all the systems where it runs, making our code totally portable <r>font_system</r>. Interface controls like <lt>Button</lt> or <lt>Label</lt> they have the font <lf>font_system</lf> of size <lf>font_regular_size</lf> associated by default. The correspondence of <i>font_system</i> in the different systems is:
+
+li.<b>Segoe UI</b>: Windows Vista, 7, 8, 10.
+li.<b>Tahoma</b>: Windows XP.
+li.<b>San Francisco</b>: macOS Mojave, High Sierra, Sierra, Mac OSX El Capitan.
+li.<b>Helvetica Neue</b>: Mac OSX Yosemite.
+li.<b>Lucida Grande</b>: Mac OSX Mavericks, Mountain Lion, Lion, Snow Leopard.
+li.<b>Ubuntu</b>: Linux Ubuntu.
+li.<b>Piboto</b>: Linux Raspbian.
+
+img(font_system.png,-1,.8).Use of the system font.
+Capture the same application on different systems, using the default font.
+
+p.In addition to the system font we have another default <b>monospace</b> font available <r>monospace_font</r>. These typefaces mimic old typewriters, where all characters occupy the same space. Usually used for technical documents or source code files.
+
+li.Use <lf>font_monospace</lf> to create a generic monospace typography. 
+
+img(monospace_font.jpg,-1,.4).Proportional font (variable width) and monospace (fixed width).
+Comparison of a proportional source and monospace.
+
+h2.Font characteristics
+
+p.In addition to the family, we can adjust the size and style of the font. The size refers to the average height (in pixels) of the characters that make up the typeface, where margins and displacements in relation to the <i>baseline</i> are not taken into account <r>char_height</r>. The <b>total height of a line of text</b> is known as <i>cell height</i> <r>cell_height</r> and, as a general rule, it will be somewhat larger than the <i>char height</i> font size.
+
+img(char_height.svg,520,.65).Character height <i>(char height = font size)</i>.
+Character height in a font.
+
+img(cell_height.svg,520,.65).Line height <i>(cell height)</i>.
+Line (or cell) height in a font.
+
+p.We can also change the style of the text, setting its attributes through the parameter <c>style</c> combining the values of <lt>fstyle_t</lt> <r>font_styles</r>.
+
+li.<lt>ekFBOLD</lt>. Bold.
+li.<lt>ekFITALIC</lt>. Italic.
+li.<lt>ekFUNDERLINE</lt>. Underlined.
+li.<lt>ekFSTRIKEOUT</lt>. Strikethrough.
+
+img(font_styles.svg,360,.5).Text style.
+Same text with different font styles.
+
+h3.Size in points
+
+p.By default, the font size is expressed in pixels, but can be changed by adding <lt>ekFPOINTS</lt> to the <c>style</c> parameter. This unit is related to paper fonts. Here is the DPI (<i>dots per inch</i>) concept that indicates the amount of isolated ink drops that a printing device can emit per metric inch. In typography the criterion of 72 DPI's is established, therefore, the size of a point is approximately 0.35mm. In this way it is easy to calculate the font size from the points: 12pt=4.2mm, 36pt=12.7mm or 72pt=25.4mm (1 inch). This is the unit used in <b>word processors</b>, which already work based on a print page size. The problem comes when we want to represent sources expressed in points on a screen, since there is no exact correspondence between pixels and millimeters. The final pixel size depends on the resolution and physical size of the monitor. A conversion agreement between pixels and inches is required, which results in the term PPI (<i>pixels per inch</i>). Traditionally, in Windows systems 96 PPI is established while in Apple iMac it is 72 PPI. This causes the fonts expressed in points to be 33% larger in Windows <r>font_points</r>. Also in the Microsoft system it is possible to configure the PPI by the user, which adds more uncertainty about the final size of the texts on the screen.
+
+img(font_points.svg,720,.8).Unit <lt>ekFPOINTS</lt> is not advisable for screens, but for paper.
+Sharing between size in pixels and size in points.
+
+h2.Bitmap and Outline fonts
+
+p.In the first computers typographies were created as raster graphics <i>Bitmap Fonts</i> <r>bitmap_font</r>. Each character fitted a fixed-sized cell where those pixels that made it were marked. The biggest problem is that they don't scale well. As the text on the screen grows larger, the jagged effect of the pixels becomes apparent.
+
+img(bitmap_font.svg,520,.65).Bitmap fonts.
+Extension of a bitmap font, where the jagged effect is appreciated.
+
+p.In 1982 Adobe launched the PostScript format that included those known as <i>Outline Fonts</i> <r>outline_font</r>. This format contains a geometric description of each symbol based on Bezier lines and curves. In this way the pixelated effect of the bitmap is avoided, since when the character is scaled, the pixels that compose it are re-computed in a process known as <b>rasterization</b>. In the late 80's Apple launches the <i>TrueType</i> format and sells a license to Microsoft that incorporates it in Windows 3.1, opening the door of the mass market to vector sources. Today all systems work with scalable fonts, having the clearest representatives in <i>TrueType</i> and <i>OpenType</i>.
+
+img(outline_font.svg,520,.65).Outline fonts, on which <i>TrueType</i> and <i>OpenType</i> formats are based.
+Scaling an outline font (vector).
+
+h2.Unicode and glyphs
+
+p.Unicode is a very extensive table. There are currently 137,374 <i>codepoints</i> registered (July 2019) and this number is growing in each new revision of the standard. If the application needs special symbols (above the BMP-<i>Basic Multilingual Plane)</i> we must make sure that the selected fonts contain glyphs for them. To see the relationship between codepoints and glyphs we can use the BabelMap application <r>babelmap</r>, and within it the Font Analysis option. From a Unicode block, it will show those installed sources that include glyphs for that range. In macOS we have a similar application called <i>Character Viewer</i> and in Ubuntu another one called <i>Character Map</i>.
+
+img(babelmap.png,-1,.7).BabelMap Font Analysis gives us information about the glyphs included in each typeface.
+Application that shows the glyphs included in each typeface.
+
+const(Font*,kFONT_DEFAULT).Default font. It is the system font in regular size.
+
+func(font_create).Create a font.
+fret(Font*).The font.
+fpar(const char_t*,family).Typographic family. Eg: "Arial", "Times New Roman", etc.
+fpar(const real32_t,size).Font size. Default in pixels. Use <lt>ekFPOINTS</lt> in <c>style</c> to change the unit.
+fpar(const uint32_t,style).Operation <c>OR |</c> over the fields of the <lt>fstyle_t</lt> structure. Eg: <c>ekFBOLD | ekFITALIC</c>.
+
+func(font_system).Create a font, with the system default family.
+fret(Font*).The font.
+fpar(const real32_t,size).Font size. Default in pixels. Use <lt>ekFPOINTS</lt> in <c>style</c> to change the unit.
+fpar(const uint32_t,style).Operation <c>OR |</c> over the fields of the <lt>fstyle_t</lt> structure. Eg: <c>ekFBOLD | ekFITALIC</c>.
+
+func(font_monospace).Create a font, with the default system mono-space family.
+fret(Font*).The font.
+fpar(const real32_t,size).Font size. Default in pixels. Use <lt>ekFPOINTS</lt> in <c>style</c> to change the unit.
+fpar(const uint32_t,style).Operation <c>OR |</c> over the fields of the <lt>fstyle_t</lt> structure. Eg: <c>ekFBOLD | ekFITALIC</c>.
+
+func(font_with_style).Create a copy of an existing font, changing the style.
+fret(Font*).A copy of <c>font</c> with another style.
+fpar(const Font*,font).Original font.
+fpar(const uint32_t,style).Operation <c>OR |</c> over the fields of the <lt>fstyle_t</lt> structure. Eg: <c>ekFBOLD | ekFITALIC</c>.
+
+func(font_copy).Create an exact copy of a font.
+fret(Font*).The copy of <c>font</c>.
+fpar(const Font*,font).Source font.
+fnote.Fonts are immutable objects. Copying really means increasing an internal counter without cloning the object. However, the application must destroy the copy with <lf>font_destroy</lf> just like those created with any other constructor.
+
+func(font_destroy).Destroy the font.
+fpar(Font**,font).The font. Will be set to <c>NULL</c> after destruction.
+
+func(font_equals).Compare two fonts. They are considered equal if they have the same family, size and style.
+fret(bool_t).<c>TRUE</c> if they are the same, <c>FALSE</c> if not.
+fpar(const Font*,font1).First font to compare.
+fpar(const Font*,font2).Second font to compare.
+
+func(font_regular_size).Get the default font size for interface controls.
+fret(real32_t).The default size in pixels.
+
+func(font_small_size).Get the <i>small</i> font size by default for interface controls.
+fret(real32_t).The size in pixels.
+fnote.This size is slightly smaller than that obtained by <lf>font_regular_size</lf>.
+
+func(font_mini_size).Get the default <i>mini</i> font size for interface controls.
+fret(real32_t).The size in pixels.
+fnote.This size is slightly smaller than that obtained by <lf>font_small_size</lf>.
+
+func(font_family).Get the font type family.
+fret(const char_t*).The typographic family in UTF8.
+fpar(const Font*,font).The font.
+
+func(font_size).Get the font size.
+fret(real32_t).The size. The units depend on the parameter <c>style</c>.
+fpar(const Font*,font).The font.
+
+func(font_height).Get the height of the cell or line of text with this font.
+fret(real32_t).Cell height.
+fpar(const Font*,font).The font.
+
+func(font_style).Get the font style.
+fret(uint32_t).The style. Combination of <lt>fstyle_t</lt> structure values. Eg: <c>ekFBOLD | ekFITALIC</c>.
+fpar(const Font*,font).The font.
+
+func(font_exists_family).Check if a typeface family is installed in the operating system.
+fret(bool_t).<c>TRUE</c> if the family exists, <c>FALSE</c> if not.
+fpar(const char_t*,family).UTF8 string with family name, terminated in a null character <c>'\0'</c>.
+
+func(font_installed_families).Get a list with the names of all the typographic families installed in the operating system.
+fret(ArrPt(String)*).Array of <lt>String</lt> with the names of the families, arranged alphabetically. It must be destroyed with <lf>arrpt_destroy</lf>.
+fcode.
+ArrPt(String) *families = font_installed_families();
+...
+arrpt_destroy(&families, str_destroy, String);
+fcode.

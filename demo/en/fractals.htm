@@ -1,0 +1,36 @@
+langrev.
+h1.Fractals
+
+p.In this application we create an procedural image by calculating the color of each pixel using fractal algorithms <r>fractals_win</r>. Some of the most fascinating results produced by a dynamic system occur when we iterate a complex variable function instead of a real one. This is the case of <b>Julia's sets</b>. The <b>source code</b> is in folder <c>/src/demo/fractals</c> of the SDK distribution.
+
+img2(fractals_win.png,fractals_macos.png,400).<b>Fractals</b> application Windows and macOS version.
+Capturing a viewer of Julia sets, Windows version.
+Capturing a viewer of Julia sets, macOS version.
+
+img2(fractals_linux.png,fractals_raspbian.png,400).Ubuntu and Raspbian version.
+Capturing a viewer of Julia sets, Linux/Ubuntu version.
+Capturing a viewer of Julia sets, Raspbian version.
+
+p.Due to the large computational load of this algorithm we have divided the calculation into several threads <r>fractal_threads</r>. This problem is easily parallelizable simply by fractioning the image, because each pixel is obtained independently. In <r>threads</r> you have the execution times according to platform.
+
+img(fractal_threads.svg,300,.60).Collaboration of several threads.
+Image divided into four parts and four threads calculating each.
+
+table(threads).Calculation times depending on the processor.
+row.
+p.CPU/Threads
+p.1
+p.2
+p.3
+p.4
+p.8
+row.
+p.Intel i7-4790K
+p.109ms
+p.59ms
+p.78ms
+p.31ms
+p.31ms
+table.
+
+codefile(demo/fractals/fractals.c).

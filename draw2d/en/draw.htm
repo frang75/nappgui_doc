@@ -1,0 +1,462 @@
+langrev.
+h1.Drawing primitives
+
+p.In the previous chapter we made an introduction to vector drawing and saw how to work with 2D contexts. Now we will see how to draw lines, figures, text and images. In <lp>drawhello</lp> you have the application that integrates everything we will see next.
+
+h2.Line drawing
+
+p.The most elementary operation is to draw a line between two points. In 2d contexts the lines are solid objects and not a mere row of pixels. Let's think we are using thick tip pens, where the theoretical line will always remain in the center of the stroke <r>line_draw</r>. We can change the shape of the endings (linecap), the joints (linejoin) and establish a pattern for dashed lines.  
+
+li.<lf>draw_line</lf> will draw a line.
+li.<lf>draw_polyline</lf> will draw several connected lines.
+li.<lf>draw_line_color</lf> will set the line color.
+li.<lf>draw_line_width</lf> set the line width.
+li.<lf>draw_line_cap</lf> set the style of the ends.
+li.<lf>draw_line_join</lf> set the style of the unions.
+li.<lf>draw_line_dash</lf> set a dot pattern.
+
+img(line_draw.png,0,.65).Different line styles. <b>(a)</b> <lt>ekLCFLAT</lt>. <b>(b)</b> <lt>ekLCSQUARE</lt>. <b>(c)</b> <lt>ekLCROUND</lt>. <b>(d)</b> <lt>ekLJMITER</lt>. <b>(e)</b> <lt>ekLJROUND</lt>. <b>(f)</b> <lt>ekLJBEVEL</lt>. The pattern: [5, 5, 10, 5], [1, 1], [2, 1], [1, 2], [5, 5, 10, 5], NULL.
+Image with different types of line, thicknesses, color, etc.
+
+h2.Figures and borders
+
+p.To draw closed figures or areas we have the following commands:
+
+li.<lf>draw_rect</lf> for rectangles.
+
+li.<lf>draw_rndrect</lf> for rectangles with rounded edges.
+
+li.<lf>draw_circle</lf> for circles.
+
+li.<lf>draw_ellipse</lf> for ellipses.
+
+li.<lf>draw_polygon</lf> for polygons.
+
+li.<lf>draw_fill_color</lf> set the area fill color.
+
+p.As we see in <r>shapes_draw</r> we can draw the outline of the figure, its interior or both. For the outline the line style established as we have seen in the previous section will be taken into account. 
+
+img(shapes_draw.png,0,.65).Stroke only <lt>ekSTROKE</lt>. Fill only <lt>ekFILL</lt>. First stroke, then fill <lt>ekSKFILL</lt>. First fill, then stroke <lt>ekFILLSK</lt>.
+Image with different geometric figures: Stroke and fill.
+
+p.As we saw in <lp>dctx</lp>, the order in which the operations are carried out matters. It is not the same to fill in and then draw the outline as vice versa. The center of the stroke will coincide with the theoretical outline of the figure.
+
+h2.Gradients
+
+p.Gradients allow regions to be filled using a gradient instead of a solid color <r>gradient</r>. Several base colors and their relative position along a vector are defined <r>graddef</r>. The positions [0, 1] correspond to the extremes and the values within this range to the possible intermediate stops. Each line perpendicular to the vector defines a uniform color that will extend indefinitely until reaching the limits of the figure to be filled.
+
+li.Use <lf>draw_fill_linear</lf> to activate the fill with gradients.
+
+li.Use <lf>draw_fill_color</lf> to return to solid color fill.
+
+img(gradient.svg,650,.65).Linear gradients. The color is interpolated along a vector.
+Example of a linear gradients in several directions.
+
+code(cpp,graddef).Definition of <r>gradient</r> gradients.
+// (a) Gradient
+color_t color[4];
+real32_t stop[4] = {0, .35f, .7f, 1};
+color[0] = color_rgb(255, 0, 0);
+color[1] = color_rgb(0, 255, 0);
+color[2] = color_rgb(0, 0, 255);
+color[3] = color_rgb(255, 0, 255);
+draw_fill_linear(ctx, color, stop, 4, 0, 0, 600, 400);
+
+// (b) Gradient
+color_t color[2];
+real32_t stop[2] = {0, 1};
+color[0] = color_rgb(255, 0, 0);
+color[1] = color_rgb(0, 0, 255);
+draw_fill_linear(ctx, color, stop, 2, 0, 0, 600, 0);
+
+// (c) Gradient
+color_t color[2];
+real32_t stop[2] = {0, 1};
+color[0] = color_rgb(255, 0, 0);
+color[1] = color_rgb(0, 0, 255);
+draw_fill_linear(ctx, color, stop, 2, 0, 0, 0, 400);
+
+// (d) Gradient
+color_t color[2];
+real32_t stop[2] = {0, 1};
+color[0] = color_rgb(255, 0, 0);
+color[1] = color_rgb(0, 0, 255);
+draw_fill_linear(ctx, color, stop, 2, 0, 0, 600, 400);
+code.
+
+h3.Gradient transformation
+
+p.Since the gradient is defined by a vector, it is possible to set a transformation that changes the way it is applied. This matrix is totally independent from the one applied to drawing primitives <lf>draw_matrix</lf>, as we saw in <lh>Reference systems</lh>.
+
+li.Use <lf>draw_fill_matrix</lf> to set the gradient transformation. With this we can get several effects:
+
+li.Global gradient: The gradient will be applied globally to the background, and the figures will be cutouts of the same pattern <r>gradient_global</r>. To do this we will set the identity matrix as a gradient transformation <r>gradglob</r>. It is defined by default.
+
+img(gradient_global.gif,600,.65).Global gradient. The continuity between figures is not lost.
+Animation of a linear gradient varying the direction.
+
+code(cpp,gradglob).Gradient matrix for the whole drawing.
+draw_fill_linear(ctx, c, stop, 2, 0, 0, 600, 400);
+draw_fill_matrix(ctx, kT2D_IDENTITYf);
+i_draw_shapes(ctx);
+code.
+
+li.Local gradient: The vector is transferred to the origin of the figure or to a point in its near surroundings <r>gradient_local</r>. With this, we will be able to apply the gradient locally and that only affects a specific figure. In <r>gradlocal</r> we have slightly varied the transformation to fix the origin in a corner and not in the center of the ellipse. This may vary depending on the desired effect.
+
+img(gradient_local.gif,600,.65).Local gradient. The origin is placed in the figure.
+Animation of several figures filled with a linear gradient varying the direction.
+
+code(cpp,gradlocal).Gradient matrix for a figure.
+t2d_movef(&matrix, kT2D_IDENTITYf, 250, 280);
+t2d_rotatef(&matrix, &matrix, - kBMATH_PIf / 10);
+draw_matrix(ctx, &matrix);
+draw_fill_linear(ctx, c, stop, 2, 0, 0, 200, 100);
+t2d_movef(&matrix, &matrix, -100, -50);
+draw_fill_matrix(ctx, &matrix);
+draw_ellipse(ctx, ekSKFILL, 0, 0, 100, 50); 
+code.
+
+h3.Gradient Limits
+
+p.As we have said, the color fill will spread evenly and indefinitely along all the lines perpendicular to the vector, but... What happens outside its limits? In <r>wrapgrad</r> <r>gradient_wrap</r> the gradient has been defined in x=[200, 400], this measure being lower than the figure to be filled:
+
+li.Use <lf>draw_fill_wrap</lf> to define the behavior of the gradient out of bounds.
+
+li.<lt>ekFCLAMP</lt> the end value is used as a constant in the outer area.
+
+li.<lt>ekFTILE</lt> the color pattern is repeated.
+
+li.<lt>ekFFLIP</lt> the pattern is repeated, but reversing the order which prevents the loss of continuity in color.
+
+code(cpp,wrapgrad).Uniform color outside the limits of the gradient <r>gradient_wrap</r> <b>(a)</b>. 
+draw_fill_linear(ctx, c, stop, 2, 200, 0, 400, 0);
+draw_fill_wrap(ctx, ekFCLAMP);
+draw_rect(ctx, ekFILLSK, 50, 25, 500, 100);
+code.
+
+img(gradient_wrap.svg,550,.65).Limit Behavior: <b>(a)</b> <lt>ekFCLAMP</lt>, <b>(b)</b> <lt>ekFTILE</lt>, <b>(c)</b> <lt>ekFFLIP</lt>.
+Gradients with different treatments in the outside area.
+
+h2.Drawing text
+
+p.Text rendering is the most important part of the user interface and one of the most complex to solve technically. In the past, small <i>bitmaps</i> were used with the image of each character, but nowadays the <lp>unicode</lp> character set has thousands of entries to draw with different styles. Texts can be scaled, rotated, filled in with different patterns or formatted in paragraphs. Fortunately, all this casuistry is solved by the native APIs of each operating system, which allows us to provide a simplified and intuitive interface.
+
+li.Use <lf>draw_text</lf> to draw texts in <lp>dctx</lp>.
+
+li.Use <lf>draw_font</lf> to set the font.
+
+li.Use <lf>draw_text_width</lf> to set the maximum width of a block of text.
+
+li.Use <lf>draw_text_align</lf> to set the alignment of the text, with respect to its insertion point.
+
+li.Use <lf>draw_text_halign</lf> to set the internal alignment of the text.
+
+li.Use <lf>draw_text_extents</lf> to get the size of a block of text.
+
+p.To draw single-line texts, we just have to call the function, passing a UTF8 string <r>simtext</r> <r>text_single_line</r>. Previously, we can assign the font, color and alignment.
+
+code(cpp,simtext).Dibujo de una línea de texto.
+Font *font = font_system(20, 0);
+draw_font(ctx, font);
+draw_fill_color(ctx, kCOLOR_BLUE);
+draw_text_align(ctx, ekLEFT, ekTOP);
+draw_text(ctx, ekFILL, "Text 文本 Κείμενο", 25, 25);
+code.
+
+img(text_single_line.png,0,.65).Single-line texts, with alignment and transformations.
+Drawing a text string several times.
+
+p.If the string to be displayed has new lines (character '\n') they will be taken into account and the text will be shown in several lines <r>multext</r> <r>text_multiline</r>. We can also obtain the measure in pixels of a block, useful to integrate the text with other primitives.
+
+code(cpp,multext).Dibujo de textos con saltos de línea.
+const char_t *text = "Text new line\n文字换行\nΓραμμή κειμένου";
+real32_t width, height;
+draw_text(ctx, ekFILL, text, 25, 25);
+draw_text_extents(ctx, text, -1, &width, &height);
+code.
+
+img(text_multiline.png,0,.65).Texts with a '\n' character.
+Drawing several times of a text string containing new line characters.
+
+p.If the text does not contain new lines, it will be drawn continuously expanding horizontally. This may not be the most appropriate in long paragraphs, so we can set a maximum width, forcing its drawing in several lines <r>blocktext</r> <r>text_paragraph</r>.
+
+code(cpp,blocktext).Maximum width and internal alignment in text blocks.
+const char_t *text = "Lorem ipsum dolor sit amet...consequat";
+draw_text_width(ctx, 200);
+draw_text_halign(ctx, ekLEFT);
+draw_text(ctx, ekFILL, text, 25, 25);
+draw_text_extents(ctx, text, 200, &width1, &height1);
+code.
+
+img(text_paragraph.png,0,.65).Text paragraphs with width limit. The maximum and real width obtained with <lf>draw_text_extents</lf> are shown.
+Drawing of text blocks with various widths.
+
+p.The text behaves like any other region: It is possible to combine the stroke drawing with the fill, or even use gradients using the parameter <c>op</c> from <lf>draw_text</lf> <r>gradtext</r> <r>text_stroke_fill</r>.
+
+code(cpp,gradtext).Text with dotted stroke and gradient fill.
+color_t c[2];
+real32_t stop[2] = {0, 1};
+real32_t dash[2] = {1, 1};
+c[0] = kCOLOR_BLUE;
+c[1] = kCOLOR_RED;
+draw_line_dash(ctx, dash, 2);
+draw_line_color(ctx, kCOLOR_GREEN);
+draw_text_extents(ctx, "Gradient dashed text", -1, &width, &height);
+draw_fill_linear(ctx, c, stop, 2, 25, 0, 25 + width, 0);
+draw_text(ctx, ekFILLSK, "Gradient dashed text", 25, 250);
+code.
+
+img(text_stroke_fill.png,0,.65).Combining fill and stroke.
+Text with different border and fill styles.
+
+bq.The optimal way to draw texts is with solid color and <lt>ekFILL</lt> operation. This should be configured in the case that we have to make intensive use: browsers, word processors, reports, etc. Drawing contours or using gradients will have a performance penalty.
+
+h2.Drawing images
+
+p.Images generated procedurally or read from disk can be used as a drawing primitive more <r>dimage</r> <r>draw_image</r>. As with text or other figures, the transformation of the context will affect the geometry of the image.
+
+li.Use <lf>draw_image</lf> to draw an image.
+
+li.Use <lf>draw_image_frame</lf> to draw a sequence of an animation.
+
+li.Use <lf>draw_image_align</lf> to set the alignment of the image with respect to the insertion point.
+
+code(cpp,dimage).Translated and rotated image drawing.
+const Image *image = image_from_resource(pack, IMAGE_JPG);
+T2Df matrix;
+t2d_movef(&matrix, kT2D_IDENTITYf, 300, 200);
+t2d_rotatef(&matrix, &matrix, kBMATH_PIf / 8);
+draw_image_align(ctx, ekCENTER, ekCENTER);
+draw_matrix(ctx, &matrix);
+draw_image(ctx, image, 0, 0);
+code.
+
+img(draw_image.png,0,.65).Drawing images with alignment.
+Drawing an image in a 2d context.
+
+h2.Default parameters
+
+p.Each context maintains certain state parameters. At the beginning of the drawing, either by the method <c>OnDraw</c> or after creating the context with <lf>dctx_bitmap</lf> the default values are those shown in <r>ctxdefault</r>:
+
+table(ctxdefault).Default values in 2D contexts.
+row.
+p.Parameter
+p.Value
+p.Change with
+row.
+p.Matrix
+p.Identity (0,0) Sup-Left corner, pixels.
+p.<lf>draw_matrix</lf>
+row.
+p.Antialiasing
+p.<c>TRUE</c>
+p.<lf>draw_antialias</lf>
+row.
+p.LineColor
+p.<lt>kCOLOR_BLACK</lt>
+p.<lf>draw_line_color</lf>
+row.
+p.LineWidth
+p.1
+p.<lf>draw_line_width</lf>
+row.
+p.Linecap
+p.<lt>ekLCFLAT</lt>
+p.<lf>draw_line_cap</lf>
+row.
+p.Linejoin
+p.<lt>ekLJMITER</lt>
+p.<lf>draw_line_join</lf>
+row.
+p.LineDash
+p.Sólido
+p.<lf>draw_line_dash</lf>
+row.
+p.FillColor
+p.<lt>kCOLOR_BLACK</lt>
+p.<lf>draw_fill_color</lf>
+row.
+p.Font
+p.System default, regular size.
+p.<lf>draw_font</lf>
+row.
+p.Text max width
+p.-1
+p.<lf>draw_text_width</lf>
+row.
+p.Text vertical align
+p.<lt>ekLEFT</lt>
+p.<lf>draw_text_align</lf>
+row.
+p.Text horizontal align
+p.<lt>ekTOP</lt>
+p.<lf>draw_text_align</lf>
+row.
+p.Text internal align
+p.<lt>ekLEFT</lt>
+p.<lf>draw_text_halign</lf>
+row.
+p.Image vertical align
+p.<lt>ekLEFT</lt>
+p.<lf>draw_image_align</lf>
+row.
+p.Image horizontal align
+p.<lt>ekTOP</lt>
+p.<lf>draw_image_align</lf>
+table.
+
+func(draw_line).Draw a line.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const real32_t,x0).X coordinate of the first point.
+fpar(const real32_t,y0).Y coordinate of the first point.
+fpar(const real32_t,x1).X coordinate of the second point.
+fpar(const real32_t,y1).Y coordinate of the second point.
+
+func(draw_polyline).Draw several joined lines.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const bool_t,closed).<c>TRUE</c> to join the last point with the first.
+fpar(const V2Df*,points).Array of points that compose the polyline.
+fpar(const uint32_t,n).Number of points.
+
+func(draw_line_color).Set the color of drawing lines and contours.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const color_t,color).Line color.
+
+func(draw_line_width).Set the line thickness.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const real32_t,width).Line width.
+
+func(draw_line_cap).Set the style of the line ends.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const linecap_t,cap).Style.
+
+func(draw_line_join).Set the style of line junctions.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const linejoin_t,join).Union style.
+
+func(draw_line_dash).Set a pattern for line drawing.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const real32_t*,pattern).Array of values that define the pattern.
+fpar(const uint32_t,n).Number of values.
+fnote.The first element of <c>pattern</c> defines the length of the first stroke and the second of the first hole, so on. Lengths are scaled by line width <lf>draw_line_width</lf>, that is, a stroke of length 1 will draw a square of side <i>line_width</i>. Lengths of value 2 equal to twice the line thickness, etc. The pattern will scale proportionally when changing the thickness or zooming through transformations.
+
+func(draw_rect).Draw a rectangle.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const drawop_t,op).Drawing operation.
+fpar(const real32_t,x).X coordinate of the upper left corner of the rectangle.
+fpar(const real32_t,y).Y coordinate of the upper left corner of the rectangle.
+fpar(const real32_t,width).Rectangle width.
+fpar(const real32_t,height).Rectangle height.
+fnote.In <lh>Cartesian systems</lh> (x,y) indicate the origin of the lower left corner.
+
+func(draw_rndrect).Draw a rectangle with rounded edges.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const drawop_t,op).Drawing operation.
+fpar(const real32_t,x).X coordinate of the upper left corner of the rectangle.
+fpar(const real32_t,y).Y coordinate of the upper left corner of the rectangle.
+fpar(const real32_t,width).Rectangle width.
+fpar(const real32_t,height).Rectangle height.
+fpar(const real32_t,radius).Corner curvature radius.
+fnote.In <lh>Cartesian systems</lh> (x,y) indicate the origin of the lower left corner.
+
+func(draw_circle).Draw a circle.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const drawop_t,op).Drawing operation.
+fpar(const real32_t,x).X coordinate of the center.
+fpar(const real32_t,y).Y coordinate of the center.
+fpar(const real32_t,radius).Radius.
+
+func(draw_ellipse).Draw an ellipse.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const drawop_t,op).Drawing operation.
+fpar(const real32_t,x).X coordinate of the center.
+fpar(const real32_t,y).Y coordinate of the center.
+fpar(const real32_t,radx).X axis radius.
+fpar(const real32_t,rady).Y axis radius.
+
+func(draw_polygon).Draw a polygon.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const drawop_t,op).Drawing operation.
+fpar(const V2Df*,points).Array of points that form the polygon.
+fpar(const uint32_t,n).Number of points.
+
+func(draw_fill_color).Set a solid color for area filling.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const color_t,color).Fill color.
+
+func(draw_fill_linear).Set a gradient for filling areas.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const color_t*,color).Color array.
+fpar(const real32_t*,stop).Color positions.
+fpar(const uint32_t,n).Number of positions/colors.
+fpar(const real32_t,x0).X coordinate of the starting point.
+fpar(const real32_t,y0).Y coordinate of the starting point.
+fpar(const real32_t,x1).X coordinate of the end point.
+fpar(const real32_t,y1).Y coordinate of the end point.
+fnote.The positions must go from the value 0 to 1. See <lh>Gradients</lh>.
+
+func(draw_fill_matrix).Sets the transformation matrix of the fill pattern.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const T2Df*,t2d).Transformation.
+fnote.It will only be effective in non-solid fills. See <lh>Gradients</lh>.
+
+func(draw_fill_wrap).Set the behavior of the gradient or fill pattern to the limits.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const fillwrap_t,wrap).Behavior at the edge.
+fnote.It will only be effective in non-solid fills. See <lh>Gradients</lh>.
+
+func(draw_font).Set the font for text drawing.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const Font*, font).Fuente tipográfica.
+fnote.Tendrá efecto a partir del siguiente texto dibujado. Ver <lp>font</lp>.
+
+func(draw_text).Draw a block of text.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const drawop_t,op).Drawing operation.
+fpar(const char_t*,text).UTF8 string, terminated in a null character <c>'\0'</c>.
+fpar(const real32_t, x).X coordinate on the canvas of the text origin.
+fpar(const real32_t, y).Y coordinate on the canvas of the text origin.
+fnote.The text will be drawn with the font and preset style and will be sensitive to the context transformation. See <lh>Drawing text</lh>.
+
+func(draw_text_width).Set the maximum width of the text blocks.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const real32_t, width).Maximum width.
+fnote.If the text to draw with <lf>draw_text</lf> is wider than <c>width</c>, it will fragment into several lines. Pass -1 to draw the entire block on a single line. Context scaling is not taken into account. The measurement is made based on the size of the preset font. See <lh>Drawing text</lh>.
+
+func(draw_text_align).Sets the alignment of the text with respect to the insertion point.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const align_t,halign).Horizontal alignment.
+fpar(const align_t,valign).Vertical alignment.
+fnote.The insertion point is the coordinate <c>(x,y)</c> from <lf>draw_text</lf>. See <lh>Drawing text</lh>.
+
+func(draw_text_halign).Set the internal horizontal alignment of the text, within a multi-line block.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const align_t,halign).Horizontal alignment.
+fnote.In single-line texts, it has no effect. See <lh>Drawing text</lh>.
+
+func(draw_text_extents).Calculate the size of a block of text.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const char_t*,text).Text.
+fpar(const real32_t,refwidth).Reference width.
+fpar(real32_t*,width).Block width.
+fpar(real32_t*,height).Block height.
+fnote.If <c>refwidth</c> is greater than <c>0</c>, <c>width</c> will be bounded by this value and <c>height</c> will expand to accommodate all the text. Take into account possible new lines <c>'\n'</c> from <c>text</c>.
+
+func(draw_image).Draw a image.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const real32_t, x).X coordinate on the canvas of the image origin.
+fpar(const real32_t, y).Y coordinate on the canvas of the image origin.
+fnote.The image will be drawn at its natural size and in the indicated position. Use <lf>draw_matrix</lf> to perform scaling and rotation. See <lh>Drawing images</lh>.
+
+func(draw_image_frame).Like <lf>draw_image</lf>, but indicating the sequence number of an animation.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const uint32_t, frame).Sequence index <i>(frame)</i> of the animation.
+fpar(const real32_t, x).X coordinate on the canvas of the image origin.
+fpar(const real32_t, y).Y coordinate on the canvas of the image origin.
+fnote.Only images created from a <b>GIF</b> file support multiple frames (animations). See <lf>image_num_frames</lf>.
+
+func(draw_image_align).Sets the alignment of the image with respect to the insertion point.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const align_t,halign).Horizontal alignment.
+fpar(const align_t,valign).Vertical alignment.
+fnote.The insertion point is the coordinate <c>(x,y)</c> from <lf>draw_image</lf>. See <lh>Drawing images</lh>.

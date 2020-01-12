@@ -1,0 +1,143 @@
+
+h1.Core
+
+ep.Un core fuerte mejorará tu técnica, fuerza, resistencia y complementará todo lo que hagas.
+<i>Susan Trainor</i>
+
+p.De igual forma que un edificio necesita una cimentación fuerte, cualquier aplicación o librería debe sustentarse sobre pilares robustos y eficientes. Es inútil invertir horas y horas en una bonita interfaz si el motor interno está quebrado. Para este cometido ha sido desarrollada la librería <i>core</i> <r>core_depends</r>. Proveé estructuras, utilidades y algoritmos de uso común en programación, que nos facilitarán el desarrollo de programas garantizando la máxima eficiencia y portabilidad. <i>Core</i> supone el tercer nivel dentro del SDK de NAppGUI y aún no tiene conocimiento sobre las posibilidades gráficas del sistema operativo, por lo que puede utilizarse en la implementación de cualquier tipo de proyecto.
+
+img(core_depends.svg,300,.4).Dependencias de <i>core</i>. Ver <lp>sdk</lp>.
+Árbol de dependencias de la librería core.
+
+p.Los servicios que proporciona <i>core</i> se han dividido en una serie de módulos.
+
+li.<lp>heap</lp>, <lp>buffer</lp>.
+li.<lp>string</lp>.
+li.<lp>stream</lp>.
+li.<lp>arrst</lp>.
+li.<lp>setst</lp>.
+li.<lp>lex</lp>.
+li.<lp>dbind</lp>.
+li.<lp>event</lp>.
+li.<lp>hfile</lp>.
+li.<lp>respack</lp>.
+li.<lp>date</lp> y <lp>clock</lp>.
+
+enum(core_event_t).Tipos de evento en la librería <i>core</i>.
+enumv(ekEASSERT).Redirección de los <lp>cassert</lp>.
+enumv(ekEFILE).Un archivo detectado mientras recorremos un directorio. <lf>hfile_dir_loop</lf>.
+enumv(ekEENTRY).Entrada en un sub-directorio mientras recorremos un directorio. <lf>hfile_dir_loop</lf>.
+enumv(ekEEXIT).Salida de un sub-directorio.
+
+enum(sstate_t).Estado en <lp>stream</lp>.
+enumv(ekSTOK).Todo bien, no errores.
+enumv(ekSTEND).No hay más datos en el canal.
+enumv(ekSTCORRUPT).Los datos en el canal no son válidos o no se han leído correctamente.
+enumv(ekSTBROKEN).Error en el canal de comunicación.
+
+enum(lextoken_t).Tipos de <i>tokens</i> en <lp>lex</lp>.
+enumv(ekTSLCOM).Comentario de una sola línea, que comienza por <c>//</c>.
+enumv(ekTMLCOM).Comentario multi-línea, encerrado entre <c>/*</c> y <c>*/</c>.
+enumv(ekTSPACE).Representa una serie de espacios en blanco (<c>' '</c>, <c>'\t'</c>, <c>'\v'</c>, <c>'\f'</c>, <c>'\r'</c>).
+enumv(ekTEOL).Representa el carácter nueva línea (<c>'\n'</c>).
+enumv(ekTLESS).Signo menor que <c>'<<>'</c>.
+enumv(ekTGREAT).Signo mayor que <c>'<>>'</c>.
+enumv(ekTCOMMA).Signo coma <c>','</c>.
+enumv(ekTPERIOD).Signo punto <c>'.'</c>.
+enumv(ekTSCOLON).Signo punto y coma <c>';'</c>.
+enumv(ekTCOLON).Signo dos puntos <c>':'</c>.
+enumv(ekTOPENPAR).Paréntesis de apertura <c>'('</c>.
+enumv(ekTCLOSPAR).Paréntesis de cierre <c>')'</c>.
+enumv(ekTOPENBRAC).Corchete de apertura <c>'['</c>.
+enumv(ekTCLOSBRAC).Corchete de cierre <c>']'</c>.
+enumv(ekTOPENCURL).Llave de apertura <c>'{'</c>.
+enumv(ekTCLOSCURL).Llave de cierre <c>'}'</c>.
+enumv(ekTPLUS).Signo más <c>'+'</c>.
+enumv(ekTMINUS).Signo menos <c>'-'</c>.
+enumv(ekTASTERK).Signo asterisco <c>'*'</c>.
+enumv(ekTEQUALS).Signo igual <c>'='</c>.
+enumv(ekTDOLLAR).Signo dolar.
+enumv(ekTPERCEN).Signo porcentaje <c>'%'</c>.
+enumv(ekTPOUND).Signo almohadilla <c>'#'</c>.
+enumv(ekTAMPER).Signo <i>ampersand</i> <c>'&'</c>.
+enumv(ekTAPOST).Signo apóstrofe <c>'''</c>.
+enumv(ekTQUOTE).Signo comillas <c>'"'</c>.
+enumv(ekTCIRCUM).Signo acento circunflejo <c>'^'</c>.
+enumv(ekTTILDE).Signo tilde <c>'~'</c>.
+enumv(ekTEXCLA).Signo exclamación <c>'!'</c>.
+enumv(ekTQUEST).Signo interrogación <c>'?'</c>.
+enumv(ekTVLINE).Signo barra vertical <c>'|'</c>.
+enumv(ekTSLASH).Signo barra oblicua <c>'/'</c>.
+enumv(ekTBSLASH).Signo barra invertida <c>'\'</c>.
+enumv(ekTAT).Signo arroba <c>'@'</c>.
+enumv(ekTINTEGER).Número entero. <lh>Números</lh>.
+enumv(ekTOCTAL).Número octal. <lh>Números</lh>.
+enumv(ekTHEX).Número hexadecimal. <lh>Números</lh>.
+enumv(ekTREAL).Número real. <lh>Números</lh>.
+enumv(ekTSTRING).Cadena de caracteres Unicode, entre comillas. <lh>Cadenas</lh>.
+enumv(ekTIDENT).Identificador. <lh>Identificadores</lh>.
+enumv(ekTUNDEF).Token desconocido.
+enumv(ekTCORRUP).Error en el <lp>stream</lp> de entrada.
+enumv(ekTEOF).Final del <lp>stream</lp>. No hay más tokens.
+enumv(ekTRESERVED).<lh>Palabras clave</lh>. Al ser de propósito general, <lt>LexScn</lt> no etiqueta ningún identificador como palabra reservada. Hay que hacerlo en fases posteriores al análisis.
+
+struct(Buffer).Bloque de memoria de propósito general, reservado dinámicamente. Una vez creado, ya no se puede redimensionar. <lp>buffer</lp>.
+
+struct(String).Cadena de caracteres UTF8 reservada dinámicamente. Son objetos "parcialmente mutables". La memoria reservada no puede crecer, pero se pueden sustituir caracteres siempre que no se desborde la capacidad inicial del buffer. <lp>string</lp>.
+
+struct(Stream).Canal genérico de entrada/salida, donde es posible leer y escribir datos con formato. <lp>stream</lp>.
+
+struct(ArrSt).Array de registros. El tipo de objeto se indica entre paréntesis. <lp>arrst</lp>.
+
+struct(ArrPt).Array de punteros. El tipo de objeto se indica entre paréntesis. <lp>arrpt</lp>.
+
+struct(SetSt).Conjunto de registros. El tipo de objeto se indica entre paréntesis. <lp>setst</lp>.
+
+struct(SetPt).Conjunto de punteros. El tipo de objeto se indica entre paréntesis. <lp>setpt</lp>.
+
+struct(LexScn).Analizador léxico. <lp>lex</lp>.
+
+struct(Event).Contiene información referente a un evento. <lp>event</lp>.
+
+struct(Listener).Enlaza al generador y receptor de un eventos a través de una función <i>callback</i>. <lp>event</lp>.
+
+struct(IListener).Interfaz C++ para utilizar miembros de clase como manejadores de eventos. <lp>hellocpp</lp>.
+
+struct(DirEntry).Elemento de un directorio, obtenido mediante <lf>hfile_dir_list</lf>.
+smember(String*,name).Nombre del archivo o subdirectorio, sin directorios intermedios.
+smember(file_type_t,type).Tipo de elemento.
+smember(uint64_t,size).Tamaño en bytes.
+smember(Date,date).Fecha de la última modificación.
+
+struct(EvFileDir).Parámetros del evento <lt>ekEFILE</lt> y <lt>ekEENTRY</lt> durante la navegación automática por directorios. <lf>hfile_dir_loop</lf>.
+smember(const char_t*,pathname).El camino parcial desde el parámetro <c>pathname</c> de <lf>hfile_dir_loop</lf>.
+smember(uint32_t,level).La profundidad del directorio desde <c>pathname</c>.
+
+struct(ResPack).Paquete de recursos que serán cargados conjuntamente. Utilizar <lt>ResId</lt> para acceder a un recurso concreto. <lp>resources</lp>.
+
+struct(ResId).Identificador de un recurso. Son generados automáticamente por <i>nrc NAppGUI Resource Compiler</i>. <lp>resources</lp>.
+
+struct(Clock).Mide el tiempo transcurrido entre dos instantes dentro de la aplicación, con precisión de micro-segundos. También es útil para lanzar eventos a intervalos regulares de tiempo.
+
+func(FPtr_remove,ptr).Libera la memoria de los campos de un objeto, pero no el objeto en sí mismo. <lh>Registros o punteros</lh>.
+fpar(type*,obj).Puntero al objeto cuyos campos deben ser liberados.
+
+func(FPtr_event_handler,ptr).Manejador de evento. Son funciones <c>callback</c> que serán llamadas por el generador de un evento cuando este ocurra. <lp>event</lp>.
+fpar(type*,obj).Datos generales pasados como primer parámetro de la función.
+fpar(Event*,event).El evento.
+
+func(FPtr_read,ptr).Crea un objeto a partir de datos leídos desde un <lp>stream</lp>. <lh>Serialización</lh>.
+fret(type*).El objeto creado, deserializando los datos del stream.
+fpar(Stream*,stream).El canal E/S donde está serializado el objeto.
+
+func(FPtr_read_init,ptr).Similar a <lf>FPtr_read</lf> donde la memoria del objeto ya ha sido reservada, pero no inicializada. <lh>Serialización</lh>.
+fpar(Stream*,stream).El canal E/S donde está serializado el objeto.
+fpar(type*,obj).El objeto cuyos campos hay que deserializar.
+
+func(FPtr_write,ptr).Escribe un objeto en un <lp>stream</lp>. <lh>Serialización</lh>.
+fpar(Stream*,stream).El canal E/S donde serializar el objeto.
+fpar(const type*,obj).El objeto a escribir.
+
+func(core_start).Inicia la librería <i>core</i>, reservando espacio para las estructuras internas globales. Internamente llama a <lf>osbs_start</lf>.
+
+func(core_finish).Finaliza la librería <i>core</i>, liberando el espacio de las estructuras internas globales. Internamente llama a <lf>osbs_finish</lf>.

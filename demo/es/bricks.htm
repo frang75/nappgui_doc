@@ -1,0 +1,16 @@
+
+h1.Bricks
+
+p.<b>Briks</b> es una imitación muy simplista del videojuego <b>Atari Breakout</b>, que nos permitirá realizar una introducción al mundo de las <lh>Aplicaciones síncronas</lh>. Cualquier aplicación en tiempo real debe estar constantemente actualizándose intervenga o no el usuario. El <b>código fuente</b> está en la caperta <c>/src/demo/bricks</c> de la distribución del SDK. 
+
+li.Utiliza <lf>osmain_sync</lf> para iniciar una aplicación síncrona, indicando un intervalo y función <i>callback</i> de actualización. NAppGUI lanzará periódicamente eventos de tiempo que actualizarán el programa.
+
+img(bricks.png,720,.95).Videojuego bricks en Windows, macOS y Linux.
+Captura del juego bricks, imitación del Atari Breakout.
+
+p.Esta aplicación está dirigida por dos eventos <r>sync_event</r>. Por un lado el movimiento del slider, que puede producirse en cualquier momento (evento asíncrono), y actualizará la posición del jugador. Por otro un evento síncrono producido por <c>osmain_sync</c> cada 40 milisegundos y será notificado a través de <c>i_update()</c> para que se actualice el estado del juego y la vista gráfica.
+
+img(sync_event.svg,420,.55).Eventos síncronos y asíncronos.
+Gráfico que muestra dos eventos, uno síncrono y otro asíncrono.
+
+codefile(demo/bricks/bricks.c).

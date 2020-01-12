@@ -1,0 +1,122 @@
+
+h1.Edit
+
+p.Los <b>EditBox</b> son pequeñas cajas de texto con capacidades de edición. Al igual que los <lt>Label</lt> son de formato uniforme: La tipografía y colores afectarán a la totalidad del texto <r>edits</r>. Suelen utilizarse para editar campos en formularios, normalmente restringidos a una sola línea, aunque también pueden extenderse a varias de ellas. Para editar textos con múltiples atributos utilizar <lt>TextView</lt>. En <lh>¡Hola Edit y UpDown!</lh> tienes un ejemplo de uso.
+
+li.Utiliza <lf>edit_create</lf> para crear una caja de edición.
+
+li.Utiliza <lf>edit_multiline</lf> para crear una caja de edición multilínea.
+
+img(edits.png,0,.4).Cajas de edición en Windows, macOS y Linux.
+Ventana donde aparecen varias cajas de edición, a modo de formulario.
+
+h2.Filtrar textos
+
+p.En función del valor que estemos editando, es posible que sea necesario validar el texto introducido. Esto podemos hacerlo al terminar de editar o mientras estamos escribiendo. Para el primer caso utilizaremos el evento <lf>edit_OnChange</lf> que llamará al manejador cuando el control haya perdido el foco del teclado <r>text_change</r>. Si queremos implementar filtros más elaborados, que corrijan el texto mientras se escribe utilizaremos el evento <lf>edit_OnFilter</lf>. Por ejemplo, en <r>tfilter</r> tenemos un sencillo filtro que solo permite carácteres numéricos <r>text_filter</r>.
+
+img(text_change.svg,420,.5).El evento <i>OnChange</i> se llama cuando el control pierde el foco.
+Muestra el cambio del foco del teclado entre dos cajas de edición.
+
+code(cpp,tfilter).Filtro que solo permite carácteres numéricos.
+static void OnFilter(void *noused, Event *e)
+{
+    const EvText *params = event_params(e, EvText);
+    EvTextFilter *result = event_result(e, EvTextFilter);
+    uint32_t i = 0, j = 0;
+    while (params->text[i] != '\0')
+    {
+        if (params->text[i] >= '0' && params->text[i] <= '9')
+        {
+            result->text[j] = params->text[i];
+            j += 1;
+        }
+
+        i += 1;
+    }
+
+    result->text[j] = '\0';
+    result->apply = TRUE;
+}
+...
+edit_OnFilter(edit1, listener(NULL, i_OnFilter, void));
+code.
+
+img(text_filter.svg,360,.45).El evento <i>OnFilter</i> se llama tras cada pulsación de tecla.
+Muestra el evento tras pulsar una tecla en una caja de edición.
+
+func(edit_create).Crea un control de edición de texto.
+fret(Edit*).El edit.
+
+func(edit_multiline).Crea un control de edición de texto que permite múltiples líneas.
+fret(Edit*).El edit.
+
+func(edit_OnFilter).Establece un manejador para filtrar el texto mientras se edita.
+fpar(Edit*,edit).El edit.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará tras cada pulsación de tecla. En <lt>EvTextFilter</lt> de <lf>event_result</lf> se devolverá el texto filtrado.
+fnote.Ver <lh>Filtrar textos</lh> y <lh>Eventos GUI</lh>.
+
+func(edit_OnChange).Establece un manejador para detectar cuando el texto ha cambiado.
+fpar(Edit*,edit).El edit.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando el control pierda el foco del teclado, lo que indicará el final de la edición.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(edit_text).Establece el texto del control de edición.
+fpar(Edit*,edit).El edit.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(edit_font).Establece la fuente del control edit.
+fpar(Edit*,edit).El edit.
+fpar(const Font*,font).Fuente tipográfica.
+
+func(edit_align).Establece la alineación del texto.
+fpar(Edit*,edit).El edit.
+fpar(const align_t,align).La alineación.
+
+func(edit_passmode).Activa el modo contraseña, que ocultará los caracteres tecleados.
+fpar(Edit*,edit).El edit.
+fpar(const bool_t,passmode).Activa o desactiva el modo contraseña.
+
+func(edit_editable).Activa o desactiva la edición en el control.
+fpar(Edit*,edit).El edit.
+fpar(const bool_t,is_editable).<c>TRUE</c> permitirá editar el texto (por defecto).
+
+func(edit_tooltip).Asigna un tooltip al control edit.
+fpar(Edit*,edit).El edit.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(edit_color).Establece el color del texto.
+fpar(Edit*,edit).El edit.
+fpar(const color_t,color).El color del texto.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(edit_color_focus).Establece el color del texto, cuando el control tiene el foco del teclado.
+fpar(Edit*,edit).El edit.
+fpar(const color_t,color).El color del texto.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(edit_bgcolor).Establece el color de fondo.
+fpar(Edit*,edit).El edit.
+fpar(const color_t,color).El color de fondo.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(edit_bgcolor_focus).Establece el color de fondo, cuando el control tiene el foco del teclado.
+fpar(Edit*,edit).El edit.
+fpar(const color_t,color).El color de fondo.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(edit_phtext).Establece un texto explicativo para cuando el control está en blanco <i>(placeholder)</i>.
+fpar(Edit*,edit).El edit.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(edit_phcolor).Establece el color del texto placeholder.
+fpar(Edit*,edit).El edit.
+fpar(const color_t,color).El color del texto.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(edit_phstyle).Establece el estilo de la fuente para el placeholder.
+fpar(Edit*,edit).El edit.
+fpar(const uint32_t,fstyle).Combinación de valores de <lt>fstyle_t</lt>.
+
+func(edit_get_text).Obtiene el texto del control.
+fret(const char_t*).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fpar(const Edit*,edit).El edit.

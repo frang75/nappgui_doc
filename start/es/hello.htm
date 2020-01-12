@@ -1,0 +1,185 @@
+
+h1.¡Hola Mundo!
+
+desc.Creamos un ¡Hola Mundo! paso a paso desde cero con interfaz gráfica en C.
+
+ep.Érase una vez una compañía llamada Taligent. Taligent fue creada por IBM y Apple para desarrollar un conjunto de herramientas y bibliotecas como Cocoa. En el momento en que Taligent alcanzó cierto grado de madurez, Aaron conoció a uno de sus ingenieros en una feria comercial y le pidió que creara una aplicación simple: Una ventana con un botón. Cuando se hace clic en el botón, las palabras "¡Hola mundo!" Aparecen en un campo de texto. El ingeniero creó un proyecto y comenzó a crear subclases locamente tanto para la ventana como para el botón y el controlador de eventos. Luego comenzó a generar código: docenas de líneas para obtener el botón y el campo de texto en la ventana. Después de 45 minutos, todavía estaba intentando que la aplicación funcionara. Un par de años después, Taligent cerró silenciosamente sus puertas para siempre.
+<i>Hillegass, Preble & Chandler</i> - Cocoa Programming for OSX.
+
+p.Poco podemos decir del significado del programa <i>Hello World!</i> cada vez que nos enfrentamos a una nueva tecnología o metodología de programación. Por lo tanto, vamos al grano.
+
+img2(hello_win10.png, hello_winxp.png).Windows 10 y WindowsXP.
+Hello World! corriendo en Windows 10.
+Hello World! corriendo en WindowsXP.
+
+img2(hello_macos_mojave.png, hello_macos_snow_leopard.png). macOS 10.14 Mojave y MacOSX 10.6 Snow Leopard.
+Hello World! corriendo en macOS Mojave.
+Hello World! corriendo en macOS Leopard.
+
+img2(hello_ambiance_ubuntu.png, hello_adwaita_dark_raspbian.png). GTK+3 Ambiance (Ubuntu) y Adwaita Dark (Raspbian).
+Hello World! corriendo en Ubuntu.
+Hello World! corriendo en Raspbian.
+
+h2.El programa completo
+
+codefile(demo/hello/main.c).
+
+h2.Esqueleto
+
+p.Una aplicación NAppGUI comienza en <lf>osmain</lf>, una macro multiplataforma que unifica la iniciación de un programa de escritorio bajo diferentes sistemas. Está definida en <c>#include "osmain.h"</c> y recibirá cuatro parámetros: constructor, destructor, argumentos (<c>char_t</c>) y el tipo de objeto. De esta forma, cualquier esqueleto básico se ve así:
+
+code.
+#include "nappgui.h"
+
+typedef struct _app_t App;
+struct _app_t
+{
+    Window *window;
+};
+
+static App *i_create(void)
+{
+    App *app = heap_new0(App);
+    return app;
+}
+
+static void i_destroy(App **app)
+{
+    heap_delete(app, App);
+}
+
+#include "osmain.h"
+osmain(i_create, i_destroy, "", App)
+code.
+
+p.La directiva <c>#include "nappgui.h"</c>, incluye gran parte de NAppGUI con una sola instrucción. Si lo prefieres, puedes optar por incluir las cabeceras por separado según sea necesario. En este caso, deberíamos reemplazar un solo <c>#include</c> por once. En el Manual de Referencia, se indica que cabecera incluir según el módulo de funciones que vayamos a utilizar.
+
+code.
+#include "gui.h"
+#include "button.h"
+#include "heap.h"
+#include "label.h"
+#include "layout.h"
+#include "listener.h"
+#include "panel.h"
+#include "strings.h"
+#include "v2d.h"
+#include "vtext.h"
+#include "window.h"
+code.
+
+h2.Constructor
+
+p.El primer parámetro de <c>osmain</c> es el constructor de la aplicación. Tan pronto como se inicia el programa, ciertas estructuras internas deben inicializarse, así como arrancar el ciclo de mensajes inherente a todas las aplicaciones de escritorio. Cuando todo esté listo, se llamará al constructor para crear el <b>objeto aplicación</b>. Este objeto puede ser de cualquier tipo y no necesita derivarse de ningún <c>class Application</c> o similar, estamos en C ;-). Dada la sencillez de este ejemplo, el objeto aplicación tan solo contiene una ventana.
+
+code.
+static App *i_create(void)
+{
+    App *app = heap_new0(App);
+    Panel *panel = i_panel(app);
+    app->window = window_create(ekWINDOW_STD, &panel);
+    return app;
+}
+code.
+
+h2.El Panel principal
+
+p.Para crear la ventana principal, necesitamos el <b>panel principal</b>, un contenedor que integra todos los controles de interfaz que se muestran en la ventana. El espacio dentro del panel está organizado en una cuadrícula invisible llamada <lt>Layout</lt>. Cada panel puede tener varios layouts y alternar entre ellos, pero al menos uno es necesario. Dentro de sus celdas ubicaremos los diferentes controles de interfaz.
+
+code.
+static Panel *i_panel(App *app)
+{
+    Panel *panel = panel_create();
+    Layout *layout = layout_create(1, 3);
+    Label *label = label_create();
+    Button *button = button_push();
+    Text *text = text_create();
+    label_text(label, "Hello!, I'm a label");
+    button_text(button, "Click Me!");
+    layout_label(layout, label, 0, 0);
+    layout_button(layout, button, 0, 1);
+    layout_text(layout, text, 0, 2);
+    panel_layout(panel, layout);
+    return panel;
+}
+code.
+
+h2.El destructor
+
+p.Cuando la aplicación termine, <c>osmain</c> llamará al destructor (segundo parámetro de la macro) para liberar el objeto aplicación y todo lo que dependa de él, con el fin de realizar una salida limpia del programa. Pondremos <b>mucho énfasis en esto</b>, ya que el hecho de no liberar correctamente toda la memoria se considerará un grave error de programación. 
+
+code.
+static void i_destroy(App **app)
+{
+    window_destroy(&(*app)->window);
+    heap_delete(app, App);
+}
+code.
+
+h2.Lanzar la ventana
+
+p.Por defecto, NAppGUI crea todas las ventanas ocultas, por lo que es necesario visualizarlas explícitamente. Establecemos un título, una posición inicial y la lanzamos con <lf>window_show</lf>. Observamos que en esta primera versión nuestra ventana no queda muy estética <r>hello_world_without_format</r>. En un momento le daremos formato.
+
+code.
+static App *i_create(void)
+{
+   ...
+   window_title(app->main_window, "Hello World!");
+   window_origin(app->main_window, v2df(500, 200));
+   window_show(app->main_window);
+   ...
+}
+code.
+
+img(hello_world_without_format.png, 0, .15).Primera versión de <i>¡Hola, Mundo!</i> (sin formato).
+Ventana con los controles muy comprimidos ya que aún no se ha aplicado ningún formato.
+
+h2.Formato del Layout
+
+p.Para mejorar la apariencia de nuestra ventana, vamos a darle un poco de formato al diseño. Concretamente, vamos a establecer un ancho de columna y un alto para la tercera fila (control de texto). Después dejaremos un margen en el borde y una separación entre filas. <r>hello_world_formatted</r>.
+
+code.
+layout_hsize(layout, 0, 200);
+layout_vsize(layout, 2, 100);
+layout_margin(layout, 5);
+layout_vmargin(layout, 0, 5);
+layout_vmargin(layout, 1, 5);
+code.
+
+img(hello_world_formatted.svg,460).<i>¡Hola, Mundo!</i> tras el formateo del Layout.
+Ventana de interfaz debidamente formateada.
+
+h2.Saliendo del programa
+
+p.Cuando presionamos el botón de cerrar la ventana principal, el programa no finaliza su ejecución. Esto es típico de las aplicaciones macOS, donde aún siguen corriendo en el Dock aunque no haya ninguna ventana abierta. NAppGUI sigue el mismo criterio de no cerrar el programa, por lo que debemos realizar una llamada explícita a la función <lf>osapp_finish</lf>. Para ello, capturaremos el <b>evento del botón</b>, a través de la macro <lf>listener</lf>.
+
+code.
+static void i_OnClose(App *app, Event *e)
+{
+    osapp_finish();
+}
+
+static App *i_create(void)
+{
+   window_OnClose(app->main_window, listener(app, i_OnClose, App));
+}
+code.
+
+h2.Eventos Button
+
+p.Finalmente, capturaremos el evento <i>clic</i> del botón e imprimiremos un mensaje en el cuadro de texto cada vez que se pulse. Vamos a implementar el manejador <c>i_OnButton</c>, responsable de componer y mostrar el mensaje y lo conectaremos al control Button que hemos creado anteriormente.
+
+code.
+static void i_OnButton(App *app, Event *e)
+{
+    String *msg = str_printf("Button click (%d)\n", app->clicks);
+    text_insert(app->vtext, tc(msg));
+    str_destroy(&msg);
+    app->clicks += 1;
+}
+...
+button_OnClick(button, listener(app, i_OnButton, App));
+code.
+
+bq.Un evento es una acción que ocurre durante la ejecución del programa. El sistema operativo lo captura y nos lo envía a través de su  controlador (definido en <c>listener()</c>). Más en <lp>event</lp>.
+

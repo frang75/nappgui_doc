@@ -1,0 +1,139 @@
+langrev.
+
+h1.Maths
+
+ep.Elementary mathematical functions and constants.
+
+const(BMath,E,2.718281828459045).Euler's number.
+
+const(BMath,LN2,0.6931471805599453).The natural logarithm of 2.
+
+const(BMath,LN10,2.302585092994046).The natural logarithm of 10.
+
+const(BMath,PI,3.141592653589793).The number Pi.
+
+const(BMath,SQRT2,1.414213562373095).Square root of 2.
+
+const(BMath,SQRT3,1.732050807568878).Square root of 3.
+
+const(BMath,DEG2RAD,0.017453292519943).Conversion from one degree to radians.
+
+const(BMath,RAD2DEG,57.2957795130823).Conversion of a radian to degrees.
+
+func(BMath,cos).Get the cosine of an angle.
+fret(real).The cosine of the angle.
+fpar(const real,angle).Angle in radians.
+
+func(BMath,sin).Get the sine of an angle.
+fret(real).The sine of the angle.
+fpar(const real,angle).Angle in radians.
+
+func(BMath,tan).Get the tangent of an angle.
+fret(real).The angle tangent.
+fpar(const real,angle).Angle in radians.
+
+func(BMath,acos).Get the cosine arc, or inverse cosine, which is the angle whose cosine is the value.
+fret(real).The angle (0, Pi).
+fpar(const real,cos).Cosine (-1, 1).
+
+func(BMath,asin).Get the sine arc, or inverse sine, which is the angle whose sine is the value.
+fret(real).The angle (0, Pi).
+fpar(const real,sin).Sine (-1, 1).
+
+func(BMath,atan2).Get the tangent arc, or inverse tangent. Es is the angle measured from the X axis to the line containing the origin (0, 0) and the point with the coordinates (x, y).
+fret(real).The angle (-Pi, Pi).
+fpar(const real,y).Y coordinate.
+fpar(const real,x).Coordinate X.
+
+func(BMath,sqrt).Get the square root of a number.
+fret(real).The square root.
+fpar(const real,value).The number.
+
+func(BMath,isqrt).Get the inverse square root of a number (1/sqrt).
+fret(real).The inverse square root.
+fpar(const real,value).The number.
+
+func(BMath,log).Get the natural logarithm (base e) of a number.
+fret(real).The logarithm.
+fpar(const real,value).The number.
+
+func(BMath,log10).Get the logarithm in base 10 of a number.
+fret(real).The logarithm.
+fpar(const real,value).The number.
+
+func(BMath,exp).Get the number of Euler e (2.7182818) raised to a power.
+fret(real).The exponential.
+fpar(const real,value).The exponent.
+
+func(BMath,pow).Calculate a power, <c>base</c> raised to <c>exponent</c>.
+fret(real).The result of the power.
+fpar(const real,base).Base.
+fpar(const real,exponent).Exponent.
+
+func(BMath,abs).Get the absolute value of a number.
+fret(real).The absolute value.
+fpar(const real,value).The number.
+
+func(BMath,max).Get the maximum of two values.
+fret(real).The maximum value.
+fpar(const real,value1).First number.
+fpar(const real,value2).Second number.
+
+func(BMath,min).Get the minimum of two values.
+fret(real).The minimum value.
+fpar(const real,value1).First number.
+fpar(const real,value2).Second number.
+
+func(BMath,clamp).Restrict a value to a certain range.
+fret(real).The limited value.
+fpar(const real,value).The number.
+fpar(const real,min).Minimum value of the range.
+fpar(const real,max).Maximum value of the range.
+
+func(BMath,mod).Get the module of divide <c>num/den</c>.
+fret(real).The module.
+fpar(const real,num).Numerator.
+fpar(const real,den).Denominator.
+
+func(BMath,modf).Get the integer and fraction part of a real number.
+fret(real).The fractional part <c>[0,1)</c>.
+fpar(const real,value).The number.
+fpar(real*,intpart).Get the integer part.
+
+func(BMath,prec).Get the number of decimals (precision) of a real number.
+fret(uint32_t).The number of decimal places.
+fpar(const real,value).The number.
+
+func(BMath,round).Rounds a number to the nearest integer (above or below).
+fret(real).The nearest whole.
+fpar(const real,value).The number.
+
+func(BMath,round_step).Round a number to the nearest fraction.
+fret(real).The nearest number.
+fpar(const real,value).The number.
+fpar(const real,step).The fraction.
+
+func(BMath,floor).Rounds a number to the integer below.
+fret(real).The largest integer number, less than or equal to the number.
+fpar(const real,value).The number.
+
+func(BMath,ceil).Round a number to the integer above.
+fret(real).The smallest integer number, greater than or equal to the number.
+fpar(const real,value).The number.
+
+func(bmath_time_seed).Gets a seed for random numbers, based on the system clock.
+fret(uint32_t).The seed. Use it as a parameter of <lf>bmath_rand_seed</lf> to generate a different sequence of random numbers.
+
+func(bmath_rand_seed).Establish a new seed of random numbers.
+fpar(const uint32_t,seed).The new seed.
+fnote.Each time the seed changes, a new sequence of random numbers begins. For the same seed, we will get the same sequence, so they are pseudo-random numbers. Similar seeds (eg. <c>4</c>, <c>5</c> ) produce radically different sequences.
+
+func(BMath,rand).Gets a random number, within an interval.
+fret(real).The random number.
+fpar(const real,from).The lower limit of the interval.
+fpar(const real,to).The upper limit of the interval.
+
+func(bmath_randi).Gets a random number, within an interval.
+fret(uint32_t).The random number.
+fpar(const uint32_t,from).The lower limit of the interval.
+fpar(const uint32_t,to).The upper limit of the interval.

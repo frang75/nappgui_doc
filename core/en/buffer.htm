@@ -1,0 +1,21 @@
+langrev.
+h1.Buffers
+
+ep.Generic memory blocks, dynamically reserved.
+
+p.<i>Buffer</i> objects are simply dynamically stored memory blocks and stored in the <lh>Heap Segment</lh>. They are useful for sharing generic data between different functions or threads. For the latter case, they must be protected by a <lt>Mutex</lt> if several threads can access it concurrently (they are not <i>thread-safe</i>). They are of fixed size. Once created, they can not be resized, although they can be rewritten as many times as necessary.
+
+func(buffer_create).Create a new buffer.
+fret(Buffer*).The new buffer.
+fpar(const uint32_t,size).Buffer size in bytes.
+
+func(buffer_destroy).Destroy the buffer.
+fpar(Buffer**,buffer).The buffer. It will be set to <c>NULL</c> after the destruction.
+
+func(buffer_size).Gets the size of the buffer.
+fret(uint32_t).The size of the buffer in bytes.
+fpar(const Buffer*,buffer).Buffer.
+
+func(buffer_data).Gets a pointer to the contents of the buffer.
+fret(byte_t*).Pointer to the contents of the buffer that can be used to read or write.
+fpar(Buffer*,buffer).Buffer.

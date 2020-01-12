@@ -1,0 +1,121 @@
+langrev.
+h1.Continuous integration
+
+ep.A Continuous Integration system will compile projects continuously automatically and on all platforms, as we make changes to the repository.
+
+p.We already saw in <lp>win_mac_linux</lp> how to move our applications between different platforms and development environments. This is a great advantage over traditional native programming, since we can generate optimized executables for each CPU and operating system without having to modify a single line of the source code. Now we are going to go one step further by automating the compilation and test phases.
+
+p.An average work team can modify the code of a project several times a day. In cross-platform environments, such changes must be compiled and tested on several machines as soon as possible in order to correct errors or anomalies. For this, the Continuous Integration (CI) system will work continuously, in the background and autonomously each time the content of the repository is modified <r>contint</r>.
+
+img(contint.svg,640,.75).Continuous Integration System will work autonomously in the background.
+Basic outline of a system of continuous integration.
+
+h2.Build grid
+
+p.The first thing we have to do is set up a heterogeneous computer network where different machines coexist with the appropriate compilers <r>buildgrid</r> and that can communicate with each other <lp>ssh</lp>. The main actors of this network are:
+
+li.<b>Build Grid:</b> Network formed by all the machines that will cooperate in compilation tasks. They can be distributed over the Internet.
+
+li.<b>Build Master:</b> Computer within the network that runs the Continuous Integration utility, coordinates the rest of the machines, stores the results and reports errors.
+
+li.<b>Build Host/Slave:</b> Machine for compilation and test tasks, which will be remotely managed by the <i>Build Master</i>.
+
+li.<b>Build Agent:</b> Configuration that identifies a compiler and CPU version. For example, the agent <c>v142_x64</c> represents Visual Studio 2019 (VC++) 64bit. An agent can be executed by any Host that has the appropriate compiler installed. The <i>Build Master</i> will be in charge of balancing the load.
+
+li.<b>Build Profile:</b> Profile that indicates all <i>targets</i> (libraries and/or executables) to be generated within a solution and which agents must intervene. The <i>Build Master</i> can handle several profiles at the same time.
+
+li.<b>Build Config:</b> Indicates the level of optimization and debug options of the compilation: <c>Debug</c>, <c>Release</c>, <c>ReleaseWithAssert</c>. <lh>Configurations</lh>.
+
+img(buildgrid.svg,640,.75).Example <i>Build Grid</i>.
+Scheme of a network of compilers, governed by a Build Master.
+
+h2.Command line
+
+p.However complex the <i>Build Profile</i> may be, the remote compilation process can be divided into four steps:
+
+li.<b>Update:</b> The working copy of the host, if outdated.
+
+li.<b>CMake:</b> To generate compilation solutions <c>.sln</c>, <c>.xcodeproj</c>or <c>Makefile</c>.
+
+li.<b>Build:</b> Compile by <c>msbuild</c>, <c>xcodebuild</c> or <c>make</c> depending on the platform.
+
+li.<b>Copiar:</b> Compilation results, errors, warnings, libraries or executables. The Master will package all products and submit reports.
+
+p.El <i>Build Master</i> you must use the command line version of all the tools involved and launch them on the remote host using SSH. We will review its syntax below.
+
+h3.SVN from command line
+
+code(txt).Version number of an SVN repository.
+svn info --show-item revision svn://192.168.1.2/svn/myrepo -r HEAD
+1642
+code.
+
+code(txt).Update the working copy of a Host.
+svn checkout --username USER --password PASS svn://192.168.1.2/svn/NAPPGUI/1_0 C:\src -r 1642
+code.
+
+code(txt).Content of a repository directory at standard output <c>stdout</c>.
+svn list svn://192.168.1.2/svn/NAPPGUI/1_0/src/osbs -r 1642
+code.
+
+code(txt).Contents of a file a <c>stdout</c>.
+svn cat svn://192.168.1.2/svn/NAPPGUI/1_0/src/osbs/bmem.h -r 1642
+code.
+
+h3.CMake from command line
+
+code(text).Creating a Visual Studio solution.
+cd C:\build
+cmake -G"Visual Studio 15 2017 Win64" -Tv141 C:\src
+code.
+
+code(text).Creating an Xcode solution.
+cd /Users/fran/build
+cmake -G"Xcode" -DCMAKE_ARCHITECTURE:STRING=x86_64 /Users/fran/src
+code.
+
+code(text).Creation of <c>Makefile</c>, to compile with GCC.
+cd /home/fran/build
+cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_ARCHITECTURE:STRING=x64 -DCMAKE_TOOLKIT=GTK3 /home/fran/src
+code.
+
+p.In macOS and Linux we can alternate between different versions of the compiler, as we saw in <lh>xcode-select</lh> and <lh>update-alternatives</lh>. This must be done <b>before launching cmake</b>.
+
+h3.Visual Studio from command line
+
+p.To compile a Visual Studio solution from the command line we will have to use the command <c>MSBuild.exe</c>, included in the distribution of the Microsoft environment.
+
+code(text).Run Visual Studio from the command line.
+cd C:\build
+MSBuild.exe Project.sln /flp1:warningsonly;logfile=warnings.txt /flp2:errorsonly;logfile=errors.txt /p:Configuration=Debug /p:Platform=x64 /maxcpucount:1
+code.
+
+p.This command redirects to <c>stdout</c> compiler messages. The warnings and errors found in the code will keep them in the archives <c>warnings.txt</c> and <c>errors.txt</c> respectively.
+
+h3.Xcode from command line
+
+p.Like Visual Studio, Xcode can be executed from the command line. The syntax is as follows:
+
+code(text).Run Xcode from command line.
+cd /Users/fran/build
+xcodebuild -project Project.xcodeproj -alltargets -configuration Debug
+code.
+
+p.It also redirects to <c>stdout</c> the result of the compilation. Unlike <c>MSBuild</c> the notices and errors write them in <c>stderr</c>, preceded by tags <c>warning:</c> and <c>error:</c> respectively.
+
+h3.GCC/Make from the command line
+
+p.In Linux the project is generated by files <c>Makefile</c>, which contain compilation scripts based on GCC. CMake has been responsible for creating these <c>Makefile</c>, so all you have to do is execute the command <c>make</c>.
+
+code(text).Ejecutar <c>make</c> from command line.
+cd /home/fran/build
+make
+code.
+
+h3.Remote copies
+
+p.Again we will use the SSH protocol, specifically the command <c>scp</c> to make the remote copy from the Host to the Master.
+
+code(text).Copy a compiled library from a remote machine to a local directory.
+scp fran@192.168.1.24:/build/Debug/core/libcore.a C:/pkg
+code. 

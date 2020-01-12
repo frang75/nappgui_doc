@@ -1,0 +1,42 @@
+
+h1.MenuItem
+
+func(menuitem_create).Crea un nuevo item para un menú.
+fret(MenuItem*).El item recién creado.
+
+func(menuitem_separator).Crea un nuevo separador para un menú.
+fret(MenuItem*).El item recién creado.
+
+func(menuitem_OnClick).Establece un manejador para la selección del item.
+fpar(MenuItem*,item).El item.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará tras hacer clic.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(menuitem_enabled).Activa o desactiva un item del menú.
+fpar(MenuItem*,item).El item.
+fpar(const bool_t,enabled).Habilitado o no.
+
+func(menuitem_visible).Muestra u oculta un item del menú.
+fpar(MenuItem*,item).El item.
+fpar(const bool_t,enabled).Habilitado o no.
+
+func(menuitem_text).Establece el texto del item.
+fpar(MenuItem*,item).El item.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(menuitem_image).Establece el icono que mostrará el item.
+fpar(MenuItem*,item).El item.
+fpar(const Image*,image).Imagen.
+
+func(menuitem_key).Establece un atajo de teclado para seleccionar el item del menú.
+fpar(MenuItem*,item).El item.
+fpar(const vkey_t,key).El código de teclado.
+fpar(const uint32_t,modifiers).Modificadores.
+
+func(menuitem_submenu).Asigna un submenú desplegable al seleccionar el item.
+fpar(MenuItem*,item).El item.
+fpar(Menu**,submenu).El submenú.
+
+func(menuitem_state).Establece el estado del item, que se reflejará con una marca junto al texto.
+fpar(MenuItem*,item).El item.
+fpar(const state_t,state).Estado.

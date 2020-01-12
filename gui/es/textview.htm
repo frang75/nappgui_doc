@@ -1,0 +1,20 @@
+
+h1.TextView
+
+p.Los <b>TextView</b> son vistas de texto que pueden mostrar varios bloques de texto enriquecido, donde pueden combinarse tipografías, tamaños y colores.
+
+func(textview_create).Crea una vista de texto.
+fret(TextView*).La vista de texto.
+
+func(textview_insert).Inserta una cadena al final de una vista, con el formato predeterminado.
+fpar(TextView*,view).La vista de texto.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(textview_text).Establece el texto del control.
+fpar(TextView*,view).La vista de texto.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fnote.Eliminará el contenido previo del control.
+
+func(textview_get_text).Obtiene el texto del control.
+fret(const char_t*).Cadena C UTF8 con el contenido del control. Terminada en carácter nulo <c>'\0'</c>.
+fpar(const TextView*,view).La vista de texto.

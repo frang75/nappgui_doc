@@ -1,0 +1,84 @@
+langrev.
+h1.Label
+
+p.<b>Label</b> controls are used to insert small blocks of text into windows and forms. They are of uniform format, that is, the font and color attributes will be applied to the entire text. In most cases the content will be limited to a single line, although it is possible to show blocks that extend in several lines. The control size will be adjusted to the text it contains <r>label_control</r> . In <lh>Hello Label!</lh> you have an example of use.
+
+img(label_control.png,0,.75).Label control. Background color has been assigned to appreciate control limits.
+Capture a window with several label controls.
+
+p.In the case that the column of <lt>Layout</lt> has a width smaller than the text, some dots (ellipse) will be displayed indicating that the text has been cut <r>label_fixed_width</r>, except in multi-line labels, which will expand vertically to accommodate all text <r>label_multiline</r>.
+
+li.Use <lf>label_create</lf> to create a text control.
+
+li.Use <lf>label_multiline</lf> to create a multi-line control.
+
+li.Use <lf>label_align</lf> to set the internal alignment of the text within the control.
+
+img(label_fixed_width.png,0,.5).Text adjustment by reducing the width of the control.
+Label controls with the width smaller than the text.
+
+img(label_multiline.png,0,.5).Multi-line labels will expand vertically to accommodate all text.
+Multiline label controls.
+
+p.In <r>simple_form</r> we have an example of the use of <i>Label</i> in forms. If necessary, we can make the texts sensitive to the mouse by varying their style and colors <r>mouse_label</r>.  
+
+li.Use <lf>label_style_over</lf> to change the font style.
+
+li.Use <lf>label_color_over</lf> to change text color.
+
+li.Use <lf>label_bgcolor_over</lf> to change background color.
+
+li.Use <lf>label_OnClick</lf> to respond to a click on the text.
+
+img(simple_form.png,0,.5).Using simple and multiline <i>Label</i> in forms.
+Capture a simple form.
+
+img(mouse_label.png,0,.35).<i>Label</i> controls sensitive to the mouse.
+Several text labels with the mouse pointer on one of them.
+
+func(label_create).Create a text control.
+fret(Label*).The new label.
+
+func(label_multiline).Create a multi-line text control.
+fret(Label*).The new label.
+
+func(label_OnClick).Set the <c>OnClick</c> event handler.
+fpar(Label*,label).The label.
+fpar(Listener*,listener).Event handler.
+fnote.See <lh>GUI Events</lh>.
+
+func(label_text).Set the text that the label will display.
+fpar(Label*,label).The label.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(label_font).Set the text font.
+fpar(Label*,label).The label.
+fpar(const Font*,font).Font.
+
+func(label_style_over).Set the font modifiers, when the mouse is over the control.
+fpar(Label*,label).The label.
+fpar(const uint32_t,style).Combination of values <lt>fstyle_t</lt>.
+
+func(label_align).Sets the horizontal alignment of the text with respect to the size of the control.
+fpar(Label*,label).The label.
+fpar(const align_t,align).Alignment.
+
+func(label_color).Set the text color.
+fpar(Label*,label).The label.
+fpar(const color_t,color).The color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(label_color_over).Set the color of the text, when the mouse is over the control.
+fpar(Label*,label).The label.
+fpar(const color_t,color).The color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(label_bgcolor).Set the background color of the text.
+fpar(Label*,label).The label.
+fpar(const color_t,color).The color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(label_bgcolor_over).Set the background color of the text, when the mouse is over the control.
+fpar(Label*,label).The label.
+fpar(const color_t,color).El color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.

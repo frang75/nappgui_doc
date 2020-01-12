@@ -1,0 +1,92 @@
+
+h1.Combo
+
+p.Los <b>ComboBox</b> son cajas de edición de texto con lista desplegable <r>combos</r>. Por tanto, funcionarán de la misma forma que los controles <lt>Edit</lt> sobre los que se añaden métodos para la gestión de la lista. En <lh>¡Hola PopUp y Combo!</lh> tienes un ejemplo de uso.
+
+img(combos.png,0,.8).Combos en Windows, macOS y Linux.
+Captura de varios controles ComboBox en una ventana.
+
+func(combo_create).Crea un control combo.
+fret(Combo*).El combo.
+
+func(combo_OnFilter).Establece un manejador para filtrar el texto mientras se edita.
+fpar(Combo*,combo).El combo.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará tras cada pulsación de tecla. En <lt>EvTextFilter</lt> de <lf>event_result</lf> se devolverá el texto filtrado.
+fnote.Ver <lh>Filtrar textos</lh> y <lh>Eventos GUI</lh>.
+
+func(combo_OnChange).Establece un manejador para detectar cuando el texto ha cambiado.
+fpar(Combo*,combo).El combo.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando el control pierda el foco del teclado, lo que indicará el final de la edición.
+fnote.Este evento se lanzará también al seleccionar un elemento de la lista, señal que el texto ha cambiado en la caja de edición. Ver <lh>Eventos GUI</lh>.
+
+func(combo_text).Establece el texto de edición del combo.
+fpar(Combo*,combo).El combo.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(combo_align).Establece la alineación del texto.
+fpar(Combo*,combo).El combo.
+fpar(const align_t,align).La alineación.
+
+func(combo_tooltip).Asigna un tooltip al control combo.
+fpar(Combo*,combo).El combo.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(combo_color).Establece el color del texto del combo.
+fpar(Combo*,combo).El combo.
+fpar(const color_t,color).El color del texto.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(combo_color_focus).Establece el color del texto, cuando el control tiene el foco del teclado.
+fpar(Combo*,combo).El combo.
+fpar(const color_t,color).El color del texto.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(combo_bgcolor).Establece el color de fondo.
+fpar(Combo*,combo).El combo.
+fpar(const color_t,color).El color de fondo.
+fnote.Los valores RGB puede que no sean del todo portables. Ver <lp>color</lp>.
+
+func(combo_bgcolor_focus).Establece el color de fondo cuando el control tiene el foco del teclado.
+fpar(Combo*,combo).El combo.
+fpar(const color_t,color).El color de fondo.
+
+func(combo_phtext).Establece un texto explicativo para cuando el control está en blanco.
+fpar(Combo*,combo).El combo.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(combo_phcolor).Establece el color del texto placeholder.
+fpar(Combo*,combo).El combo.
+fpar(const color_t,color).El color del texto.
+
+func(combo_phstyle).Establece el estilo de la fuente para el placeholder.
+fpar(Combo*,combo).El combo.
+fpar(const uint32_t,fstyle).Combinación de valores de <lt>fstyle_t</lt>.
+
+func(combo_get_text).Obtiene el texto del control.
+fret(const char_t*).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fpar(const Combo*,combo).El combo.
+
+func(combo_add_elem).Añade un nuevo elemento a la lista desplegable.
+fpar(Combo*,combo).El combo.
+fpar(const char_t*,text).El texto del elemento en UTF-8 o el identificador del recurso. <lp>resources</lp>.
+fpar(const Image*,image).Icono asociado al elemento o el identificador del recurso. Por cuestión de espacio, se escalará a un alto máximo de 16 píxeles.
+
+func(combo_set_elem).Edita un elemento de la lista desplegable.
+fpar(Combo*,combo).El combo.
+fpar(const uint32_t,index).El índice del elemento a sustituir.
+fpar(const char_t*,text).El texto del elemento en UTF-8 o el identificador del recurso. <lp>resources</lp>.
+fpar(const Image*,image).Icono asociado al elemento o el identificador del recurso. Por cuestión de espacio, se escalará a un alto máximo de 16 píxeles.
+
+func(combo_ins_elem).Inserta un elemento en la lista desplegable.
+fpar(Combo*,combo).El combo.
+fpar(const uint32_t,index).La posición de inserción.
+fpar(const char_t*,text).El texto del elemento en UTF-8 o el identificador del recurso. <lp>resources</lp>.
+fpar(const Image*,image).Icono asociado al elemento o el identificador del recurso. Por cuestión de espacio, se escalará a un alto máximo de 16 píxeles.
+
+func(combo_del_elem).Elimina un elemento de la lista desplegable.
+fpar(Combo*,combo).El combo.
+fpar(const uint32_t,index).El índice del elemento a eliminar.
+
+func(combo_duplicates).Impide que hayan textos duplicados en la lista desplegable.
+fpar(Combo*,combo).El combo.
+fpar(const bool_t,duplicates).<c>TRUE</c> para permitir textos duplicados.

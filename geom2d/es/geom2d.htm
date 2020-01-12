@@ -1,0 +1,40 @@
+
+h1.Geom2D
+
+p.Estamos ante una librería de cálculo geométrico en dos dimensiones. Geom2D permite trabajar con primitivas en el plano real: Puntos, vectores, transformaciones, curvas y regiones. Ofrece tan solo funcionalidad matemática, es decir, no define ningún tipo de representación ni operación de dibujo. Depende únicamente de la librería <lp>core</lp> <r>geom2d_depends</r>, por lo que puede utilizarse tanto en aplicaciones de escritorio como en utilidades por línea de comandos. Todos los tipos y funciones se definen en simple <c>(float)</c> y <c>double</c> precisión, además de poder hacer uso de las <lh>Plantillas matemáticas C++</lh>.
+
+img(geom2d_depends.svg,300,.4).Dependencias de <i>geom2d</i>. Ver <lp>sdk</lp>.
+Árbol de dependencias de la librería geom2d.
+
+p.Todos los elementos geométricos se basan en coordenadas <b>(x, y)</b> en el plano. Geom2D no asume como serán interpretadas dichas coordenadas. Eso dependerá del sistema de referencia definido por la aplicación. Los más utilizados son el cartesiano y el de pantalla <r>refsystems</r>, aunque podrían utilizarse otros llegado el caso <r>systems2d</r>.
+
+img(refsystems.svg,580,.65).Interpretación de la coordenada (3,2) en monitores (izquierda) y en el plano cartesiano (derecha).
+Sistema de referencia del monitor y sistema de referencia cartesiano.
+
+img(systems2d.svg,580,.5).Diferentes sistemas de coordenadas en 2D.
+Ejes de coordenadas en en plano, con diferentes orientaciones.
+
+struct(V2D,real).Representa un vector o punto 2d. <lp>v2d</lp>.
+smember(real,x).Coordenada x.
+smember(real,y).Coordenada y.
+
+struct(S2D,real).Representa un tamaño en 2d. <lp>s2d</lp>.
+smember(real,width).Ancho.
+smember(real,height).Alto.
+
+struct(R2D,real).Rectángulo en 2d. <lp>r2d</lp>.
+smember(V2D,pos).Origen.
+smember(S2D,size).Tamaño.
+
+struct(B2D,real).Bounding Box en 2d. <lp>b2d</lp>.
+smember(V2D,min).Coordenada mínima del bounding.
+smember(V2D,max).Coordenada máxima del bounding.
+
+struct(T2D,real).Transformación afín en 2d. <lp>t2d</lp>.
+smember(V2D,i).Componente i de la transformación lineal.
+smember(V2D,j).Componente j de la transformación lineal.
+smember(V2D,p).Posición.
+
+struct(Curve2D,real).Curva paramétrica en 2d. <lp>curve2d</lp>.
+
+struct(Brep2D,real).Área o región en 2d. <lp>brep2d</lp>.

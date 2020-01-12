@@ -1,0 +1,565 @@
+
+h1.Products
+
+p.En este proyecto afrontaremos la construcción de una aplicación que permite navegar por una base de datos de productos obtenida desde un servidor Web <r>products_win</r>. Este patrón cliente-servidor es ampliamente utilizado a día de hoy, por lo que dispondremos de una base estable para crear cualquier aplicación basada en este modelo. El <b>código fuente</b> está en la caperta <c>/src/demo/products</c> de la distribución del SDK.
+
+img(products_win.png,0,.8).Aplicación <i>Products</i>, versión Windows.
+Captura de la versión Windows de la aplicación Products.
+
+img(products_macos.png,0,.8).Versión macOS.
+Captura de la versión macOS de la aplicación Products.
+
+img(products_gtk.png,0,.8).Versión Linux/GTK+.
+Captura de la versión Linux de la aplicación Products.
+
+h2.Especificaciones
+
+li.La base de datos es remota y accederemos a ella a través de servicios Web que encapsularán los datos en JSON. Para obtener los productos utilizaremos este <l>http://serv.nappgui.com/dproducts.php''servicio</l> y para registrar a un usuario <l>http://serv.nappgui.com/duser.php?user=amanda&pass=1234''este otro</l>. Tenemos cuatro <b>usuarios</b> dados de alta en nuestra base de datos: <i>amanda</i>, <i>brenda</i>, <i>brian</i> y <i>john</i> todos con el <b>password</b> 1234.
+
+li.La base de datos remota es de solo lectura. No tenemos servicios web para editarla.
+
+li.En el momento que un usuario se registre, se descargarán automáticamente todos los artículos.
+
+li.Se mostrará un pequeño gráfico con las estadísticas de ventas de cada producto.
+
+li.Se puede editar la base de datos de forma local, así como añadir o eliminar registros.
+
+li.Se puede exportar la base de datos local a disco, así como importarla.
+
+li.Tendremos los controles típicos de navegación: Primero, último, siguiente, anterior.
+
+li.Podremos establecer un filtro por descripción. Solo se mostrarán aquellos productos cuya descripción coincida parcialmente con el filtro.
+
+li.La interfaz estará en siete idiomas: Inglés, Español, Portugués, Italiano, Vietnamita, Ruso y Japonés. Podremos cambiar de idioma sin necesidad de cerrar la aplicación.
+
+li.La aplicación debe correr en Windows, macOS y Linux.
+
+h2.Modelo-Vista-Controlador
+
+p.Dado que este programa tiene un  nivel de complejidad medio, lo fragmentaremos en tres partes utilizando el conocido patrón modelo-vista-controlador <b>MVC</b> <r>mvc</r>.
+
+img(mvc.svg,520,.7).Módulos MVC que componen la aplicación.
+Esquema del patrón Modelo-Vista-Controlador.
+
+li.<b>Modelo:</b> Se ocupará de los datos propiamente dichos, la conexión con el servidor y la lectura/escritura en disco. Se implementará en <c>prmodel.c</c>.
+
+li.<b>Vista:</b> Aquí implementaremos la capa de presentación de datos, compuesta por la ventana principal (en <c>prview.c</c>) y la barra de menú (en <c>prmenu.c</c>).
+
+li.<b>Controlador:</b> Se ocupará de la lógica del programa <c>prctrl.c</c>. Responderá a los eventos del usuario y mantendrá la coherencia entre el modelo y la vista. Debido a la cantidad de trabajo extra que supone sincronizar cada campo de la estructura con los controles de interfaz, haremos uso del patrón <i>Model-View-ViewModel</i> <b>MVVM</b> donde los datos del modelo se sincronizarán automáticamente con la interfaz y los canales E/S.
+
+li.<b>Main:</b> Módulo principal <c>products.c</c>. Contiene la función <lf>osmain</lf> y carga los tres actores anteriores.
+
+h2.Modelo
+
+p.El modelo de datos de esta aplicación es bastante sencillo <r>cmodel</r>, ya que únicamente requiere manipular un array de estructuras tipo <c>Product</c>.
+
+code(cpp,cmodel).Estructuras que forman el modelo de datos.
+typedef struct _model_t Model;
+typedef struct _product_t Product;
+
+typedef enum _type_t
+{
+    ekCPU,
+    ekGPU,
+    ekHDD,
+    ekSCD
+} type_t;
+
+struct _product_t
+{
+    type_t type;
+    String *code;
+    String *description;
+    Image *image64;
+    real32_t price;
+};
+
+struct _model_t
+{
+    ArrSt(uint32_t) *filter;
+    ArrPt(Product) *products;
+};
+code.
+
+p.Como paso previo, registraremos las estructuras del modelo lo que nos permitirá automatizar tareas de E/S sin tener que programarlas explícitamente gracias al <lp>dbind</lp> <r>cdbind</r>.
+
+code(cpp,cdbind).Registro de los <c>struct</c> del modelo de datos.
+dbind_enum(type_t, ekCPU);
+dbind_enum(type_t, ekGPU);
+dbind_enum(type_t, ekHDD);
+dbind_enum(type_t, ekSCD);
+dbind(Product, type_t, type);
+dbind(Product, String*, code);
+dbind(Product, String*, description);
+dbind(Product, Image*, image64);
+dbind(Product, real32_t, price);
+code.
+
+h3.JSON WebServices
+
+p.La lectura de los artículos desde el servidor Web la haremos en dos pasos. Por un lado descargaremos un <lt>Stream</lt> con el JSON mediante HTTP y, posteriormente, lo "parsearemos" a un objeto C <r>chttpget</r>.
+
+code(cpp,chttpget).Descarga de datos y procesamiento del JSON.
+wserv_t model_webserv(Model *model)
+{
+    Stream *stm = http_dget("serv.nappgui.com",80,"/dproducts.php",NULL);
+    if (stm != NULL)
+    {
+        PJson *json = json_read(stm, NULL, PJson);
+        stm_close(&stm);
+        ...
+code.
+
+p.El JSON de este <l>http://serv.nappgui.com/dproducts.php''servicio web</l> consta de una cabecera y una lista de productos <r>webformat</r>, por lo que debemos registrar una nueva estructura con el fin de que <lf>json_read</lf> pueda crear correctamente el objeto <r>alljson</r>. Observar que emparejamiento JSON-C se lleva a cabo por el nombre del campo, por lo que estos deben ser idénticos <r>json_read</r>. 
+
+code(text,webformat).Formato del servicio Web.
+{
+    "code":0,
+    "size":80,
+    "data":[
+    {"id":0,
+    "code":"i7-8700K",
+    "description":"Intel BX80684I78700K 8th Gen Core i7-8700K Processor",
+    type":0,
+    "price":374.8899999999999863575794734060764312744140625,
+    "image":"cpu_00.jpg",
+    "image64":"\/9j\/4AAQSkZJRgABAQ....
+    },
+    ...
+}
+code.
+
+code(cpp,alljson).Registrando de cabecera del JSON.
+typedef struct _pjson_t PJson;
+struct _pjson_t
+{
+    int32_t code;
+    uint32_t size;
+    ArrPt(Product) *data;
+};
+
+dbind(PJson, int32_t, code);
+dbind(PJson, uint32_t, size);
+dbind(PJson, ArrPt(Product)*, data);
+code.
+
+img(json_read.svg,800,1).<c>json_read</c> accede al registro <c>dbind</c> para crear un objeto C a partir de un stream JSON.
+Esquema que muestra la vinculación automática entre un JSON y las estructuras del programa.
+
+h3.Escribir/Leer en disco
+
+p.La serialización <r>cwrite</r> y de-serialización <r>cread</r> de objetos mediante streams binarios también puede realizarse de forma automática por el mero hecho de haber registrado los tipos de datos <r>serialize</r>. No es necesario que programemos explícitamente métodos de lectura y escritura de clases.
+
+code(cpp,cwrite).Exportación de la base de datos a disco.
+bool_t model_export(Model *model, const char_t *pathname, ferror_t *err)
+{
+    Stream *stm = stm_to_file(pathname, err);
+    if (stm != NULL)
+    {
+        dbind_write(stm, model->products, ArrPt(Product));
+        stm_close(&stm);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+code.
+
+code(cpp,cread).Importación de la base de datos desde disco.
+bool_t model_import(Model *model, const char_t *pathname, ferror_t *err)
+{
+    Stream *stm = stm_from_file(pathname, err);
+    if (stm != NULL)
+    {
+        ArrPt(Product) *products = dbind_read(stm, ArrPt(Product));
+        stm_close(&stm);
+
+        if (products != NULL)
+        {
+            dbind_destroy(&model->products, ArrPt(Product));
+            model->products = products;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+code.
+
+img(serialize.svg,620,.88).(De)serialización de objetos binarios mediante <c>dbind</c>.
+Esquema que muestra como, gracias a la vinculación de datos, se pueden serializar objetos sin necesidad de código adicional.
+
+h3.Añadir/Eliminar registros
+
+p.Y por último veremos como añadir o eliminar registros a la base de datos utilizando los constructores y destructores que proporciona por defecto <c>dbind</c>. En <r>dadd</r> creamos un nuevo artículo y en <r>ddel</r> destruimos otro existente a partir de su índice.
+
+code(cpp,dadd).Constructor por defecto.
+void model_add(Model *model)
+{
+    Product *product = dbind_create(Product);
+    arrpt_append(model->products, product, Product);
+}
+code.
+
+code(cpp,ddel).Destructor.
+static void i_destroy(Product **product)
+{
+    dbind_destroy(product, Product);
+}
+
+void model_delete(Model *model, const uint32_t index)
+{
+    arrpt_delete(model->products, index, i_destroy, Product);
+}
+code.
+
+h2.Vista
+
+p.Hemos fragmentado el diseño de la ventana principal en varios bloques, implementado cada uno en su propio <i>sublayout</i>. En <lh>Uso de sublayouts</lh> y <lh>Sub-layouts</lh> tienes ejemplos al respecto. Comenzamos por un layout de una columna y dos filas <r>mainlay</r> <r>main_layout</r>. En la celda superior ubicaremos un sublayout con otras dos celdas en horizontal: Una para el formulario y otra para el panel de login. La celda inferior la utilizaremos para el <i>status bar</i>.
+
+code(cpp,mainlay).Composición del layout principal.
+static Layout *i_layout(Ctrl *ctrl)
+{
+    Layout *layout = layout_create(1, 2);
+    Layout *layout0 = layout_create(2, 1);
+    Layout *layout1 = i_form(ctrl);
+    Layout *layout2 = i_status_bar(ctrl);
+    Panel *panel1 = i_login_panel(ctrl);
+    layout_layout(layout0, layout1, 0, 0);
+    layout_panel(layout0, panel1, 1, 0);
+    layout_layout(layout, layout0, 0, 0);
+    layout_layout(layout, layout2, 0, 1);
+    return layout;
+}
+code.
+
+img(main_layout.svg,400,.65).Layout principal de la ventana.
+Esquema que muestra la composición por bloques del layout principal.
+
+p.A su vez, el layout que integra el formulario, implementado en <c>i_form()</c>, está compuesto por tres celdas en vertical <r>form_layout</r>: Una para la barra de herramientas <c>i_toolbar()</c>, otra para el slider de selección y otra para los datos de artículos <c>i_product()</c>. Esta última celda es un sublayout de dos columnas y tres filas. En la fila central ubicamos los label <c>Type</c> y <c>Price</c> y, en las otras dos, cuatro sublayout creados por las funciones <c>i_code_desc()</c>, <c>i_n_img()</c>, <c>i_type()</c> e <c>i_price()</c>.
+
+img(form_layout.svg,400,.65).Layout que implementa el formulario.
+Esquema que muestra la composición por bloques del layout formulario.
+
+p.Si observamos el código de <c>i_product()</c>, reproducido parcialmente en <r>prexpand</r>, hemos realizado un <lh>Formato del Layout</lh>, asignando un ancho y alto mínimo para las celdas superiores. También indicamos que la expansión vertical se realice sobre la fila 0, evitando que se expandan las filas 1 y 2, correspondientes a los <i>label</i>, los <i>radiobutton</i> y el precio.
+
+code(cpp,prexpand).Formato del layout <c>i_product()</c>.
+static Layout *i_product()
+{
+    Layout *layout = layout_create(2, 3);
+    ...
+    layout_hsize(layout, 0, 200.f);
+    layout_hsize(layout, 1, 200.f);
+    layout_vsize(layout, 0, 200.f);
+    layout_vexpand(layout, 0);
+    ...
+}
+code.
+
+h3.Panel de Login
+
+p.Para el <i>login</i> del usuario hemos utilizado un panel con dos layouts diferentes: Uno para registro y otro para mostrar los datos de usuario una vez registrado <r>multilay</r> <r>multilayout</r>. De esta forma, el controlador podrá alternar entre ellos fácilmente llamando a <lf>panel_visible_layout</lf>. Esta función se encargará de visualizar/ocultar controles y recalcular el tamaño de la ventana, ya que puede haber sufrido variaciones por el cambio de disposición.
+
+code(cpp,multilay).Creación de un panel multi-layout
+static Panel *i_login_panel(Ctrl *ctrl)
+{
+    Panel *panel = panel_create();
+    Layout *layout0 = i_login(ctrl);
+    Layout *layout1 = i_logout(ctrl);
+    panel_layout(panel, layout0);
+    panel_layout(panel, layout1);
+    return panel;
+}
+code.
+
+img(multilayout.svg,520,.65).Panel de login con dos layouts.
+Captura de los dos layouts que forman un panel multi-layout.
+
+h3.Ocultar columnas
+
+p.También es posible ocultar el panel de login mediante el menú o el botón correspondiente <r>showlogin</r>. Esto es sencillo de realizar dentro del controlador, actuando sobre la columna que contiene dicho panel.
+
+code.
+layout_show_col(ctrl->layout, 1, state == ekON ? TRUE : FALSE);
+code.
+
+img(showlogin.png,-1,.65).Mostrar/Ocultar el panel de login.
+Captura que muestra como ocultar parte del panel.
+
+h3.Gráficos de barras
+
+p.Uno de los requisitos es que la interfaz incluya un pequeño gráfico de barras que vaya mostrando las estadísticas de venta de cada producto <r>graphbars</r>. El código que genera dicho gráfico lo tenemos en <r>drawstats</r>. En <lh>Uso de vistas personalizadas</lh>, <lh>Dibujo paramétrico</lh> y <lp>dctx</lp> tienes más información sobre gráficos interactivos.
+
+code(cpp,drawstats).Dibujo paramétrico de un gráfico de barras.
+static void i_OnStats(Ctrl *ctrl, Event *e)
+{
+    const EvDraw *params = event_params(e, EvDraw);
+    uint32_t i, n = sizeof(ctrl->stats) / sizeof(real32_t);
+    real32_t p = 10.f, x = p, y0 = params->height - p;
+    real32_t w = (params->width - p * 2) / n;
+    real32_t h = params->height - p * 2;
+    real32_t avg = 0, pavg;
+    char_t tavg[16];
+    color_t c[2];
+    real32_t stop[2] = {0, 1};
+    c[0] = kHOLDER;
+    c[1] = kCOLOR_VIEW;
+    draw_fill_linear(params->ctx, c,stop, 2, 0, p, 0, params->height - p + 1);
+
+    for (i = 0; i < n; ++i)
+    {
+        real32_t hr = h * (ctrl->stats[i] / i_MAX_STATS);
+        real32_t y = p + h - hr;
+        draw_rect(params->ctx, ekFILL, x, y, w - 2, hr);
+        avg += ctrl->stats[i];
+        x += w;
+    }
+
+    avg /= n;
+    pavg = h * (avg / i_MAX_STATS);
+    pavg = p + h - pavg;
+    bstd_sprintf(tavg, sizeof(tavg), "%.2f", avg);
+    draw_fill_color(params->ctx, kTXTRED);
+    draw_line_color(params->ctx, kTXTRED);
+    draw_line(params->ctx, p - 2, pavg, params->width - p, pavg);
+    draw_line_color(params->ctx, kCOLOR_LABEL);
+    draw_line(params->ctx, p - 2, y0 + 2, params->width - p, y0 + 2);
+    draw_line(params->ctx, p - 2, y0 + 2, p - 2, p);
+    draw_text(params->ctx, ekFILL, tavg, p, pavg);
+}
+code.
+
+img(graphbars.gif,-1,.35).Gráficos dinámicos en el panel de login.
+Animación de un gráfico de barras dinámico, incluído en la aplicación.
+
+h3.Traducciones
+
+p.La interfaz se ha traducido a siete idiomas, con el Inglés como predeterminado <r>translate</r>. Para cambiar el lenguaje, llamamos a <lf>gui_language</lf> dentro del manejador del evento del <lt>PopUp</lt> <r>tradfunc</r>. En <lp>resources</lp> tienes una guía paso a paso para localizar y traducir aplicaciones.
+
+code(cpp,tradfunc).Código que cambia el idioma del programa. 
+static void i_OnLang(Ctrl *ctrl, Event *e)
+{
+    const EvButton *params = event_params(e, EvButton);
+    static const char_t *LANGS[] = { "en_US", "es_ES", "pt_PT", "it_IT", "vi_VN", "ru_RU", "ja_JP" };
+    gui_language(LANGS[params->index]);
+}
+code.
+
+img(translate.gif,-1,.8).Traducciones automáticas.
+Animación del programa, cambiando el idioma de la interfaz.
+
+h3.Temas <i>Dark Mode</i>
+
+p.NAppGUI utiliza controles de interfaz nativos, hecho que que provoca que las ventanas se integren perfectamente con el tema de escritorio activo en cada máquina. No obstante, si utilizamos iconos o colores personalizados es posible estos no siempre sean coherentes al portar a otros sistemas. 
+
+li.En <lp>color</lp> se definen una serie de colores "de sistema", por ejemplo <lt>kCOLOR_LABEL</lt>, cuyo valor RGB se resolverá en tiempo de ejecución en función de la plataforma destino. Utilizando estas constantes, tendremos la certeza que nuestras aplicaciones siempre lucirán bien y presentarán un esquema de colores coherentes. En <lp>colorview</lp> tienes una demo que muestra estos colores.
+
+li.Utiliza <lf>color_alt</lf> para definir colores con dos versiones: Una para temas claros y otra para oscuros. NAppGUI se encargará de resolver el RGB cada vez que sea necesario <r>colalt</r>.
+
+code(cpp,colalt).Colores personalizados utilizados en <c>Products</c>.
+kHOLDER = color_alt(color_bgr(0x4681Cf), color_bgr(0x1569E6));
+kEDITBG = color_alt(color_bgr(0xFFFFe4), color_bgr(0x101010));
+kSTATBG = color_alt(color_bgr(0xFFC165), color_bgr(0x523d1d));
+kSTATSK = color_alt(color_bgr(0xFF8034), color_bgr(0xFF8034));
+kTXTRED = color_alt(color_bgr(0xFF0000), color_bgr(0xEB665A));
+code.
+
+li.Para las imágenes, deberemos incluir dos versiones en los recursos del programa y seleccionar una u otra en función del valor <lf>color_dark_mode</lf> <r>thimages</r>.
+
+code(cpp,thimages).Selección de iconos para <i>Light</i> o <i>Dark Themes</i>.
+void ctrl_theme_images(Ctrl *ctrl)
+{
+    bool_t dark = color_dark_mode();
+    button_image(cell_button(ctrl->first_cell), dark ? FIRSTD_PNG : FIRST_PNG);
+    button_image(cell_button(ctrl->back_cell), dark ? BACKD_PNG : BACK_PNG);
+    button_image(cell_button(ctrl->next_cell), dark ? NEXTD_PNG : NEXT_PNG);
+    button_image(cell_button(ctrl->last_cell), dark ? LASTD_PNG : LAST_PNG);
+    button_image(cell_button(ctrl->add_cell), ADD_PNG);
+    button_image(cell_button(ctrl->minus_cell), MINUS_PNG);
+    button_image(cell_button(ctrl->setting_cell), SETTINGS_PNG);
+    button_image(cell_button(ctrl->login_cell), LOGIN16_PNG);
+    button_image(cell_button(ctrl->logout_cell), dark ? LOGOUT16D_PNG : LOGOUT16_PNG);
+    menuitem_image(ctrl->import_item, OPEN_PNG);
+    menuitem_image(ctrl->export_item, dark ? SAVED_PNG : SAVE_PNG);
+    menuitem_image(ctrl->first_item, dark ? FIRST16D_PNG : FIRST16_PNG);
+    menuitem_image(ctrl->back_item, dark ? BACK16D_PNG : BACK16_PNG);
+    menuitem_image(ctrl->next_item, dark ? NEXT16D_PNG : NEXT16_PNG);
+    menuitem_image(ctrl->last_item, dark ? LAST16D_PNG : LAST16_PNG);
+    menuitem_image(ctrl->login_item, LOGIN16_PNG);
+    menuitem_image(ctrl->logout_item, dark ? LOGOUT16D_PNG : LOGOUT16_PNG);
+}
+code.
+
+li.Utiliza <lf>gui_OnThemeChanged</lf> para actualizar los iconos personalizados en tiempo de ejecución <r>themchanged</r> <r>darkmode</r>.
+
+code(cpp,themchanged).Actualización de iconos en tiempo de ejecución.
+static void i_OnThemeChanged(App *app, Event *e)
+{
+    ctrl_theme_images(app->ctrl);
+    unref(e);
+}
+
+gui_OnThemeChanged(listener(app, i_OnThemeChanged, App));
+code.
+
+img(darkmode.gif,-1,.8).Cambio del tema de escritorio.
+Animación del cambio de Light Mode a Dark Mode en macOS.
+
+h2.Controlador
+
+p.El controlador es el encargado de mantener la coherencia entre el Modelo y la Vista, así como de implementar la <b>lógica de negocio</b>. Concretamente este programa no hace prácticamente nada con los datos, al margen de descargarlos del servidor y mostrarlos, lo que presenta una buena oportunidad para practicar.
+
+h3.Login multi-hilo
+
+p.Cuando el usuario pulsa el botón <c>[Login]</c> el programa llama a dos servicios Web. Uno para registrar al usuario y otro para descargar los datos. Este proceso dura alrededor de un segundo, lo cual es una eternidad desde el punto de vista de un proceso. Durante este tiempo se llega a apreciar que el programa se queda "congelado" a la espera de que se resuelvan las llamadas del servidor. Esto ocurre porque se está ejecutando una tarea "lenta" en el mismo hilo que gestiona el ciclo de mensajes <r>multithread</r><b>(a)</b>. 
+
+p.Para evitar este desagradable efecto, que puede agravarse si la petición durase más tiempo, vamos a utilizar <lh>Tareas multi-hilo</lh> mediante <lf>osapp_task</lf> <r>ostask</r> <r>multithread</r><b>(b)</b>. Esto crea un nuevo hilo de ejecución que comienza en <c>i_login_begin</c>. En el momento que los datos se han descargado, el gestor de tareas de NAppGUI llamará a <c>i_login_end</c> (ya en el hilo principal) y el programa seguirá con su ejecución mono-hilo.
+
+code(cpp,ostask).Proceso de login multi-hilo.
+static void i_OnLogin(Ctrl *ctrl, Event *e)
+{
+    ctrl->status = ekIN_LOGIN;
+    i_status(ctrl);
+    osapp_task(ctrl, 0., i_login_begin, NULL, i_login_end, Ctrl);
+    unref(e);
+}
+code.
+
+img(multithread.svg,800,.8).Ejecución de una tarea "lenta". Mono-hilo (a), Multi-hilo (b). Con un solo hilo la interfaz se quedará "congelada".
+Esquema que muestra como se coordinan dos hilos para realizar el proceso de login.
+
+h3.Sincronizar Modelo y Vista
+
+p.Mantener sincronizados el Modelo de datos y la Vista también es tarea del controlador. A medida que el usuario interactúa con la interfaz, este deberá capturar los eventos, filtrar datos y actualizar los objetos del modelo. De igual forma, cada vez que cambie el modelo tendrá que refrescar la interfaz. Esta sincronización bidireccional se puede automatizar utilizando el registro <b>dbind</b>, ahorrando mucho código extra de programación <r>dbindctrl</r>.
+
+img(dbindctrl.svg,480,.65).DBind libera al controlador de la recurrente tarea de sincronizar los objetos con la interfaz.
+Esquema que muestra la ubicación del vinculado de datos en el patrón MVC.
+
+p.La implementación de este patrón <b>MVVM</b> <i>Model-View-ViewModel</i> es bastante sencilla y la tenemos resumida en <r>mvvmbind</r> <r>mvvm_synchro</r>.
+
+li.Utiliza <lf>cell_dbind</lf> para vincular una celda del layout con un campo del modelo.
+
+li.Utiliza <lf>layout_dbind</lf> para vincular el layout que contiene las celdas anteriores con el <c>struct</c> que contiene los campos.
+
+li.Utiliza <lf>layout_dbind_obj</lf> para asignar un objeto al layout. A partir de aquí las actualizaciones Modelo-Vista se realizarán de forma automática.
+
+code(cpp,mvvmbind).Vinculación de <c>struct</c> con <c>layout</c>.
+// In View
+Cell *cell0 = layout_cell(layout, 0, 1);
+...
+cell_dbind(cell0, Product, String*, code);
+cell_dbind(cell1, Product, String*, description);
+cell_dbind(cell2, Product, type_t, type);
+cell_dbind(cell3, Product, Image*, image64);
+cell_dbind(cell4, Product, real32_t, price);
+layout_dbind(layout, Product);
+
+// In Controller
+Product *product = model_product(model, index);
+layout_dbind_obj(layout, product, Product);
+code.
+
+img(mvvm_synchro.svg,520,.75).Vinculación de datos en el GUI.
+Esquema que muestra la correspondencia entre los campos de una estructura y los controles de interfaz.
+
+p.Es habitual que los datos tengan que ser revisados (filtrados) tras la edición para comprobar que los valores sean coherentes con el modelo. <b>dbind</b> admite diferentes formatos para los campos registrados. En <r>dbindreal</r> hemos aplicado formato al campo <c>price</c> de <c>Product</c>.
+
+code(cpp,dbindreal).Formato del campo <c>price</c> de <c>Product</c>.
+dbind_default(Product, real32_t, price, 1);
+dbind_range(Product, real32_t, price, .50f, 1e6f);
+dbind_precision(Product, real32_t, price, .05f);
+dbind_increment(Product, real32_t, price, 5.f);
+dbind_suffix(Product, real32_t, price, "€");
+code.
+
+h3.Cambiar la imagen 
+
+p.Para cambiar la imagen asociada al producto, el controlador ha modificado ligeramente el funcionamiento del <lt>ImageView</lt>, que mostrará un icono sobreimpreso cada vez que el ratón se sitúe encima de la imagen <r>overdraw</r>, <r>overlay</r>. 
+
+code(cpp,overdraw).Dibujo de un <i>overlay</i> cuando el ratón está encima de la imagen.
+static void i_OnImgDraw(Ctrl *ctrl, Event *e)
+{
+    const EvDraw *params = event_params(e, EvDraw);
+    const Image *image = gui_respack_image(EDIT_PNG);
+    uint32_t w, h;
+    image_size(image, &w, &h);
+    draw_image(params->context, image, params->width - w - 10, params->height - h - 10);
+    unref(ctrl);
+}
+...
+imageview_OnOverDraw(view, listener(ctrl, i_OnImgDraw, Ctrl));
+code.
+
+img(overlay.png,520,.65).Icono sobreimpreso en una vista de imagen.
+Vista de imagen con un icono.
+
+p.Al hacer clic sobre la imagen aparecerá el diálogo de apertura de archivos que nos permitirá seleccionar una nueva. Si se acepta el diálogo, la imagen se cargará y se asignará al control <r>openfile</r>. El objeto se actualizará automáticamente.
+
+code(cpp,openfile).Dibujo de un <i>overlay</i> cuando el ratón está encima de la imagen.
+static void i_OnImgClick(Ctrl *ctrl, Event *e)
+{
+    const char_t *type[] = { "png", "jpg" };
+    const char_t *file = comwin_open_file(type, 2, NULL);
+    if (file != NULL)
+    {
+        Image *image = image_from_file(file, NULL);
+        if (image != NULL)
+        {
+            View *view = cell_view(ctrl->image_cell);
+            imageview_image(view, image);
+            image_destroy(&image);
+        }
+    }
+    unref(e);
+}
+...
+imageview_OnClick(view, listener(ctrl, i_OnImgClick, Ctrl));
+code.
+
+h3.Gestión de memoria
+
+p.Tras el cierre del programa se imprimirá un informe con el uso de la memoria, alertándonos de posibles <i>memory leaks</i> <r>mout</r>. No está de más revisarlo periódicamente con el fin de detectar anomalías lo antes posible.
+
+code(text,mout).Estadísticas del uso de memoria, generadas al cierre de cualquier aplicación NAppGUI.
+[22:17:21] [OK] Heap Memory Staticstics
+[22:17:21] ============================
+[22:17:21] Total a/dellocations: 2065, 2065
+[22:17:21] Total bytes a/dellocated: 2831766, 2831766
+[22:17:21] Max bytes allocated: 1642879
+[22:17:21] Effective reallocations: (0/55)
+[22:17:21] Real allocations: 13 pages of 65536 bytes
+[22:17:21]                   5 pages greater than 65536 bytes
+[22:17:21] ============================
+code.
+
+p.Si queremos información más detallada, podemos pasar el parámetro <c>"-hv"</c> en el campo <c>options</c> de <lf>osmain</lf> <r>dheap</r>.
+
+code(cpp).
+osmain(i_create, i_destroy, "-hv", App)
+code.
+
+code(text,dheap).Salida detallada del uso de memoria.
+[12:01:41] 'App' a/deallocations: 1, 1 (32) bytes
+[12:01:41] 'ArrPt::Cell' a/deallocations: 24, 24 (576) bytes
+[12:01:41] 'ArrPt::GuiComponent' a/deallocations: 8, 8 (192) bytes
+...
+[12:01:41] 'Button' a/deallocations: 13, 13 (1664) bytes
+[12:01:41] 'View' a/deallocations: 5, 5 (840) bytes
+[12:01:41] 'Clock' a/deallocations: 1, 1 (48) bytes
+[12:01:41] 'Combo' a/deallocations: 1, 1 (176) bytes
+...
+[12:01:41] 'UpDown' a/deallocations: 1, 1 (64) bytes
+[12:01:41] 'VImgData' a/deallocations: 4, 4 (160) bytes
+[12:01:41] 'Window' a/deallocations: 1, 1 (80) bytes
+[12:01:41] 'bool_t::arr' a/deallocations: 6, 6 (27) bytes
+[12:01:41] 'i_App' a/deallocations: 1, 1 (184) bytes
+[12:01:41] 'i_Task' a/deallocations: 1, 1 (64) bytes
+code.
+
+h2.El programa completo
+
+codefile(demo/products/products.hxx).
+codefile(demo/products/prmodel.c).
+codefile(demo/products/prview.c).
+codefile(demo/products/prmenu.c).
+codefile(demo/products/prctrl.c).

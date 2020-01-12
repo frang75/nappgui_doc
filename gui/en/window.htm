@@ -1,0 +1,110 @@
+langrev.
+h1.Window
+
+p.<b>Window</b> objects are the highest level containers within the user interface <r>windows_3</r>. They are composed of the title bar, where the close, maximize and minimize buttons are located, the interior area and the frame. If the window supports resizing, this frame can be dragged with the mouse to change its size. The interior area or client area of the window is configured by a <lt>Panel</lt> passed as a constructor parameter.
+
+li.Use <lf>window_create</lf> to create a window.
+
+img(windows_3.png,0,.5).The window concept appears already in the first graphic systems.
+Windows 3 operating system capture.
+
+h2.Window size
+
+p.In principle, the window size is automatically calculated based on the <lh>Natural sizing</lh> of its main panel, but it can be changed at any time.
+
+li.Use <lf>window_size</lf> to change the size of the main panel.
+
+li.Use <lt>ekWNRES</lt> flag to create a user resizable window.
+
+p.The change in the dimensions of the client area implies a re-location and resizing of the internal controls. This is automatically managed by <lt>Layout</lt> objects depending on how its <lh>Cell expansion</lh>, which will be recursively propagated by all sublayouts. In <lp>die</lp> you have an example of resizing a window <r>resize_window</r>.
+
+img(resize_window.svg,520,.5).Resizing the window in the <b>Die</b> demo.
+It shows how the oversize is distributed among the controls when resizing the window.
+
+func(window_create).Create a new window.
+fret(Window*).The window.
+fpar(const uint32_t,flags).Combination of <lt>window_flag_t</lt> values.
+fpar(Panel**,main_panel).Main panel, which integrates the content of the window.
+fnote.The window size will be calculated based on the <lh>Natural sizing</lh> of the main panel.
+
+func(window_destroy).Destroy the window and all its contents.
+fpar(Window**,window).The window. Will be set to <c>NULL</c> after destruction.
+fnote.Panels, layouts and components will be recursively destroyed.
+
+func(window_OnClose).Set an event handler for the window closing.
+fpar(Window*,window).The window.
+fpar(Listener*,listener).<i>Callback</i> function to be called before closing a window.
+fnote.If for any reason the window should not close, it must be returned <c>FALSE</c> as a result of the event. See <lh>GUI Events</lh>.
+fcode.
+static void i_OnClose(App *app, Event *e)
+{
+    const EvWinClose *params = event_params(e, EvWinClose);
+    if (can_close(app, params->origin) == FALSE)
+    {
+        bool_t *result = event_result(e, bool_t);
+        *result = FALSE;
+    }
+}
+...
+window_OnClose(window, listener(app, i_OnClose, App));
+fcode.
+
+func(window_OnMoved).Set an event handler for moving the window on the desktop.
+fpar(Window*,window).The window.
+fpar(Listener*,listener).<i>Callback</i> function to be called as the title bar is dragged and the window moves across the desktop.
+fnote.See <lh>GUI Events</lh>.
+
+func(window_OnResize).Set an event handler for window resizing.
+fpar(Window*,window).The window.
+fpar(Listener*,listener).<i>Callback</i> function to be called as the outer edges of the window are dragged to resize.
+fnote.The resizing and relocation of elements is done automatically based on the main <lt>Layout</lt>, so it is not usually necessary for the application to respond to this event. See <lh>GUI Events</lh>.
+
+func(window_title).Set the text that will display the window in the title bar.
+fpar(Window*,window).The window.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(window_show).Show the window. By default windows are created hidden. You have to show them explicitly.
+fpar(Window*,window).The window.
+
+func(window_hide).Hide the window.
+fpar(Window*,window).The window.
+
+func(window_modal).Launch a window in <b>modal</b> mode.
+fret(uint32_t).Value returned by <lf>window_stop_modal</lf>.
+fpar(Window*,window).The window.
+fpar(Window*,parent).The parent window.
+fnote.<c>parent</c> stop receiving events until you call <lf>window_stop_modal</lf>.
+
+func(window_stop_modal).Ends the <b>modal</b> cycle of a window.
+fpar(Window*,window).The window previously launched with <lf>window_modal</lf>.
+fpar(const uint32_t,return_value).Value to be returned <lf>window_modal</lf>.
+
+func(window_update).Recalculate the position and size of the controls after modifying any <lt>Layout</lt>.
+fpar(Window*,window).The window.
+
+func(window_origin).Move the window to specific desktop coordinates.
+fpar(Window*,window).The window.
+fpar(const V2Df,origin).Position <c>(x,y)</c> of the upper-left corner of the window.
+
+func(window_size).Set the size of the client area of the window.
+fpar(Window*,window).The window.
+fpar(const S2Df,size).Main panel size.
+fnote.The final size will depend on the window frame and desktop theme settings. This measure only refers to the interior area.
+
+func(window_get_origin).Get the window position.
+fret(V2Df).Position <c>(x,y)</c> from the upper-left corner of the window.
+fpar(const Window*,window).The window.
+
+func(window_get_size).Get the total dimensions of the window.
+fret(S2Df).Window size.
+fpar(const Window*,window).The window.
+fnote.The frame and title bar are taken into account.
+
+func(window_get_client_size).Get the dimensions of the client area of the window.
+fret(S2Df).Main panel size.
+fpar(const Window*,window).The window.
+
+func(window_defbutton).Set the default window button. It will be activated when pressed <c>[Intro]</c>.
+fpar(Window*,window).The window.
+fpar(Button*,button).The button.
+

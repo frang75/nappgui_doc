@@ -1,0 +1,86 @@
+langrev.
+h1.Cell
+
+func(cell_label).Get the label inside the cell.
+fret(Label*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_button).Get the button inside the cell.
+fret(Button*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_popup).Get the popup inside the cell.
+fret(PopUp*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_edit).Get the edit inside the cell.
+fret(Edit*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_combo).Get the combo inside the cell.
+fret(Combo*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_updown).Get the updown inside the cell.
+fret(UpDown*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_slider).Get the slider inside the cell.
+fret(Slider*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_progress).Get the progress inside the cell.
+fret(Progress*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_view).Get the view inside the cell.
+fret(View*).The view.
+fpar(Cell*,cell).The cell.
+
+func(cell_textview).Get the textview inside the cell.
+fret(TextView*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_imageview).Get the imageview inside the cell.
+fret(ImageView*).The control.
+fpar(Cell*,cell).The cell.
+
+func(cell_layout).Get the layout inside the cell.
+fret(Layout*).El layout.
+fpar(Cell*,cell).The cell.
+
+func(cell_enabled).Activate or deactivate a cell.
+fpar(Cell*,cell).The cell.
+fpar(const bool_t,enabled).Enabled or not.
+
+func(cell_visible).Show or hide a cell.
+fpar(Cell*,cell).The cell.
+fpar(const bool_t,visible).Visible or not.
+
+func(cell_focus).Set the keyboard focus on the cell.
+fpar(Cell*,cell).The cell.
+
+func(cell_padding).Set an inner margin.
+fpar(Cell*,cell).The cell.
+fpar(const real32_t,pall).Inner margin.
+
+func(cell_padding2).Set an inner margin.
+fpar(Cell*,cell).The cell.
+fpar(const real32_t,ptb).Upper and lower margin.
+fpar(const real32_t,plr).Left and right margin.
+
+func(cell_padding4).Set an inner margin.
+fpar(Cell*,cell).The cell.
+fpar(const real32_t,pt).Top margin.
+fpar(const real32_t,pr).Right margin.
+fpar(const real32_t,pb).Bottom margin.
+fpar(const real32_t,pl).Left margin.
+
+func(cell_dbind).Associates a cell with the field of a <c>struct</c>.
+fpar(Cell*,cell).The cell.
+fpar(,type).The <c>struct</c> type.
+fpar(,mtype).The <c>struct</c> field type.
+fpar(,mname).Field name.
+fcode.
+cell_dbind(cell, Product, String*, description);
+fcode.

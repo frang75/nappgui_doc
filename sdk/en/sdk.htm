@@ -1,0 +1,43 @@
+langrev.
+h1.SDK reference
+
+ep.While civilians (i.e., nonprogrammers) often fantasize about winning the lottery, the equivalent for many programmers is the rare opportunity to create a new library from scratch, without the constraints that often frustrate their desires to extend and improve an existing library.
+<i>Philip J. Schneider</i> - Industrial Light + Magic
+
+img(sdk_big_picture.svg,300,.35).Architecture of NAppGUI.
+Outline diagram of the NAppGUI SDK.
+
+li(orange_block.png,24).Packages that do not contain platform dependent code.
+
+li(green_block.png,24).Packages that contain platform dependent code under a common interface.
+
+li.<lp>sewer</lp>: Basic types, asserts, Unicode.
+
+li.<lp>osbs</lp>: Operating system basic services. Portable API about files, directories, processes, threads, memory, etc.
+
+li.<lp>core</lp>: Non-graphic utilities in common use. Memory Auditor, data structures, I/O channels, MVVM, etc.
+
+li.<lp>geom2d</lp>: 2D geometry. Transformations, vectors, etc.
+
+li.<lp>draw2d</lp>: API of vector drawing, images and fonts, that connects with the native technologies of each operating system.
+
+li.<lp>gui</lp>: High-level composer of  user interfaces.
+
+li.<lp>osapp</lp>: Desktop applications. Message loop.
+
+li.<lp>inet</lp>: Protocols and Internet services. Http, Ftp, Google, etc.
+
+p.The NAppGUI implementation has been divided into several static libraries written in ANSI-C (C90) with small parts in C++ 98 <r>sdk_big_picture</r>. The project compiles without problems in all the versions of Visual Studio (from VS2005), Xcode (from 3) and GCC (from 4). It can be used for the development of high performance applications written in C on Windows, MacOS and Linux systems. A clear line has been marked that separates the packages oriented to perform calculations and data access <i>(back-end)</i> from those destined to the presentation or interface layers <i>(front-end)</i>. Also we have applied certain <lh>Standards</lh> whose bases are centralized in the library <lp>sewer</lp>, that although it does not incorporate much functionality, defines the basic types and configuration macros common to the entire project.
+
+h2.A little history
+
+p.I started working on this project unconsciously, in mid 2008 when I was finishing my Computer Engineering studies at the University of Alicante. I wanted to develop a physical systems simulator that worked both on PC-Windows computers and Apple iMac without having to duplicate all the work. The technological alternatives of the time, such as GTK or Qt, did not convince me at all as they were too heavy, complicated to use and slow so they would end up tarnishing the quality, elegance and commitment that I was putting into my mathematical calculation algorithms. After losing several months evaluating different libraries for multiplatform programming I downloaded some technical manuals from Apple to program directly in Cocoa, the base technology to develop software for the iMac. In mid 2010 I started to see the first results and this was encouraging. I had created an application with the prototype of my simulator in just 500Kb <r>imech</r>, in contrast to the more than 30Mb of dependencies required by third-party solutions. The code was compact and clean, the application worked at breakneck speed and, above all, it had a professional appearance that reminded us in part of the iMovie, it allowed to manipulate 3D views as in a videogame and it provided technical data of the simulation in real time. This inspired me to continue working on drawing a barrier between the part of the reusable application and that dependent on a specific technology. This would allow me to adapt my simulator to different computer models and operating systems.
+
+img(imech.png,0,.8).iMech simulator, based on a primitive version of NAppGUI.
+Capture of the iMech physical simulator.
+
+p.At the same time, in September 2008, I returned to the labor market after six years in the University, a market in which I still work today (July 2019), although in recent years I have worked as a freelancer at home, which allows me to organize the agenda and optimize my work. maximum time. In these years I have not abandoned my personal project, I have continued working on it in part time simply for pure hobby. Its development has allowed me to investigate and delve into interesting areas for me and recycle constantly. In 2013, I made my first foray into the world of entrepreneurship, co-founding iMech Technologies, a software company with which I am still linked and whose main objective was the sale of the simulation engine that I had previously created. By not proposing a solid marketing strategy, we did not achieve our initial objectives with iMech, but we were able to reconvert it by incorporating new clients and, to this day, it is still alive.
+
+p.In the middle of 2015, I began to think about the fact that all the technical effort made during these years is enough to become a product by itself. It was then that I created the NAppGUI project and started to migrate all the iMech libraries devoted to multiplatform development. During these last years I have completed the support for <i>Cocoa</i> and including <i>Win32</i> and <i>Gtk+</i> . I have created this documentation in Spanish and English, helping me with Google translation services.
+
+p.On September 31, 2019, I upload the first public version of NAppGUI.

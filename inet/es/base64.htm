@@ -1,0 +1,24 @@
+
+h1.Base64
+
+func(b64_encoded_size).Obtiene el número de bytes necesarios para codificar un bloque de memoria en formato <b>base64</b>.
+fret(uint32_t).El tamaño base64.
+fpar(const uint32_t,data_size).El tamaño del bloque original.
+
+func(b64_decoded_size).Obtiene el número de bytes necesarios para decodificar un bloque de memoria en formato <b>base64</b>.
+fret(uint32_t).El tamaño en bytes.
+fpar(const uint32_t,data_size).El tamaño del bloque codificado en base64.
+
+func(b64_encode).Codifica un bloque de memoria en <b>base64</b>.
+fret(uint32_t).El tamaño en bytes.
+fpar(const byte_t*,data).El bloque de datos.
+fpar(const uint32_t,size).El tamaño del bloque.
+fpar(char_t*,base64).El búfer donde almacenar el resultado.
+fnote.El búfer <c>base64</c> debe tener, al menos, el tamaño devuelto por <lf>b64_encoded_size</lf>.
+
+func(b64_decode).De-codifica un bloque <b>base64</b>.
+fret(uint32_t).El tamaño en bytes.
+fpar(const char_t*,base64).El bloque base64.
+fpar(const uint32_t,size).El tamaño del bloque.
+fpar(byte_t*,data).El búfer donde almacenar el resultado.
+fnote.El búfer <c>data</c> debe tener, al menos, el tamaño devuelto por <lf>b64_decoded_size</lf>.

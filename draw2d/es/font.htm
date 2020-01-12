@@ -1,0 +1,182 @@
+
+h1.Fuentes tipográficas
+
+p.Las fuentes tipográficas son objetos gráficos (archivos)  que contienen los caracteres y símbolos que vemos en un monitor. Recordamos que una cadena <lp>unicode</lp> únicamente almacena el código de los caracteres <i>(codepoints)</i> sin ningún tipo de información sobre como deben ser dibujados. Se conoce como <b>glifo</b> al gráfico asociado a un carácter y, en un fichero de fuente, hay tantos glifos como <i>codepoints</i> pueda representar la tipografía. El emparejamiento entre <i>codepoints</i> y sus correspondientes glifos lo lleva a cabo el sub-sistema gráfico del sistema operativo <r>drawtext</r> <r>text_representation</r>.
+
+code(cpp,drawtext).Dibujo de una cadena de texto.
+Font *font = font_create("Comic Sans MS" 28, 0);
+draw_font(context, font);
+draw_text(context, ekFILL, "Hello World", 200, 250);
+font_destroy(&font);
+code.
+
+img(text_representation.svg,520,.65).Representación de textos: <i>codepoints</i> + glifos.
+Gráfico que relaciones carácteres Unicode con glifos y tipografías.
+
+h2.Crear fuentes
+
+p.A la hora de mostrar textos en interfaces gráficas es necesario establecer una tipografía, de lo contrario el sistema no sabría como renderizarla. Siempre existirá alguna fuente definida por defecto, pero podemos cambiarla a la hora de personalizar la apariencia de nuestros textos. 
+
+li.Utiliza <lf>font_create</lf> para crear una nueva fuente.
+
+li.Utiliza <lf>draw_font</lf> para establecer la fuente en <lp>dctx</lp>.
+
+li.Utiliza <lf>label_font</lf> para cambiar la fuente asociada a un control <lt>Label</lt>.
+
+p.La característica más representativa del diseño de una tipografía es la familia a la que pertenece (<i>font family</i> o <i>typeface</i>) <r>typefaces</r>. Cada computador tiene instaladas una serie de familias que no tienen porqué coincidir con las incorporadas en otra máquina. Este es un hecho importante a tener en cuenta ya que, en pro de la portabilidad, no debemos asumir que una determinada familia tipográfica vaya a estar presente en todas las máquinas que ejecuten el programa. Sentencias del tipo:
+
+code.
+Font *font = font_create("Comic Sans MS", 28, 0);
+code.
+
+p(noindent).no serán del todo portables, ya que no tenemos la certeza de que la tipografía <i>Comic Sans MS</i> esté instalada en todos los ordenadores. Tenemos dos alternativas para garantizar la existencia de una determinada fuente:
+
+img(typefaces.svg,360,.5).Diferentes familias tipográficas.
+Texto Hello World escrito utilizando diferentes tipografías.
+
+li.Utiliza <lf>font_system</lf> para obtener la fuente por defecto del sistema operativo. Siempre estará disponible pero su apariencia será diferente según plataformas.
+
+li.Utiliza <lf>font_installed_families</lf> para obtener la lista de familias instaladas en la máquina y elegir la que más se adapte a nuestros propósitos.
+
+h2.Fuente del sistema
+
+p.Como acabamos de mencionar, siempre hay una fuente por defecto asociada al entorno de ventanas y que, en cierta manera, le otorga parte de su personalidad. Utilizar esta fuente nos garantiza la correcta integración de nuestro programa en todos los sistemas donde se ejecute, haciendo nuestro código totalmente portable <r>font_system</r>. Los controles de interfaz como <lt>Button</lt> o <lt>Label</lt> tienen asociada por defecto la fuente <lf>font_system</lf> de tamaño <lf>font_regular_size</lf>. La correspondencia de <i>font_system</i> en los diferentes sistemas es:
+
+li.<b>Segoe UI</b>: Windows Vista, 7, 8, 10.
+li.<b>Tahoma</b>: Windows XP.
+li.<b>San Francisco</b>: macOS Mojave, High Sierra, Sierra, Mac OSX El Capitan.
+li.<b>Helvetica Neue</b>: Mac OSX Yosemite.
+li.<b>Lucida Grande</b>: Mac OSX Mavericks, Mountain Lion, Lion, Snow Leopard.
+li.<b>Ubuntu</b>: Linux Ubuntu.
+li.<b>Piboto</b>: Linux Raspbian.
+
+img(font_system.png,-1,.8).Uso de la fuente del sistema.
+Captura de la misma aplicación en diferentes sistemas, utilizando la fuente por defecto.
+
+p.Además de la fuente del sistema tenemos disponible otra fuente <b>monoespacio</b> por defecto <r>monospace_font</r>. Estas tipografías imitan a las máquinas de escribir antiguas, donde todos los caracteres ocupan el mismo espacio. Suelen utilizarse para documentos técnicos o archivos de código fuente.
+
+li.Utiliza <lf>font_monospace</lf> para crear una tipografía monoespacio genérica. 
+
+img(monospace_font.jpg,-1,.4).Fuente proporcional (ancho variable) y monoespacio (ancho fijo).
+Comparativa de una fuente proporcional y monoespacio.
+
+h2.Características de las fuentes
+
+p.Además de la familia, podremos ajustar el tamaño y el estilo de la fuente. El tamaño hace referencia a la altura promedio (en píxeles) de los caracteres que componen la tipográfica, donde no se tiene en cuenta los márgenes ni los desplazamientos en relación al <i>baseline</i> <r>char_height</r>. A la <b>altura total de una línea de texto</b> se la conoce como <i>cell height</i> <r>cell_height</r> y, por norma general, será algo superior al tamaño de la fuente <i>char height</i>.
+
+img(char_height.svg,520,.65).Altura del carácter <i>(char height = font size)</i>.
+Altura del carácter en una fuente tipográfica.
+
+img(cell_height.svg,520,.65).Altura de línea <i>(cell height)</i>.
+Altura de línea (o celda) en una fuente tipográfica.
+
+p.También podemos cambiar el estilo del texto, estableciendo sus atributos a través del parámetro <c>style</c> combinando los valores de <lt>fstyle_t</lt> <r>font_styles</r>.
+
+li.<lt>ekFBOLD</lt>. Negrita.
+li.<lt>ekFITALIC</lt>. Itálica.
+li.<lt>ekFUNDERLINE</lt>. Subrayado.
+li.<lt>ekFSTRIKEOUT</lt>. Tachado.
+
+img(font_styles.svg,360,.5).Estilo del texto.
+Mismo texto con diferentes estilos de fuente.
+
+h3.Tamaño en puntos
+
+p.Por defecto, el tamaño de la fuente se expresa en píxeles, pero puede cambiarse añadiendo <lt>ekFPOINTS</lt> al parámetro <c>style</c>. Esta unidad está relacionada con las fuentes impresas en papel. Aquí aparece el concepto DPI (<i>dots per inch</i>) que indica la cantidad de gotas de tinta aisladas que un dispositivo de impresión puede emitir por pulgada métrica. En tipografía se establece el criterio de 72 DPI’s, por tanto, el tamaño de un punto es 0.35mm aproximadamente. De esta forma es sencillo calcular el tamaño de letra a partir de los puntos: 12pt=4.2mm, 36pt=12.7mm ó 72pt=25.4mm (1 pulgada). Esta es la unidad utilizada en <b>procesadores de texto</b>, que ya estos trabajan en base a un tamaño de página de impresión. El problema llega cuando queremos representar fuentes expresadas en puntos en una pantalla, ya que no existe una correspondencia exacta entre píxeles y milímetros. El tamaño final del pixel depende de la resolución y del tamaño físico del monitor. Se precisa un convenio de conversión entre píxeles y pulgadas, lo que da lugar al término PPI (<i>pixels per inch</i>). Tradicionalmente, en sistemas Windows se establece 96 PPI mientras que en los iMac de Apple es de 72 PPI. Esto provoca que las fuentes expresadas en puntos sean un 33% más grandes en Windows <r>font_points</r>. Además en el sistema de Microsoft es posible configurar el PPI por el usuario, lo que añade más incertidumbre sobre el tamaño final de los textos en pantalla.
+
+img(font_points.svg,720,.8).La unidad <lt>ekFPOINTS</lt> no es aconsejable para pantallas, si no para papel.
+Compartiva entre tamaño en píxeles y tamaño en puntos.
+
+h2.Fuentes Bitmap y Outline
+
+p.En los primeros computadores las tipografías se creaban como gráficos de raster <i>Bitmap Fonts</i> <r>bitmap_font</r>. Cada carácter se ajustaba a una celda de tamaño fijo donde se marcaban aquellos píxeles que lo componían. El mayor problema es que no escalan bien. A medida que hacemos más grande el texto en pantalla más se hace patente el efecto dentado de los píxeles.
+
+img(bitmap_font.svg,520,.65).Fuentes bitmap.
+Ampliación de una fuente bitmap, donde se aprecia el efecto dentado.
+
+p.En 1982 Adobe lanza el formato PostScript que incluía las conocidas como <i>Outline Fonts</i> <r>outline_font</r>. Este formato contiene una descripción geométrica de cada símbolo basada en líneas y curvas de Bezier. De esta forma se evita el efecto pixelado de las bitmap, ya que al escalar el carácter se vuelven a computar los píxeles que lo componen en un proceso conocido como <b>rasterización</b>. A finales de los 80’s Apple lanza el formato <i>TrueType</i> y le vende una licencia a Microsoft que lo incorpora en Windows 3.1, abriendo la puerta del mercado masivo a las fuentes vectoriales. Hoy en día todos los sistemas trabajan con fuentes escalables, teniendo en <i>TrueType</i> y <i>OpenType</i> los más claros representantes.
+
+img(outline_font.svg,520,.65).Fuentes outline, en las que se basan los formatos <i>TrueType</i> y <i>OpenType</i>.
+Escalado de una fuente outline (vectorial).
+
+h2.Unicode y glifos
+
+p.Unicode es una tabla muy extensa. Actualmente hay registrados 137.374 <i>codepoints</i> (Julio 2019) y este número va creciendo en cada nueva revisión del estándar. Si la aplicación necesita de símbolos especiales (por encima del BMP-<i>Basic Multilingual Plane)</i> debemos cerciorarnos que las tipografías seleccionadas contengan glifos para ellos. Para ver la relación entre codepoints y glifos podemos utilizar la aplicación BabelMap <r>babelmap</r>, y dentro de ella la opción Font Analysis. A partir de un bloque Unicode mostrará aquellas fuentes instaladas que incluyen glifos para dicho rango. En macOS tenemos una aplicación similar llamada <i>Character Viewer</i> y en Ubuntu otra denominada <i>Character Map</i>.
+
+img(babelmap.png,-1,.7).BabelMap Font Analysis nos proporciona información sobre los glifos incluidos en cada tipografia.
+Aplicación que muestra los glifos incluidos en cada fuente tipográfica.
+
+const(Font*,kFONT_DEFAULT).Fuente por defecto. Es la fuente del sistema en tamaño regular.
+
+func(font_create).Crea una fuente tipográfica.
+fret(Font*).La fuente recién creada.
+fpar(const char_t*,family).Familia tipográfica. Pe: "Arial", "Times New Roman", etc.
+fpar(const real32_t,size).Tamaño de la fuente. Por defecto en píxeles. Utiliza <lt>ekFPOINTS</lt> en <c>style</c> para cambiar la unidad.
+fpar(const uint32_t,style).Operación <c>OR |</c> sobre los campos de la estructura <lt>fstyle_t</lt>. Pe: <c>ekFBOLD | ekFITALIC</c>.
+
+func(font_system).Crea una fuente tipográfica, con la familia por defecto del sistema.
+fret(Font*).La fuente recién creada.
+fpar(const real32_t,size).Tamaño de la fuente. Por defecto en píxeles. Utiliza <lt>ekFPOINTS</lt> en <c>style</c> para cambiar la unidad.
+fpar(const uint32_t,style).Operación <c>OR |</c> sobre los campos de la estructura <lt>fstyle_t</lt>. Pe: <c>ekFBOLD | ekFITALIC</c>.
+
+func(font_monospace).Crea una fuente tipográfica, con la familia mono-espacio por defecto del sistema.
+fret(Font*).La fuente recién creada.
+fpar(const real32_t,size).Tamaño de la fuente. Por defecto en píxeles. Utiliza <lt>ekFPOINTS</lt> en <c>style</c> para cambiar la unidad.
+fpar(const uint32_t,style).Operación <c>OR |</c> sobre los campos de la estructura <lt>fstyle_t</lt>. Pe: <c>ekFBOLD | ekFITALIC</c>.
+
+func(font_with_style).Crea una copia de una fuente existente, cambiando el estilo.
+fret(Font*).Una copia de <c>font</c> con otro estilo.
+fpar(const Font*,font).Fuente original.
+fpar(const uint32_t,style).Operación <c>OR |</c> sobre los campos de la estructura <lt>fstyle_t</lt>. Pe: <c>ekFBOLD | ekFITALIC</c>.
+
+func(font_copy).Crea una copia exacta de una fuente tipográfica.
+fret(Font*).La copia de <c>font</c>.
+fpar(const Font*,font).Fuente original.
+fnote.Las fuentes son objetos inmutables. Copiar realmente significa incrementar un contador interno sin llegar a clonar el objeto. No obstante, la aplicación debe destruir la copia con <lf>font_destroy</lf> al igual que las creadas con cualquier otro constructor.
+
+func(font_destroy).Destruye la fuente.
+fpar(Font**,font).La fuente. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(font_equals).Compara dos fuentes. Se consideran iguales si tienen la misma familia, tamaño y estilo.
+fret(bool_t).<c>TRUE</c> si son iguales, <c>FALSE</c> si no.
+fpar(const Font*,font1).Primera fuente a comparar.
+fpar(const Font*,font2).Segunda fuente a comparar.
+
+func(font_regular_size).Obtiene el tamaño de la fuente por defecto para los controles de interfaz.
+fret(real32_t).El tamaño por defecto en píxeles.
+
+func(font_small_size).Obtiene el tamaño <i>pequeño</i> de la fuente por defecto para los controles de interfaz.
+fret(real32_t).El tamaño en píxeles.
+fnote.Este tamaño es ligeramente menor que el obtenido por <lf>font_regular_size</lf>.
+
+func(font_mini_size).Obtiene el tamaño <i>mini</i> de la fuente por defecto para los controles de interfaz.
+fret(real32_t).El tamaño en píxeles.
+fnote.Este tamaño es ligeramente menor que el obtenido por <lf>font_small_size</lf>.
+
+func(font_family).Obtiene la familia tipográfica de la fuente.
+fret(const char_t*).La familia tipográfica en UTF8.
+fpar(const Font*,font).La fuente.
+
+func(font_size).Obtiene el tamaño de la fuente.
+fret(real32_t).El tamaño. Las unidades depende el parámetro <c>style</c>.
+fpar(const Font*,font).La fuente.
+
+func(font_height).Obtiene la altura de la celda o línea de texto con esta fuente.
+fret(real32_t).Altura de la celda.
+fpar(const Font*,font).La fuente.
+
+func(font_style).Obtiene el estilo de la fuente.
+fret(uint32_t).El estilo. Combinación de valores de la estructura <lt>fstyle_t</lt>. Pe: <c>ekFBOLD | ekFITALIC</c>.
+fpar(const Font*,font).La fuente.
+
+func(font_exists_family).Comprueba si una familia tipográfica está instalada en el sistema operativo.
+fret(bool_t).<c>TRUE</c> si existe la familia, <c>FALSE</c> si no.
+fpar(const char_t*,family).Cadena UTF8 con el nombre de la familia, terminada en carácter nulo <c>'\0'</c>.
+
+func(font_installed_families).Obtiene una lista con los nombres de todas las familias tipográficas instaladas en el sistema operativo.
+fret(ArrPt(String)*).Array de <lt>String</lt> con los nombres de las familias, ordenadas alfabéticamente. Debe ser destruido con <lf>arrpt_destroy</lf>.
+fcode.
+ArrPt(String) *families = font_installed_families();
+...
+arrpt_destroy(&families, str_destroy, String);
+fcode.

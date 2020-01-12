@@ -1,0 +1,163 @@
+
+h1.Die
+
+ep.El buen código debería ser simple, claro y fácil de entender. El buen código debería ser compacto: solo lo necesario para hacer el trabajo y nada más, pero no críptico, hasta el punto de que no se pueda entender. El buen código debería ser genérico, para que pueda resolver una amplia clase de problemas de manera uniforme. Podría describirse como elegante, muestra de buen gusto y refinamiento.
+Brian Kernighan
+
+p.Como el camino se demuestra andando, vamos a dedicar unos capítulos a profundizar en el uso de NAppGUI de la mano de aplicaciones reales. Nuestro objetivo es presentar programas de cierto nivel, a medio camino entre los sencillos "ejemplos de libro" y las aplicaciones comerciales. En esta primera demo tenemos un programa que nos permite dibujar la silueta de un dado <r>die_simulator_win</r> y que nos servirá como excusa para introducir conceptos de dibujo paramétrico, composición de <i>layouts</i> y uso de recursos. El <b>código fuente</b> está en la caperta <c>/src/demo/die</c> de la distribución del SDK. En <lp>newprj</lp> y <lp>resources</lp> vimos como crear el proyecto desde cero.
+
+img(die_simulator_win.png,450,.65).Aplicación <i>Die Simulator</i>, versión Windows. Inspirado en DieView <i>(Cocoa Programming for OSX, Hillegass et al.)</i>
+Captura de la aplicación Die en Windows.
+
+img(die_simulator_macos.png,450,.65).Versión macOS.
+Captura de la aplicación Die en macOS.
+
+img(die_simulator_gtk.png,450,.65).Versión Linux/GTK+.
+Captura de la aplicación Die en Linux.
+
+h2.Uso de sublayouts
+
+p.Comenzamos trabajando en la interfaz de usuario, que hemos dividido en dos áreas: una vista personalizada (<lt>View</lt>) donde dibujaremos la representación del dado en 2D, y una zona de controles donde podremos interactuar con dicho dibujo. Como ya vimos en <lp>hello</lp> utilizaremos objetos <lt>Layout</lt> para ubicar los controles dentro de la ventana principal. No obstante observamos que esta disposición de elementos no encaja bien en una única tabla, por lo tanto, usaremos dos celdas en horizontal como contenedor principal y un <i>grid</i> de dos columnas y seis filas para los controles <r>sublayout_code</r> <r>sublayout</r>. Este segundo layout se ubicará en la celda derecha del primer contenedor y diremos que es un <b>sublayout</b> del layout principal.
+
+code(cpp,sublayout_code).Composición mediante sublayouts.
+Layout *layout = layout_create(2, 1);
+Layout *layout1 = layout_create(2, 6);
+layout_view(layout, view, 0, 0);
+layout_label(layout1, label1, 0, 0);
+layout_label(layout1, label2, 0, 1);
+layout_label(layout1, label3, 0, 2);
+layout_label(layout1, label4, 0, 3);
+layout_label(layout1, label5, 0, 4);
+layout_view(layout1, vimg, 0, 5);
+layout_popup(layout1, popup1, 1, 0);
+layout_popup(layout1, popup2, 1, 1);
+layout_slider(layout1, slider1, 1, 2);
+layout_slider(layout1, slider2, 1, 3);
+layout_slider(layout1, slider3, 1, 4);
+layout_label(layout1, label6, 1, 5);
+layout_layout(layout, layout1, 1, 0);
+code.
+
+img(sublayout.svg,430,.65).El uso de sublayouts añade flexibilidad a la hora de diseñar el <i>gui</i>.
+Captura que muestra la organización de los controles utilizando Layouts.
+
+p.De igual forma que hicimos en <lh>Formato del Layout</lh> hemos establecido ciertos márgenes y un ancho fijo para la columna de los controles.
+
+code(cpp,layout_format).Formato del layout
+view_size(view, s2df(200.f, 200.f));
+layout_margin(layout, 10.f);
+layout_hsize(layout1, 1, 150.f);
+layout_hmargin(layout, 0, 10.f);
+layout_hmargin(layout1, 0, 5.f);
+layout_vmargin(layout1, 0, 5.f);
+layout_vmargin(layout1, 1, 5.f);
+layout_vmargin(layout1, 2, 5.f);
+layout_vmargin(layout1, 3, 5.f);
+layout_vmargin(layout1, 4, 5.f);
+code.
+
+h2.Uso de vistas personalizadas
+
+p.<lt>View</lt> son controles que nos permitirán diseñar nuestros propios <i>widgets</i>. Al contrario que ocurre con otro tipo de componentes, como <lp>slider</lp> o <lp>button</lp>, aquí tendremos total libertad para dibujar cualquier cosa. Podremos interactuar con el control capturando sus eventos (ratón, teclado, etc) e implementando los manejadores adecuados. Estas vistas se integran en el layout como cualquier otro componente <r>createview</r>.
+
+code(cpp,createview).Creación de una vista personalizada.
+View *view = view_create();
+view_size(view, s2df(200.f, 200.f));
+layout_view(layout, view, 0, 0);
+code.
+
+p.No podemos dibujar dentro de un <c>View</c> cuando queramos. Tendremos que realizar una solicitud al sistema operativo mediante el método <lf>view_update</lf> <r>redrawcode</r>, ya que el área de dibujo puede afectar a ventanas superpuestas y esto debe gestionarse de forma centralizada. Cuando el control esté listo para refrescarse, el sistema enviará un evento <lt>EvDraw</lt> que debemos capturar a través de <lf>view_OnDraw</lf>.
+
+code(cpp,redrawcode).Código básico de refresco del View.
+static void i_OnPadding(App *app, Event *e)
+{
+    const EvSlider *params = event_params(e, EvSlider);
+    app->padding = params->pos;
+    view_update(app->view);
+}
+
+static void i_OnDraw(App *app, Event *e)
+{
+    const EvDraw *params = event_params(e, EvDraw);
+    die_draw(params->context, params->width, params->height, app);
+}
+
+slider_OnMoved(slider1, listener(app, i_OnPadding, App));
+view_OnDraw(view, listener(app, i_OnDraw, App));
+code.
+
+p.Cada vez que el usuario mueve un slider (parámetro padding, por ejemplo) el sistema operativo captura la acción e informa a la aplicación a través del método <c>i_OnPadding</c> <r>redraw_event</r>. Como la acción implica un cambio en el dibujo, este método llama a <lf>view_update</lf> para informar de nuevo al sistema que la vista debe actualizarse. Cuando este lo considera apropiado, manda el evento <c>EvDraw</c>, que es capturado por <c>i_OnDraw</c> donde se regenera el dibujo con los nuevos parámetros.
+
+img(redraw_event.svg,420,.6).Comprendiendo el flujo de eventos en dibujos interactivos.
+Esquema que muestra como funcionan los eventos en sistemas de escritorio.
+
+h2.Dibujo paramétrico
+
+p.Bajo este concepto se describe la capacidad para generar imágenes vectoriales a partir de unos pocos valores numéricos conocidos como parámetros <r>parametric_drawing</r>. Se usa bastante en el diseño asistido por computadora (CAD), ya permite realizar ajustes de forma sencilla en planos o modelos sin tener que editar, una por una, un sinfín de primitivas.
+
+img(parametric_drawing.svg,420,.6).Principios del dibujo paramétrico, aplicados en Die.
+Ejemplo de dibujo paramétrico.
+
+p.En nuestra aplicación, la representación del dado puede cambiar en tiempo de ejecución a medida que el usuario manipula los sliders o dimensiona la ventana, por lo que calculamos la posición y el tamaño de sus primitivas utilizando fórmulas paramétricas. Una vez resueltas, creamos el dibujo con tres simples comandos del API <lp>draw</lp>.
+
+li.<lf>draw_clear</lf>. Borra toda el área de dibujo utilizando un color sólido.
+
+li.<lf>draw_rndrect</lf>. Dibuja un rectángulo con bordes redondeados.
+
+li.<lf>draw_circle</lf>. Dibuja un círculo.
+
+codefile(demo/casino/ddraw.c).
+
+p.Los comandos de dibujo se plasman sobre un lienzo (canvas), también conocido como contexto <lt>DCtx</lt>. Este objeto llega a <c>i_OnDraw</c> como parámetro del evento <lt>EvDraw</lt>. En este caso, el lienzo lo proporciona el propio control <c>View</c>, pero también es posible crear contextos para dibujar directamente en memoria.
+
+h2.Redimensionado
+
+p.En esta aplicación la ventana puede cambiar de tamaño estirando el cursor sobre sus bordes, algo habitual en programas de escritorio. Vamos a ver algunos aspectos básicos sobre esta característica no presente en <lp>hello</lp>, que presentaba una ventana estática. Lo primero es habilitar la opción dentro del constructor de la ventana.
+
+code.
+window_create(ekWNSRES, &panel);
+code.
+
+p.Cuando una ventana cambia de tamaño, los controles interiores deben hacerlo proporcionalmente así como cambiar su ubicación dentro del panel. Esta gestión se lleva a cabo dentro de cada objeto <lt>Layout</lt>. Cuando se inicia la ventana, el tamaño por defecto de cada layout se calcula aplicando el <b>dimensionamiento natural</b>, que es el resultante del tamaño inicial de los controles más los márgenes, como ya vimos en <lh>Formato del Layout</lh>. Cuando estiramos o contraemos la ventana, la diferencia de píxeles entre el dimensionamiento natural y el real se distribuye entre las columnas del layout <r>resizing</r>. Lo mismo ocurre con la diferencia vertical, que se distribuye entre sus filas. Si una celda contiene un sublayout, este incremento se distribuirá recursivamente por sus propias columnas y filas.
+
+img(resizing.svg,520,.65).Al redimensionar, el exceso de píxeles se distribuye proporcionalmente por las filas y columnas del <c>Layout</c>.
+Muestra como se reparte entre los controles el exceso al tamaño al redimensionar la ventana.
+
+p.Pero en este caso particular, queremos que todo el incremento vaya al área de dibujo (columna 0). Dicho de otro modo, buscamos que la columna de los controles permanezca con ancho fijo y no crezca <r>resized_window</r>. Para ello debemos cambiar la proporción del redimensionado:
+
+code.
+layout_hexpand(layout, 0);
+code.
+
+p.Con esta función el 100% del excedente horizontal irá a la columna 0. Por defecto, teníamos una proporción del (50%, 50%) ya que son dos columnas (33% para tres, 25% para cuatro, etc). Con esto ya tendríamos resuelto el redimensionado para la dimensión X de la ventana, pero ¿qué ocurre con la vertical?. En el layout principal, solo tenemos una fila que, al expandirse, cambiará la altura de la vista personalizada. Pero esta expansión también afectará a la celda de la derecha, donde los controles también crecerán verticalmente debido al aumento recursivo de píxeles en las filas del sublayout. Para resolverlo, forzamos la alineación vertical <lt>ekTOP</lt> en la celda derecha del layout.
+
+code.
+layout_valign(layout, 1, 0, ekTOP);
+code.
+
+p(noindent).en lugar del <lt>ekJUSTIFY</lt>, que es la alineación predeterminada para sublayouts. De esta manera, el contenido de la celda (el sublayout completo) no se expandirá verticalmente, si no que se ajustará al borde superior dejando todo el espacio libre en la parte inferior de la celda. Obviamente, si usamos <lt>ekCENTER</lt> o <lt>ekBOTTOM</lt>, el sublayout se centrará o ajustará al borde inferior.
+
+img(resized_window.svg,520,.65).Jugando con la proporción horizontal y la alineación vertical, solo el área de dibujo se verá afectada por los cambios de tamaño.
+Muestra como solo se redimensiona la vista de dibujo, el resto no.
+
+h2.Uso de recursos
+
+p.Tanto los texto como los iconos que hemos utilizado en <i>Die</i> se han externalizado en el paquete de recursos <c>all</c>. Gracias a ello, podemos realizar una traducción automática de la interfaz entre los idiomas Inglés y Español. Puedes consultar <lp>resources</lp> para obtener información detallada de como se han asignado los textos e imágenes en la interfaz del programa.
+
+codefile(demo/die/res/all/strings.msg).
+
+codefile(demo/die/res/all/es_es/strings.msg).
+
+h2.Die y Dice
+
+p.Esta aplicación se ha utilizado como hilo conductor del capítulo <lp>newprj</lp> y siguientes del tutorial de NAppGUI. El ejemplo completo consta de dos aplicaciones (<b>Die</b> y <b>Dice</b>), así como de la librería <b>casino</b> que agrupa las rutinas comunes para ambos programas <r>die_dice</r>. Los tres proyectos completos los tienes listos para compilar y probar en la carpeta <c>src/demo</c> de la distribución del SDK.
+
+img(die_dice.svg,520,.65).Las rutinas comunes para ambas aplicaciones se comparten mediante la librería <b>casino</b>.
+Relación entre dos aplicaciones y sus dependencias comunes.
+
+h2.El programa Die completo
+
+codefile(demo/die/die.hxx).
+codefile(demo/die/main.c).
+codefile(demo/die/dgui.c).
+codefile(demo/die/dgui.h).

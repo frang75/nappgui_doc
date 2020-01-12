@@ -1,0 +1,86 @@
+
+h1.Cell
+
+func(cell_label).Obtiene el label del interior de la celda.
+fret(Label*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_button).Obtiene el botón del interior de la celda.
+fret(Button*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_popup).Obtiene el popup del interior de la celda.
+fret(PopUp*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_edit).Obtiene el edit del interior de la celda.
+fret(Edit*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_combo).Obtiene el combo del interior de la celda.
+fret(Combo*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_updown).Obtiene el updown del interior de la celda.
+fret(UpDown*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_slider).Obtiene el slider del interior de la celda.
+fret(Slider*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_progress).Obtiene el progress del interior de la celda.
+fret(Progress*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_view).Obtiene la vista del interior de la celda.
+fret(View*).La vista.
+fpar(Cell*,cell).La celda.
+
+func(cell_textview).Obtiene el textview del interior de la celda.
+fret(TextView*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_imageview).Obtiene el imageview del interior de la celda.
+fret(ImageView*).El control.
+fpar(Cell*,cell).La celda.
+
+func(cell_layout).Obtiene el layout del interior de la celda.
+fret(Layout*).El layout.
+fpar(Cell*,cell).La celda.
+
+func(cell_enabled).Activa o desactiva una celda.
+fpar(Cell*,cell).La celda.
+fpar(const bool_t,enabled).Habilitada o no.
+
+func(cell_visible).Muestra u oculta una celda.
+fpar(Cell*,cell).La celda.
+fpar(const bool_t,visible).Visible o no.
+
+func(cell_focus).Establece el foco del teclado en la celda.
+fpar(Cell*,cell).La celda.
+
+func(cell_padding).Establece un margen interior.
+fpar(Cell*,cell).La celda.
+fpar(const real32_t,pall).Margen interior.
+
+func(cell_padding2).Establece un margen interior.
+fpar(Cell*,cell).La celda.
+fpar(const real32_t,ptb).Margen superior e inferior.
+fpar(const real32_t,plr).Margen izquierdo y derecho.
+
+func(cell_padding4).Establece un margen interior.
+fpar(Cell*,cell).La celda.
+fpar(const real32_t,pt).Margen superior.
+fpar(const real32_t,pr).Margen derecho.
+fpar(const real32_t,pb).Margen inferior.
+fpar(const real32_t,pl).Margen izquierdo.
+
+func(cell_dbind).Asocia una celda con el campo de un <c>struct</c>.
+fpar(Cell*,cell).La celda.
+fpar(,type).El tipo de <c>struct</c>.
+fpar(,mtype).El tipo del campo del <c>struct</c>.
+fpar(,mname).El nombre del campo.
+fcode.
+cell_dbind(cell, Product, String*, description);
+fcode.

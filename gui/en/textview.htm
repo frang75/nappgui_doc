@@ -1,0 +1,20 @@
+langrev.
+h1.TextView
+
+p.<b>TextViews</b> are views that can display multiple blocks of rich text, where fonts, sizes and colors can be combined.
+
+func(textview_create).Create a text view.
+fret(TextView*).The view.
+
+func(textview_insert).Insert a string at the end of a view, with the default format.
+fpar(TextView*,view).The view.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(textview_text).Set the control text.
+fpar(TextView*,view).The view.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+fnote.It will remove the previous content of the control.
+
+func(textview_get_text).Get control text.
+fret(const char_t*).UTF8 C-string terminated in null character <c>'\0'</c>.
+fpar(const TextView*,view).The view.

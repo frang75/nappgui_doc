@@ -1,0 +1,45 @@
+
+h1.HTTP
+
+func(http_create).Crea un objeto HTTP para realizar peticiones a un servidor.
+fret(Http*).Objeto recién creado.
+fpar(const char_t*,host).Nombre del servidor.
+fpar(const uint16_t,port).Puerto de conexión.
+fpar(ierror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+
+func(http_destroy).Destruye un objeto HTTP.
+fpar(Http**,http).El objeto HTTP. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(http_param).Añade un parámetro a la petición HTTP.
+fpar(Http*,http).El objeto HTTP. 
+fpar(const char_t*,name).El nombre del parámetro. 
+fpar(const char_t*,value).El valor del parámetro. 
+
+func(http_header).Añade una cabecera a la petición HTTP.
+fpar(Http*,http).El objeto HTTP. 
+fpar(const char_t*,name).El nombre de la cabecera. 
+fpar(const char_t*,value).El valor de la cabecera. 
+
+func(http_clear_params).Elimina los parámetros previamente asignados.
+fpar(Http*,http).El objeto HTTP. 
+
+func(http_clear_headers).Elimina las cabeceras previamente asignadas.
+fpar(Http*,http).El objeto HTTP. 
+
+func(http_get).Realiza una petición HTTP.
+fpar(Http*,http).El objeto HTTP. 
+fpar(const char_t*,uri).Dirección del recurso.
+fpar(Stream*,body).Stream de escritura donde se guardará la respuesta. 
+fpar(ierror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+
+func(http_dget).Realiza una petición HTTP de un recurso Web.
+fret(Stream*).Stream de lectura con el resultado de la petición. La aplicación debe conocer como de-serializar el contenido.
+fpar(const char_t*,host).Nombre del servidor.
+fpar(const uint16_t,port).Puerto de conexión.
+fpar(const char_t*,uri).Dirección del recurso.
+fpar(ierror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.Utiliza esta función para el acceso directo a un recurso aislado. Si necesitas realizar varias peticiones o configurar las cabeceras y parámetros, utiliza <lf>http_create</lf>.
+fcode.
+// http://serv.nappgui.com:80/dproducts.php
+Stream *json = http_dget("serv.nappgui.com", 80, "/dproducts.php", &error);
+fcode.

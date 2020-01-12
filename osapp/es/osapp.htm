@@ -1,0 +1,206 @@
+
+h1.OSApp
+
+p.La librería <i>OSApp</i> arranca y gestiona el <b>ciclo de mensajes</b> de una aplicación de escritorio <r>osapp_depends</r>. Si bien la librería <b>Gui</b> podría integrarse en aplicaciones existentes mediante un <i>plugin</i>, si queremos crear una aplicación desde cero, necesitaremos gestionar los eventos que el sistema operativo envía al programa.
+
+li.Utiliza <lf>osmain</lf> para iniciar una aplicación de escritorio.
+
+li.Utiliza <lf>osapp_finish</lf> para finalizar una aplicación de escritorio.
+
+img(osapp_depends.svg,300,.4).Dependencias de <i>OSApp</i>. Ver <lp>sdk</lp>.
+Árbol de dependencias de la librería osapp.
+
+h2.main() y osmain()
+
+p.La clásica función <c>main</c> es el punto de inicio de cualquier programa C/C++ por línea de comandos <r>main</r>. Su funcionamiento no entraña dificultad alguna y puede resumirse en:
+
+img(main.svg,420,.6).Ejecución de una aplicación C de consola.
+Esquema que muestra las fases principales en la ejecución de un programa en C/C++.
+
+li(st01.svg,24).El sistema operativo carga el programa en memoria y llama a la función <c>main()</c> para empezar su ejecución.
+
+li(st02.svg,24).Las sentencias se van ejecutando de manera secuencial y en el orden en el que están escritas. Dicho orden puede alterarse mediante sentencias de control (<c>for</c>, <c>if</c>, <c>switch</c>, etc) o llamadas a función.
+
+li(st03.svg,24).Si es necesario realizar entrada/salida, el programa esperará a que termine la comunicación y continuará con la ejecución.
+
+li(st04.svg,24).Cuando se alcance el final de la función <c>main()</c> o se ejecute una sentencia <c>exit()</c> el programa finalizará y el sistema operativo lo descargará de memoria.
+
+p.Sin embargo, en aplicaciones de escritorio (dirigidas por eventos), el ciclo de ejecución es un poco más complicado. En esencia, el programa se encuentra continuamente ejecutando un bucle a la espera que el usuario realice alguna acción <r>osmain</r> <r>skel</r>. En <lp>hello</lp> tienes un ejemplo sencillo:
+
+img(osmain.svg,480,.65).Ejecución de una aplicación C de escritorio.
+Esquema que muestra las fases principales en la ejecución de un programa de escritorio en C/C++.
+
+li(st01.svg,24).El sistema operativo carga el programa en memoria y llama a la función <c>main()</c>. Ahora está encapsulada dentro de la macro <lf>osmain</lf> que inicia ciertas estructuras necesarias para la captura y gestión de eventos.
+
+li(st02.svg,24).En el algún momento de este proceso inicial, se llamará al constructor de la aplicación (el primer parámetro de <c>osmain()</c>) que deberá crear el objeto principal. Dado que el programa está continuamente devolviendo el control al sistema operativo, en este objeto se mantendrá el estado de los datos y de las ventanas.
+
+li(st03.svg,24).Una vez inicializada, la aplicación entrará en un bucle conocido como <b>ciclo de mensajes</b> <r>runloop</r>, permaneciendo a la espera de que el usuario realice alguna acción sobre la interfaz del programa.
+
+img(runloop.svg,480,.6).Implementación del ciclo de mensajes.
+Esquema que muestra como se implementa el ciclo de mensajes en cada sistema operativo.
+
+li(st04.svg,24).Cuando esto ocurra, el sistema operativo capturará el evento producido y lo enviará a la aplicación.
+
+li(st05.svg,24).Si la aplicación ha definido un manejador para dicho evento, este será invocado y se ejecutará el código de respuesta. Una aplicación puede recibir cientos de mensajes pero solo responderá a los que considere necesarios, ignorando el resto.
+
+li(st06.svg,24).Hay un evento especial <b>de salida</b> que es generado al llamar a <lf>osapp_finish</lf>. Cuando esto ocurre, <c>osmain()</c> empieza a liberar recursos y a preparar una salida limpia. En algún punto se llamará al destructor de la aplicación (segundo parámetro de <c>osmain()</c>) para que haga su parte del trabajo, cerrando posibles archivos abiertos y destruyendo el objeto principal.
+
+li(st07.svg,24).El sistema operativo descarga la aplicación de la memoria.
+
+li(pink_block.png,16).Los bloques de color rosa son dependientes de plataforma y están implementados dentro de NAppGUI.
+
+li(orange_block.png,16).Los bloques de color naranja son multiplataforma (totalmente portables) y están implementados dentro de la aplicación.
+
+code(cpp,skel).Esqueleto elemental de una aplicación de escritorio.
+typedef struct _app_t App;
+struct _app_t
+{
+    // Program data
+    Window *window;
+};
+
+static App* i_create(void)
+{
+    App *app = heap_new(App);
+    // Init program data, GUI and Event handlers
+    app->window = ...
+    return app;
+}
+
+static void i_destroy(App *app)
+{
+    // Destroy program data
+    window_destroy(&(*app)->window);
+    heap_delete(app, App);
+}
+
+osmain(i_create, i_destroy, "", App);
+code.
+
+h2.Aplicaciones síncronas
+
+p.Cierto tipo de aplicaciones, entre las que se encuentran los videojuegos, reproductores multimedia o simuladores requieren actualizarse a intervalos regulares de tiempo intervenga o no el usuario <r>synchronous_application</r> <r>skelsync</r>. Para estos casos necesitaremos una variante de <c>osmain</c>, que acepte una función de actualización y un intervalo de tiempo. En <lp>bricks</lp> tienes un ejemplo.
+
+li.Utiliza <lf>osmain_sync</lf> para iniciar una aplicación síncrona.
+
+img(synchronous_application.svg,480,.6).Eventos en aplicaciones síncronas.
+Gráfico de eventos en aplicaciones síncronas.
+
+code(cpp,skelsync).Esqueleto elemental de una aplicación síncrona.
+typedef struct _app_t App;
+struct _app_t
+{
+    // Program data
+    Window *window;
+};
+
+static App* i_create(void)
+{
+    App *app = heap_new(App);
+    // Init program data, GUI and Event handlers
+    app->window = ...
+    return app;
+}
+
+static void i_update(App *app, const real64_t prtime, const real64_t ctime)
+{
+    // Update program state every 40ms
+}
+
+static void i_destroy(App *app)
+{
+    // Destroy program data
+    window_destroy(&(*app)->window);
+    heap_delete(app, App);
+}
+
+osmain_sync(0.04, i_create, i_destroy, i_update, "", App);
+code.
+
+h2.Tareas multi-hilo
+
+p.Tanto las aplicaciones síncronas como asíncronas ejecutan el ciclo de mensajes en un único hilo de la CPU. Esto significa que si, como respuesta a un evento, se debe ejecutar una tarea relativamente lenta la aplicación quedará "congelada" hasta que esta termine <r>multithread_task</r> <b>(a)</b>. Esto producirá un efecto indeseado ya que el programa no responderá durante unos segundos, dando la impresión que se ha bloqueado. La solución es lanzar una tarea en paralelo <r>multithread_task</r> <b>(b)</b> <r>newtask</r> que libere rápidamente el hilo que gestiona el GUI. En <lh>Login multi-hilo</lh> tienes un ejemplo del uso de tareas.
+
+li.Utiliza <lf>osapp_task</lf> para lanzar una nueva tarea en un hilo paralelo.
+
+img(multithread_task.svg,560,.8).(a) Bloqueo de la interfaz por una función lenta. (b) Función lenta en un hilo paralelo.
+Gráfico que compara código en un hilo o varios hilos.
+
+code(cpp,newtask).Nueva tarea en un hilo paralelo.
+// Runs in new thread
+static uint32_t i_task_main(TaskData *data)
+{
+    // Do the task work here!
+}
+
+// Runs in GUI thread
+static void i_task_update(TaskData *data)
+{
+    // Update the GUI here!
+}
+
+// Runs in GUI thread
+static void i_task_end(TaskData *data, const uint32_t rvalue)
+{
+    // Finish task code here!
+}
+
+osapp_task(tdata, .04, i_task_main, i_task_update, i_task_end, TaskData);
+code.
+
+p.El nuevo hilo comenzará su ejecución en <c>task_main</c>. Esta función <b>no debería</b> acceder a los elementos de la interfaz, tan solo realizar cálculos o tareas de entrada/salida. Si fuera necesario actualizar el GUI mientras dure la tarea (incrementando una barra de progreso o similar) deberá realizarse en <c>task_update</c>, indicando en <c>updtime</c> el intervalo de actualización. El nuevo hilo terminará cuando se retorne de <c>task_main</c>, momento que se llamará a <c>task_end</c> en el hilo principal. Evidentemente, si ambos hilos acceden a variables compartidas, deberán protegerse mediante un <lt>Mutex</lt>.
+
+func(FPtr_app_create,ptr).Prototipo de constructor de una aplicación.
+fret(type*).Objeto aplicación.
+
+func(FPtr_app_update,ptr).Prototipo de función de actualización de una aplicación síncrona.
+fpar(type*, app).Objeto aplicación.
+fpar(const real64_t, prtime).Tiempo de la actualización anterior.
+fpar(const real64_t, ctime).Tiempo actual.
+
+func(FPtr_task_main,ptr).Prototipo de función de inicio de una tarea.
+fret(uint32_t).Valor de retorno de la tarea.
+fpar(type*,data).Datos iniciales de la tarea.
+
+func(FPtr_task_update,ptr).Prototipo de función de actualización de una tarea.
+fpar(type*,data).Datos de la tarea.
+
+func(FPtr_task_end,ptr).Prototipo de función de finalización de una tarea.
+fpar(type*,data).Datos de la tarea.
+fpar(const uint32_t,rvalue).Valor de retorno de la tarea.
+
+func(osmain).Inicia una aplicación de escritorio.
+fpar(FPtr_app_create, func_create).Constructor del objeto aplicación.
+fpar(FPtr_destroy, func_destroy).Destructor del objeto aplicación.
+fpar(const char_t*, options).Cadena de opciones.
+fpar(,type).Tipo de objeto aplicación.
+fnote.En <lp>hello</lp> tienes un ejemplo sencillo de aplicación de escritorio.
+
+func(osmain_sync).Inicia una aplicación de escritorio síncrona.
+fpar(const real64_t, lframe).Tiempo en segundos del intervalo de actualización (0.04 = 25 fps).
+fpar(FPtr_app_create, func_create).Constructor del objeto aplicación.
+fpar(FPtr_destroy, func_destroy).Destructor del objeto aplicación.
+fpar(FPtr_app_update, func_update).Función que se llamará en cada intervalo de actualización.
+fpar(const char_t*, options).Cadena de opciones.
+fpar(,type).Tipo de objeto aplicación.
+fnote.Ver <lh>Aplicaciones síncronas</lh>.
+
+func(osapp_finish).Finaliza una aplicación de escritorio, destruyendo el ciclo de mensajes y el objeto aplicación.
+
+func(osapp_task).Lanza una tarea en paralelo, evitando el bloqueo del hilo que controla la interfaz de usuario.
+fpar(type*,data).Datos iniciales de la tarea.
+fpar(const real32_t, updtime).Tiempo del intervalo de actualización, en caso que lo requiera.
+fpar(FPtr_task_main, func_main).Función de inicio de la tarea.
+fpar(FPtr_task_update, func_update).Función de actualización de la tarea.
+fpar(FPtr_task_end, func_end).Función que se llamará al acabar la tarea.
+fpar(,type).Tipo de los datos iniciales de la tarea.
+fnote.Ver <lh>Tareas multi-hilo</lh>.
+
+func(osapp_menubar).Establece la barra de menú general de la aplicación.
+fpar(Menu*,menu).El menú.
+fpar(Window*,window).La ventana que albergará el menú.
+fnote.En macOS el menú de aplicación no se vincula con ninguna ventana.
+
+func(osapp_open_url).Abre una dirección de Internet utilizando el navegador por defecto del sistema operativo.
+fpar(const char_t*,url).La dirección URL.
+

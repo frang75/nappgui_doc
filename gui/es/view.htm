@@ -1,0 +1,122 @@
+
+h1.View
+
+p.Las <b>View</b> o vistas personalizadas son áreas en blanco dentro de la ventana que nos permiten implementar nuestros propios componentes. Se caracterizan por tres cosas:
+
+li.Están integradas dentro de un <lt>Layout</lt> como el resto de elementos de interfaz. El layout gestionará la posición y tamaño de la vista en función de su configuración.
+
+li.Permiten dibujar cualquier cosa a través del evento <b>OnDraw</b>. El manejador recibirá un contexto 2D listo para dibujar.
+
+li.Permiten capturar los eventos de teclado y ratón producidos por el usuario, lo que hará posible interactuar con las escenas generadas.
+
+li.No asumen nada sobre el contenido. Es el programador el que debe sincronizar los eventos del usuario con el dibujo para producir el efecto deseado.
+
+li.Utiliza <lf>view_create</lf> para crear una vista personalizada.
+
+li.Utiliza <lf>view_OnDraw</lf> para dibujar en una vista.
+
+li.Utiliza <lf>view_data</lf> para asociar datos de usuario con la vista.
+
+p.No podemos dibujar en la vista cuando queramos. Al ser un área dentro de la ventana está sujeta a solapamientos por lo que el búfer de dibujo es gestionado por el sistema operativo. El ciclo de refresco se divide en varios pasos <r>view_events</r>:
+
+li.Se produce algún evento que requiere actualizar el contenido de la vista.
+
+li.Llamamos al método <lf>view_update</lf> para notificar que la vista debe ser actualizada. 
+
+li.En el momento oportuno, el sistema mandará un evento <c>OnDraw</c> con un objeto <lt>DCtx</lt> preparado para recibir nuestros comando de dibujo. En <lp>drawimg</lp> o <lp>die</lp> tienes ejemplos de uso de vistas personalizadas.
+
+img(view_events.svg,420,.6).Ciclo de refresco de una vista personalizada.
+Gráfico con las diferentes fases de la actualización de una vista.
+
+func(view_create).Crea una nueva vista personalizada.
+fret(View*).El control vista.
+fpar(uint32_t,flags).Opciones de creación. Combinación <c>OR |</c> de valores de <lt>view_flag_t</lt>.
+
+func(view_data).Asocia datos de usuario con la vista.
+fpar(View*,view).La vista.
+fpar(type**,data).Datos de usuario.
+fpar(FPtr_destroy,func_destroy_data).Destructor de los datos de usuario. Será llamado al destruir la vista.
+fpar(,type).Tipo de datos de usuario.
+
+func(view_get_data).Obtiene los datos de usuario asociados con la vista.
+fret(type*).Los datos de usuario.
+fpar(const View*,view).La vista.
+fpar(,type).Tipo de datos de usuario.
+
+func(view_size).Establece el tamaño por defecto de la vista.
+fpar(View*,view).La vista.
+fpar(const S2Df,size).El tamaño.
+fnote.Corresponde al <lh>Dimensionado natural</lh> del control. Por defecto 128x128.
+
+func(view_OnDraw).Establece un manejador para dibujar en la vista.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cada vez que deba refrescarse el dibujo.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnSize).Establece un manejador para el cambio de tamaño.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cada vez que la vista cambie de tamaño.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnMoved).Establece un manejador para el movimiento del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará a medida que el cursor del ratón se desplace por encima de la vista.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnEnter).Establece un manejador para la entrada del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando el cursor del ratón entre en el área de la vista.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnExit).Establece un manejador para la salida del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando el cursor del ratón salga del área de la vista.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnClick).Establece un manejador para el clic del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cada vez que se haga clic sobre la vista.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnStartDrag).Establece un manejador para el inicio del arrastre del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se empiece a arrastrar el ratón.
+fnote."Arrastrar" es desplazar el ratón con uno de los botones pulsados. Ver <lh>Eventos GUI</lh>.
+
+func(view_OnDrag).Establece un manejador para el arrastre del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará mientras se esté arrastrando el cursor del ratón sobre la vista.
+fnote."Arrastrar" es desplazar el ratón con uno de los botones pulsados. Ver <lh>Eventos GUI</lh>.
+
+func(view_OnEndDrag).Establece un manejador para el final del arrastre del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se termine de arrastrar el ratón.
+fnote."Arrastrar" es desplazar el ratón con uno de los botones pulsados. Ver <lh>Eventos GUI</lh>.
+
+func(view_OnWheel).Establece un manejador para la ruedecilla del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se mueva la ruedecilla del ratón sobre la vista.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnKeyDown).Establece un manejador para la pulsación de una tecla.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se pulse una tecla y la vista tenga el foco del teclado.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnKeyUp).Establece un manejador para la liberación de una tecla.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se libere una tecla y la vista tenga el foco del teclado.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_scrollbar_size).Obtiene el tamaño de las barras de scroll.
+fpar(const View*,view).La vista.
+fpar(S2Df*,size).El ancho de la barra horizontal y alto de la vertical.
+fnote.Útil si debemos tener en cuenta las barras de scroll al dibujar en la vista.
+
+func(view_content_size).Establece el tamaño del área de dibujo cuando existen barras de scroll.
+fpar(View*,view).La vista.
+fpar(const S2Df,size).El tamaño interno del área de dibujo.
+fnote.Cuando se crea una vista con scroll, este método indica la totalidad del área de dibujo. El control lo utilizará para dimensionar y posicionar las barras de scroll.
+
+func(view_update).Manda una orden al sistema operativo que la vista debe ser refrescada.
+fpar(View*,view).La vista.

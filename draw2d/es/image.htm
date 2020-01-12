@@ -1,0 +1,256 @@
+
+h1.Imágenes
+
+p.Una imagen digital, también llamada <i>bitmap</i> o <i>raster graphics</i>, es un conjunto de pequeños puntos de color denominados <b>píxeles</b> organizados en una matriz rectangular. Se caracteriza por su resolución (ancho, alto) y profundidad, que es la cantidad de bits necesaria para codificar cada pixel <r>image_resolution</r>.
+
+p.Los imágenes <i>bitmap</i> funcionan mejor para captar instantáneas del mundo real, donde es prácticamente imposible descomponer la escena en bloques geométricos, como vimos en <lp>draw</lp>. Como contrapartida, al estar compuesta por puntos discretos, no se comporta bien ante los cambios de tamaño donde sufrirá una pérdida de calidad.
+
+img(image_resolution.png,520,.65).A la izquierda imagen de 64x64 píxeles y 16 colores. A la derecha 256x256 píxeles y 16 millones de colores.
+La misma imagen en dos resoluciones diferentes.
+
+h2.Cargar y visualizar imágenes
+
+p.En la mayoría de ocasiones, lo único que necesitaremos saber sobre imágenes será como leerlas de disco u otro origen de datos para, posteriormente, visualizarlas en pantalla como parte de la interfaz de usuario <r>imgcode</r> <r>use_of_images</r>. Consideramos que las imágenes están almacenadas en alguno de los formatos estándar: JPG, PNG, BMP o GIF.
+
+code(cpp,imgcode).Carga y visualización de imágenes.
+Image *img = image_from_file("lenna.jpg", NULL);
+Image *icon = image_from_resource(pack, ekCANCEL);
+...
+imageview_image(view, img);
+button_image(button, icon);
+code.
+
+img(use_of_images.svg,460,.65).Integración de imágenes en la interfaz de usuario.
+Lectura de una imagen desde disco y visualización.
+
+li.Utiliza <lf>image_from_file</lf> para cargar una imagen de disco.
+
+li.Utiliza <lf>image_from_data</lf> para crear una imagen desde un búfer de memoria.
+
+li.Utiliza <lf>image_from_resource</lf> para obtener una imagen de un paquete de recursos.
+
+li.Utiliza <lf>image_read</lf> para crear una imagen a partir de <lp>stream</lp>.
+
+li.En <lp>urlimg</lp> tienes un ejemplo de como descargarlas desde un servidor Web.
+
+bq.NAppGUI solo soporta los formatos JPG, PNG, BMF y GIF.
+
+p.Una vez cargado el objeto imagen en memoria, disponemos de varias formas de visualizarlo:
+
+li.Utiliza <lf>draw_image</lf> para dibujar una imagen en un contexto 2d.
+
+li.Utiliza <lf>imageview_image</lf> para asignar una imagen a una vista.
+
+li.Utiliza <lf>button_image</lf> para asignar una imagen a un botón.
+
+li.Utiliza <lf>popup_add_elem</lf> para asignar un texto e icono a una lista desplegable.
+
+h2.Generar imágenes
+
+p.Como ya vimos en <lp>dctx</lp>, si fuera necesario podemos crear nuestras propias imágenes a partir de primitivas geométricas. En <lp>drawimg</lp> tienes una aplicación de ejemplo completa <r>drawimage</r>.
+
+li.Utiliza <lf>dctx_image</lf> para crear una imagen a partir de un contexto 2d.
+
+img(drawimage.png,0,.8).Imagen generada mediante comandos de dibujo.
+Imagen generada desde comandos de dibujo.
+
+h2.Acceso a píxeles
+
+p.Otra forma de generar imágenes es mediante algoritmos que calculen el valor de cada píxel. Una clara aplicación de esto la encontramos en la representación de conjuntos fractales <r>fractals</r>, un área de la matemática dedicada al estudio de determinados sistemas dinámicos. En <lp>fractals</lp> tienes la aplicación completa.
+
+li.Utiliza <lf>image_from_pixels</lf> para crear una imagen a partir de un búfer.
+
+li.Utiliza <lf>image_pixels</lf> para obtener un búfer con los píxeles de la imagen.
+
+img(fractals.png,480,.65).Imagen generada píxel a píxel mediante algoritmos fractales.
+Representación de un conjunto de Julia.
+
+p.Las imágenes son objetos optimizados para el dibujo recurrente en pantalla, por lo que se permiten ciertas licencias en la organización interna de la información de color. Por este motivo no es posible manipular directamente los píxeles, sino que debemos acceder a ellos mediante un búfer intermedio. Un <b>pixbufer</b> <r>pixel_format</r> no es más que un área de memoria que contiene todos los píxeles de forma secuencial y donde se puede acceder a cada elemento mediante un sencillo desplazamiento, teniendo en cuenta el formato de color <r>accpixel</r>. Los algoritmos escribirán directamente en esta memoria y, posteriormente, se creará un objeto <lt>Image</lt> <r>pixel_buffer</r>, para poder dibujarlo en pantalla o enviarlo por los canales de salida.
+
+img(pixel_format.svg,420,.5).Formatos de píxel. <b>(a)</b> <lt>ekRGBA32</lt>, <b>(b)</b> <lt>ekRGB24</lt>, <b>(c)</b> <lt>ekGRAY8</lt>.
+Representación visual de un array de píxeles según el formato.
+
+code(cpp,accpixel).Acceso directo a al píxel (x, y).
+// Pixel format = kRGBA32
+byte_t *pixbuf = heap_new_n(width * height * 4, byte_t);
+byte_t *pixel = pixbuf + (y * width + x) * 4;
+pixel[0] = red;
+pixel[1] = green;
+pixel[2] = blue;
+pixel[3] = alpha;
+
+// Pixel format = kRGB24
+byte_t *pixbuf = heap_new_n(width * height * 3, byte_t);
+byte_t *pixel = pixbuf + (y * width + x) * 3;
+pixel[0] = red;
+pixel[1] = green;
+pixel[2] = blue;
+
+// Pixel format = kGRAY8
+byte_t *pixbuf = heap_new_n(width * height, byte_t);
+byte_t *pixel = pixbuf + (y * width + x);
+pixel[0] = gray;
+code.
+
+img(pixel_buffer.svg,620,.8).Imagen a partir de la información de color.
+Proceso desde un pixel buffer a una imagen.
+
+p.Otra gran aplicación del acceso directo al píxel es la implementación de filtros de imágen. En estos casos partimos extrayendo el <b>pixbuf</b> de una imagen existente <r>image_filter</r>, se editará y se creará una nueva imagen con el resultado. En <lp>filters</lp> tienes el ejemplo completo <r>imagefilter</r>.
+
+img(image_filter.svg,620,.8).Proceso básico de un filtro de imagen.
+Operativa de un filtro de imagen.
+
+img(imagefilter.png,0,.8).Aplicación de ejemplo del uso de filtros de imagen.
+Captura de una imagen a la que se ha aplicado un filtro.
+
+h2.Guardar imágenes: Codecs
+
+p.Uno de los mayores problemas de las imágenes digitales es la gran cantidad de memoria que necesitan. Una imagen de tan solo 1024x768 píxeles y 32bits de color necesita 3 megabytes de memoria. Puede que no parezca mucho, pero a finales de los años 80 esto suponía un gran handicap ya que la memoria era muy cara y las transmisiones muy lentas. Por esto se idearon varios sistemas de codificación (compresión) que reducían la cantidad de memoria necesaria y que se consolidaron con el auge de Internet <r>file_formats</r>.
+
+li.Utiliza <lf>image_get_codec</lf> para obtener el <i>codec</i> asociado a la imagen.
+
+li.Utiliza <lf>image_codec</lf> para cambiar el <i>codec</i> asociado a la imagen.
+
+li.Utiliza <lf>image_to_file</lf> para guardarla en disco.
+
+li.Utiliza <lf>image_write</lf> para escribirla en un <lt>Stream</lt>.
+
+img(file_formats.svg,360,.5).Formatos de imagen soportados por NAppGUI.
+Logotipos de BMP, GIF, JPG y PNG.
+
+li.<b>JPEG:</b> <i>Joint Photographic Experts Group</i> es un formato con una muy buena tasa de compresión basada en la Transformada de Fourier. Ideal para captar instantáneas del mundo real, aunque restará algo de calidad a la captura original (compresión con pérdida).
+
+li.<b>PNG:</b> <i>Portable Network Graphics</i> surgió como respuesta a los problemas legales con el formato GIF. Soporta compresión LZ77/Deflate sin pérdida y formatos de píxel indexado. Ideal para esquemas, gráficos o imágenes generadas por computador.
+
+li.<b>GIF:</b> <i>Graphics Interchange Format</i>. Utiliza el algoritmo de compresión propietario LZW, aunque la patente expiró en 2003. Ha sobrevivido a PNG gracias a que puede incluir animaciones en un solo archivo, algo que ninguno de los dos formatos anteriores soporta.
+
+li.<b>BMP:</b> <i>BitMaP</i>. Formato nativo de Windows ampliamente superado por los otros tres. Aunque soporta un tipo especial de compresión denominado <i>Run-Length encoding</i>, lo cierto es que la mayoría de archivos se guardan sin comprimir. Los archivos BMP ocupan mucho más espacio, por este motivo se utiliza muy poco en Internet y casi nada en máquinas ajenas a Windows. Es soportado por casi todos los programas y sistemas gracias a que es muy sencillo y rápido de interpretar.
+
+p.Para poder visualizarse en pantalla, la imagen debe ser descomprimida (de-codificada), proceso que se realiza automáticamente al leer la imagen. Al guardarla a disco o enviarla por la red se realiza el proceso contrario, se comprime o codifica utilizando el algoritmo asociado a la misma <r>codecs</r>, pero se puede cambiar.
+
+table(codecs).Codecs de imagen por defecto.
+row.
+p.Constructor
+p.Codec
+row.
+p.<lf>image_from_file</lf>
+p.El codec original.
+row.
+p.<lf>image_from_data</lf>
+p.El codec original.
+row.
+p.<lf>image_from_resource</lf>
+p.El codec original.
+row.
+p.<lf>image_from_pixels</lf>
+p.<lt>ekJPG</lt>.
+row.
+p.<lf>dctx_image</lf>
+p.<lt>ekPNG</lt>.
+table.
+
+func(image_from_pixels).Crea una imagen a partir de un array de píxeles.
+fret(Image*).La imagen recién creada.
+fpar(const uint32_t,width).El ancho de la imagen (en píxeles).
+fpar(const uint32_t,height).El alto de la imagen (en píxeles).
+fpar(const pixformat_t,format).El formato de pixel.
+fpar(const byte_t*,data).Búfer que contiene el valor de color de cada pixel. Dependerá de la resolución y del formato.
+fnote.Ver <lh>Acceso a píxeles</lh>.
+
+func(image_from_file).Crea una imagen a partir de un archivo en disco.
+fret(Image*).La imagen recién creada.
+fpar(const char_t*,pathname).La ruta del archivo. <lh>Filename y pathname</lh>.
+fpar(ferror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.Solo los formatos <i>jpg</i>, <i>png</i>, <i>bmp</i> y <i>gif</i> son aceptados.
+
+func(image_from_data).Crea una imagen a partir de un búfer que contiene los datos codificados. 
+fret(Image*).La imagen recién creada.
+fpar(const byte_t*,data).El búfer con los datos de la imagen.
+fpar(const uint32_t,size).El tamaño del búfer en bytes.
+fnote.El búfer representa datos codificados en <i>jpg</i>, <i>png</i>, <i>bmp</i> o <i>gif</i>. Para crear la imagen directamente desde píxeles utiliza <lf>image_from_pixels</lf>.
+
+func(image_from_resource).Obtiene una imagen de un paquete de recursos. 
+fret(Image*).La imagen.
+fpar(const ResPack*,pack).El paquete de recursos.
+fpar(const ResId,id).El identificador del recurso.
+fnote.Ver <lp>resources</lp>.
+
+func(image_scale).Crea una copia de la imagen, con un nuevo tamaño.
+fret(Image*).La imagen recién creada.
+fpar(const Image*,image).La imagen original.
+fpar(const uint32_t,nwidth).El ancho de la nueva imagen. Pasar <lt>UINT32_MAX</lt> para que se mantenga la relación de aspecto con respecto a <c>nheight</c>.
+fpar(const uint32_t,nheight).El alto de la nueva imagen. Pasar <lt>UINT32_MAX</lt> para que se mantenga la relación de aspecto con respecto a <c>nwidth</c>.
+fnote.Si ambos valores <c>nwidth</c>, <c>nheight</c> son <c>UINT32_MAX</c> o las nuevas dimensiones son idénticas a las actuales se incrementará el contador de referencias interno, al igual que ocurre en <lf>image_copy</lf>.
+
+func(image_copy).Crea una copia de la imagen.
+fret(Image*).La imagen copiada.
+fpar(const Image*,image).La imagen original.
+fnote.Las imágenes son objetos inmutables. Copiar realmente significa incrementar un contador interno sin llegar a clonar el objeto. No obstante, la aplicación debe destruir la copia con <lf>image_destroy</lf> al igual que las creadas con cualquier otro constructor. Cuando todas las copias sean destruídas se eliminará realmente de memoria.
+
+func(image_read).Crea una imagen a partir de los datos leídos desde un <lp>stream</lp>.
+fret(Image*).La imagen recién creada.
+fpar(Stream*,stm).Stream de lectura. Se esperan datos codificados en <i>jpg</i>, <i>png</i>, <i>bmp</i> o <i>gif</i>. La función detecta el formato automáticamente.
+
+func(image_to_file).Guarda una imagen en disco, utilizado el codec asociado a la misma.
+fret(bool_t).<c>TRUE</c> si se ha guardado correctamente o <c>FALSE</c> y ha ocurrido algún error.
+fpar(const Image*,image).La imagen.
+fpar(const char_t*,pathname).La ruta del archivo destino. <lh>Filename y pathname</lh>.
+fpar(ferror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.Utiliza <lf>image_codec</lf> para cambiar el codec por defecto.
+
+func(image_write).Escribe una imagen en un stream de salida, utilizado el codec asociado a la misma.
+fpar(Stream*,stm).Stream de escritura. Se escribirán datos codificados en <i>jpg</i>, <i>png</i>, <i>bmp</i> o <i>gif</i>.
+fpar(const Image*,image).La imagen.
+fnote.Utiliza <lf>image_codec</lf> para cambiar el codec por defecto.
+
+func(image_destroy).Destruye la imagen.
+fpar(Image**,image).La imagen. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(image_size).Obtiene la resolución de la imagen.
+fpar(const Image*,image).La imagen.
+fpar(uint32_t*,width).El ancho de la imagen en píxeles.
+fpar(uint32_t*,height).El alto de la imagen en píxeles.
+
+func(image_pixformat).Obtiene el formato de pixel de la imagen.
+fpar(const Image*,image).La imagen.
+fpar(pixformat_t*,format).El formato de pixel.
+
+func(image_pixels).Obtiene un búfer con los píxeles que forman la imagen decodificada.
+fpar(const Image*,image).La imagen.
+fpar(uint32_t*,width).El ancho de la imagen en píxeles. Puede ser <c>NULL</c>.
+fpar(uint32_t*,height).El alto de la imagen en píxeles. Puede ser <c>NULL</c>.
+fpar(pixformat_t*,format).El formato del pixel. Necesario para interpretar la información del vector <c>pixels</c>. Puede ser <c>NULL</c>.
+fpar(Buffer**,pixels).El búfer donde se almacenarán los píxeles. Debe ser destruido con <lf>buffer_destroy</lf> cuando ya no sea necesario. Puede ser <c>NULL</c>.
+fnote.Ver <lh>Acceso a píxeles</lh>.
+
+func(image_codec).Cambia el codec por defecto asociado con la imagen.
+fpar(Image*,image).La imagen.
+fpar(const codec_t,codec).El nuevo codec.
+fnote.El cambio tendrá efecto la próxima vez que guardemos o escribamos la imagen. Por defecto, la imagen conserva el codec con el que fue leída. Cuando la creamos con <lf>image_from_pixels</lf> se le asigna el codec <lt>ekJPG</lt> por defecto. Para imágenes desde contextos 2d <lf>dctx_image</lf>, el codec por defecto es <lt>ekPNG</lt>.
+fcode.
+Image *img = image_from_file("lenna.jpg", NULL);
+Stream *stm = stm_socket(ip, port, NULL, NULL);
+image_codec(img, ekPNG);
+image_write(socket, img);
+fcode.
+
+func(image_get_codec).Obtiene el codec asociado con la imagen.
+fret(codec_t).El codec.
+fpar(const Image*,image).La imagen.
+fnote.Ver <lf>image_codec</lf>.
+
+func(image_num_frames).Obtiene el número de secuencias en imágenes animadas.
+fret(uint32_t).El número de secuencias o <i>frames</i>.
+fpar(const Image*,image).La imagen.
+fnote.Únicamente el formato <i>gif</i> soporta animaciones. Para el resto siempre se devolverá 1.
+
+func(image_frame_length).Obtiene el tiempo que dura una secuencia de animación.
+fret(real32_t).El tiempo de la secuencia en segundos.
+fpar(const Image*,image).La imagen.
+fpar(const uint32_t,findex).El índice del frame.
+fnote.Únicamente el formato <i>gif</i> soporta animaciones.
+
+func(image_bpp).Obtiene el número de bytes por píxel del formato. 
+fret(uint32_t).Bytes por pixel.
+fpar(const pixformat_t,format).El formato de píxel.
+

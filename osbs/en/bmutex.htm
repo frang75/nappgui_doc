@@ -1,0 +1,30 @@
+langrev.
+
+h1.Mutual exclusion
+
+ep.Mutual exclusion mechanisms ensure that only one execution thread can access a resource at the same time.
+
+p.In processes with multiple threads, mutual exclusion guarantees that only one of them can execute a <b>critical section</b> at a specific moment of time. The critical section is a block of code that normally protects a shared resource that does not support concurrent access. 
+
+h2.Locks
+
+p.Locks or <lt>Mutex</lt> are synchronization objects managed by the operating system that mark the beginning and end of a critical section <r>mutex</r>. When a thread is going to access a certain share, you must call the method <lf>bmutex_lock</lf> to guarantee exclusive access. If another thread is using the resource (it has previously called <c>bmutex_lock</c>), the current thread will stop until the resource is released through <lf>bmutex_unlock</lf>. Blocking and unblocking threads is handled by the operating system itself. The programmer should only worry about identifying and protecting the critical sections. <lh>Multi-thread example</lh>.
+
+img(mutex.svg,380,.45).A mutex protecting the critical sections of two threads, which can not be executed concurrently. The rest of the code can run in parallel.
+Diagram of a mutual exclusion mechanism protecting two critical sections.
+
+func(bmutex_create).Creates a mutual exclusion object that allows multiple threads to share the same resource, such as a memory or file area on disk, preventing them from accessing at the same time.
+fret(Mutex*).The mutual exclusion handler.
+fnote.<lp>bthread</lp>, <lh>Multi-thread example</lh>.
+
+func(bmutex_close).Close the mutual exclusion object and free memory.
+fpar(Mutex**,mutex).The mutual exclusion handler. It will be set to <c>NULL</c> after closing.
+fnote.<lp>bthread</lp>, <lh>Multi-thread example</lh>.
+
+func(bmutex_lock).Marks the start of a critical section, blocking access to a shared resource. If another thread tries to block, it will be stopped until the current thread calls <c>bmutex_unlock</c>.
+fpar(Mutex*,mutex).The mutual exclusion handler.
+fnote.<lp>bthread</lp>, <lh>Multi-thread example</lh>.
+
+func(bmutex_unlock).Mark the end of a critical section, unlocking access to a shared resource. If another thread is waiting, access will be allowed to its critical section and, therefore, to the shared resource.
+fpar(Mutex*,mutex).The mutual exclusion handler.
+fnote.To avoid unnecessary delays, the time between <c>bmutex_lock</c> and <c>bmutex_unlock</c> should be as short as possible. Any calculation that the thread can make in its private memory space must precede the call to <c>bmutex_lock</c>. <lp>bthread</lp>, <lh>Multi-thread example</lh>.

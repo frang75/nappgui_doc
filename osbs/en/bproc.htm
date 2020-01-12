@@ -1,0 +1,204 @@
+langrev.
+
+h1.Processes
+
+ep.A process is a running program that is launched and controlled by the operating system.
+
+p.From the programmer perspective, multi-processing is the possibility of launching and interacting with other processes (children) from the main process (parent). The operating system can execute the child process in another CPU core <i>(true multitasking)</i> or in the same as the parent <i>(context switch)</i>. This is a system decision in which the programmer can not influence and will depend on the processor type and its workload. The final effect will be that both processes (parent and child) run in parallel.
+
+h2.Launching processes
+
+p.<lf>bproc_exec</lf> will launch a process from our own C program in a similar way as the Terminal does <r>run_process</r>. In this case, the <lp>bstd</lp> <c>stdin</c>, <c>stdout</c> and <c>stderr</c> will be redirected to the <lt>Proc</lt> object through anonymous pipes. From here, we can use <lf>bproc_write</lf> to write on the son <c>stdin</c> channel and <lf>bproc_read</lf> to read from his <c>stdout</c>. The rules of reading/writing are those that govern the operating system <i>pipes</i> and that we can summarize in:
+
+img(run_process.svg,480,.55).Launching a process from our own C code.
+Schema of a parent process and a child process linked by the Proc object.
+
+li.If the parent calls <c>bproc_read</c> and the child has not written anything (empty buffer), the parent will be blocked (wait) until there is information in the child's output channel.
+
+li.If the child ends and parent is waiting to read, <c>bproc_read</c> will return <c>FALSE</c> and the parent will continue his execution.
+
+li.If the parent calls <c>bproc_write</c> and the writing buffer is full, the parent will block (wait) until the child reads from his <c>stdin</c> and free space in the channel.
+
+li.If the child ends and the father is blocked by writing, <c>bproc_write</c> will return <c>FALSE</c> and the parent will continue his execution.
+
+li.Some commands or processes (eg <c>sort</c>) will not start until reading the entire <c>stdin</c> contents. In these cases, the parent process must use <lf>bproc_write_close</lf> to indicate to the child that the writing on his <c>stdin</c> has finished.
+
+li.When the parent calls <lf>bproc_close</lf>, all the I/O channels will be closed and both processes will continue their execution independently. To finish the execution of the child process <i>(kill)</i> use <lf>bproc_cancel</lf>.
+
+li.<lf>bproc_wait</lf> will stop the parent process until the child completes. To avoid overloading the child output buffer <c>stdout</c>, close the channel through <lf>bproc_read_close</lf>.
+
+li.<lf>bproc_finish</lf> will check, in a non-blocking way, if the child has finished running.
+
+h2.Multi-processing examples
+
+p.Let's look at some practical examples of IPC <i>Inter-Process Communication</i> using the standard I/O channels in linked parent-child processes. In <r>exread</r> we will dump the child process <c>stdout</c> output in a file. In <r>exwrite</r> we will redirect both channels, we will write in <c>stdin</c> and we will read from <c>stdout</c> using disk files. Finally, we will implement an asynchronous protocol where the parent and child exchange requests and responses. In <r>asynchild</r> we show the code of the child process, in <r>asynparent</r> the parent process and in <r>asynresult</r> the result of the communication, written by the parent process.
+
+code(cpp,exread).Reading from a process <c>stdout</c> and saving it in a file.
+byte_t buffer[512];
+uint32_t rsize;
+File *file = bfile_create("out.txt", NULL);
+Proc *proc = bproc_exec("dir C:\Windows\System32", NULL, NULL);
+while(bproc_read(proc, buffer, 512, &rsize, NULL) == TRUE)
+    bfile_write(file, buffer, rsize, NULL, NULL);
+bproc_close(&proc);
+bfile_close(&file);
+code.
+
+bq.The <i>shell</i> commands are not portable in general. We use them only as an example.
+
+code(cpp,exwrite).Redirecting the <c>stdin</c> and <c>stdout</c> of a process.
+byte_t buffer[512];
+uint32_t rsize;
+File *fsrc = bfile_open("members.txt", ekFILE_READ, NULL);
+File *fdes = bfile_create("sorted_members.txt", NULL);
+Proc *proc = bproc_exec("sort", NULL, NULL);
+
+// Writes to stdin
+while (bfile_read(fsrc, buffer, 512, &rsize, NULL) == TRUE)
+    bproc_write(proc, buffer, rsize, NULL, NULL);
+
+// Closes child stdin
+bproc_write_close(proc);
+
+// Reads child stdout
+while(bproc_read(proc, buffer, 512, &rsize, NULL) == TRUE)
+    bfile_write(fdes, buffer, rsize, NULL, NULL);
+
+bfile_close(&fsrc);
+bfile_close(&fdes);
+bproc_close(&proc);
+code.
+
+code(cpp,asynparent).Asynchronous protocol (parent process).
+Proc *proc;
+uint32_t commands[] = { 326, 32, 778, 123, 889, 712, 1, 55, 75, 12 };
+uint32_t exit_command = 0;
+uint32_t i;
+
+proc = bproc_exec("child", NULL, NULL);
+
+for (i = 0; i < 10; ++i)
+{
+    uint32_t response;
+    uint32_t time;
+    // Send command to child
+    bproc_write(proc, (byte_t*)&commands[i], sizeof(uint32_t), NULL);
+
+    // Waits for child response
+    bproc_read(proc, (byte_t*)&response, sizeof(uint32_t), NULL);
+    bproc_read(proc, (byte_t*)&time, sizeof(uint32_t), NULL);
+    bstd_printf("Child command %d in %d milliseconds.\n", response, time);
+}
+
+bproc_write(proc, (byte_t*)&exit_command, sizeof(uint32_t), NULL);
+bproc_close(&proc);
+code.
+
+code(cpp,asynchild).Asynchronous protocol (child process).
+for (;;)
+{
+    uint32_t command;
+    // Reads from standard input a command from parent.
+    if (bstd_read((byte_t*)&command, sizeof(command), NULL) == TRUE)
+    {
+        if (command != 0)
+        {
+            // Waits random time (simulates processing).
+            uint32_t timer = bmath_randi(1000, 2000);
+            bthread_sleep(timer);
+
+            // Writes to standard output the response to parent.
+            bstd_write((const byte_t*)&command, sizeof(command), NULL);
+            bstd_write((const byte_t*)&timer, sizeof(timer), NULL);
+        }
+        else
+        {
+            // Command 0 = Exit
+            break;
+        }
+    }
+}
+code.
+
+code(text,asynresult).Parent process execution result.
+Child command 326 in 1761 milliseconds.
+Child command 32 in 1806 milliseconds.
+Child command 778 in 1989 milliseconds.
+Child command 123 in 1909 milliseconds.
+Child command 889 in 1043 milliseconds.
+Child command 712 in 1153 milliseconds.
+Child command 1 in 1780 milliseconds.
+Child command 55 in 1325 milliseconds.
+Child command 75 in 1157 milliseconds.
+Child command 12 in 1426 milliseconds.
+code.
+
+func(bproc_exec).Launch a new process.
+fret(Proc*).Child process handler that we can use to communicate with him. If the function fails, return <c>NULL</c>.
+fpar(const char_t*,command).The command to execute (path and arguments). Eg. <c>"ls -lh"</c> or <c>"C:\Programs\imgresize background.png -w640 -h480"</c>.
+fpar(const ProcOpt*,opts).Process creation options.
+fpar(perror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.<lh>Multi-processing examples</lh>.
+
+func(bproc_close).Close communication with the child process and free resources.
+fpar(Proc**,proc).Process handler. It will be set to <c>NULL</c> after closing.
+fnote.If the process is still running, this function does not finish it. It only closes the communication channel between the parent and child that will continue to run independently. Like any other object, a process must always be closed, even if it has already finished its execution. <lh>Multi-processing examples</lh>.
+
+func(bproc_cancel).Force the finalization of the process.
+fret(bool_t).<c>TRUE</c> if the process is finish. <c>FALSE</c> otherwise.
+fpar(Proc*,proc).Process handler.
+
+func(bproc_wait).Wait until the child process finishes.
+fret(uint32_t).The return value of the child process or <c>UINT32_MAX</c> if there is any error.
+fpar(Proc*,proc).Process handler.
+
+func(bproc_finish).Check if the child process is still running.
+fret(bool_t).<c>TRUE</c> if the child process has finish, <c>FALSE</c> if not.
+fpar(Proc*,proc).Process handler.
+fpar(uint32_t*,code).The output value of the process (if it has finished). Can be <c>NULL</c>.
+fnote.This function returns immediately. It does not block the process that calls it.
+
+func(bproc_read).Read data from the process standard output  (<c>stdout</c>).
+fret(bool_t).<c>TRUE</c> if data has been read. <c>FALSE</c> if any error has occurred.
+fpar(Proc*,proc).Process handler.
+fpar(byte_t*,data).Buffer where the read data will be written.
+fpar(const uint32_t,size).The maximum bytes to read (buffer size).
+fpar(uint32_t*,rsize).Receive the number of bytes actually read. Can be <c>NULL</c>.
+fpar(perror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.This function will block the parent process until the child writes in its <c>stdout</c>. If there is no data in the channel and the child ends, will return <c>FALSE</c> with <c>rsize = 0</c> and <c>error = ekPROC_SUCCESS</c>. <lh>Multi-processing examples</lh>.
+
+func(bproc_eread).Read data from the process error output (<c>stderr</c>).
+fret(bool_t).<c>TRUE</c> if data has been read. <c>FALSE</c> if any error has occurred.
+fpar(Proc*,proc).Process handler.
+fpar(byte_t*,data).Buffer where the read data will be written.
+fpar(const uint32_t,size).The maximum bytes to read (buffer size).
+fpar(uint32_t*,rsize).Receive the number of bytes actually read. Can be <c>NULL</c>.
+fpar(perror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.This function will block the parent process until the child writes in its <c>stdout</c>. If there is no data in the channel and the child ends, will return <c>FALSE</c> with <c>rsize = 0</c> and <c>error = ekPROC_SUCCESS</c>. <lh>Multi-processing examples</lh>.
+
+func(bproc_write).Write data in the process input channel (<c>stdin</c>).
+fret(bool_t).<c>TRUE</c> if data has been written. <c>FALSE</c> if any error has occurred.
+fpar(Proc*,proc).Process handler.
+fpar(const byte_t*,data).Buffer that contains the data to write.
+fpar(const uint32_t,size).The number of bytes to write.
+fpar(uint32_t*,wsize).It receives the number of bytes actually written. Can be <c>NULL</c>.
+fpar(perror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.This function will block the parent process if there is no space in the buffer to complete the write. When the child process reads <c>stdin</c> and free space, the writing will be completed and the parent process will continue its execution. <lh>Multi-processing examples</lh>.
+
+func(bproc_read_close).Close the <c>stdout</c> channel of child process.
+fret(bool_t).<c>TRUE</c> if the channel has been closed. <c>FALSE</c> if it was already closed.
+fpar(Proc*,proc).Process handler.
+fnote.This function allows ignoring the output of the child process, preventing blockages due to channel saturation. <lh>Launching processes</lh>.
+
+func(bproc_eread_close).Close the <c>stderr</c> channel of child process.
+fret(bool_t).<c>TRUE</c> if the channel has been closed. <c>FALSE</c> if it was already closed.
+fpar(Proc*,proc).Process handler.
+fnote.This function allows ignoring the error output of the child process, preventing blockages due to channel saturation. <lh>Launching processes</lh>.
+
+func(bproc_write_close).Close the <c>stdin</c> channel of child process.
+fret(bool_t).<c>TRUE</c> if the channel has been closed. <c>FALSE</c> if it was already closed.
+fpar(Proc*,proc).Process handler.
+fnote.Some processes need to read all the <c>stdin</c> content before starting work. When closing the channel, the child process receives the signal <c>EOF</c> <i>End-Of-File</i> in <c>stdin</c>. <lh>Launching processes</lh>.
+
+func(bproc_exit).End the current process (the caller) and all its execution children.
+fpar(const uint32_t,code).The exit code of the process.

@@ -1,0 +1,552 @@
+
+h1.Layout
+
+p.Un <b>Layout</b> es una rejilla virtual y transparente vinculada siempre con un <lt>Panel</lt> que sirve para ubicar los diferentes elementos de la interfaz <r>simple_layout</r>. Sus celdas interiores tienen la capacidad de dimensionarse automáticamente en función de su contenido, con lo que se consigue una gran portabilidad debido a que no es necesario indicar coordenadas ni tamaños específicos para los controles. Para ilustrar el concepto, vamos a simplificar ligeramente el código de <lh>¡Hola Edit y UpDown!</lh> <r>basiclayout</r>, cuyo resultado podemos verlo en <r>basic_layout</r>.
+
+li.Utiliza <lf>layout_create</lf> para crear un nuevo layout.
+
+li.Utiliza <lf>layout_label</lf> y similares para ubicar controles en las diferentes celdas.
+
+img(simple_layout.svg,420,.5).Un layout sirve para ubicar controles en el área del panel.
+Representación de diferentes controles de interfaz ubicados en filas y columnas.
+
+code(cpp,basiclayout).Layout de dos columnas y cinco filas.
+Layout *layout = layout_create(2, 5);
+Label *label1 = label_create();
+Label *label2 = label_create();
+Label *label3 = label_create();
+Label *label4 = label_create();
+Label *label5 = label_create();
+Edit *edit1 = edit_create();
+Edit *edit2 = edit_create();
+Edit *edit3 = edit_create();
+Edit *edit4 = edit_create();
+Edit *edit5 = edit_create();
+label_text(label1, "User Name:");
+label_text(label2, "Password:");
+label_text(label3, "Address:");
+label_text(label4, "City:");
+label_text(label5, "Phone:");
+edit_text(edit1, "Amanda Callister");
+edit_text(edit2, "aQwe56nhjJk");
+edit_text(edit3, "35, Tuam Road");
+edit_text(edit4, "Galway - Ireland");
+edit_text(edit5, "+35 654 333 000");
+edit_passmode(edit2, TRUE);
+layout_label(layout, label1, 0, 0);
+layout_label(layout, label2, 0, 1);
+layout_label(layout, label3, 0, 2);
+layout_label(layout, label4, 0, 3);
+layout_label(layout, label5, 0, 4);
+layout_edit(layout, edit1, 1, 0);
+layout_edit(layout, edit2, 1, 1);
+layout_edit(layout, edit3, 1, 2);
+layout_edit(layout, edit4, 1, 3);
+layout_edit(layout, edit5, 1, 4);
+code.
+
+img(basic_layout.png,0,.3).Resultado de <r>basiclayout</r>.
+Imagen de un sencillo formulario con cinco etiquetas y cinco editbox.
+
+h2.Dimensionado natural
+
+p.El resultado de <r>basic_layout</r>, si bien no es muy estético, es lo que denominamos <b>dimensionado natural</b> que es la maquetación por defecto aplicada en función del contenido de las celdas. En <r>dimnat</r> tienes las medidas por defecto de cada control. El ancho de columna se fija al del elemento más ancho y de igual forma se calcula la altura de las filas. El tamaño final del layout será la suma de las medidas tanto de columnas como de filas.
+
+table(dimnat).Dimensionado natural de controles.
+row.
+p.Control
+p.Anchura
+p.Altura
+row.
+p.<lt>Label</lt>
+p.Ajustado al texto.
+p.Ajustado al texto considerando <c>'\n'</c>.
+row.
+p.<lt>Button</lt> (push)
+p.Ajustado al texto + márgen.
+p.Según el tema del S.O.
+row.
+p.<lt>Button</lt> (check/radio)
+p.Ajustado al texto + icono.
+p.Ajustado al icono.
+row.
+p.<lt>Button</lt> (flat)
+p.Ajustado al icono + margen.
+p.Ajustado al icono + margen.
+row.
+p.<lt>PopUp</lt>
+p.Ajustado al texto mas largo.
+p.Según el tema del S.O.
+row.
+p.<lt>Edit</lt>
+p.100 Unidades (px).
+p.Ajustado al texto + margen.
+row.
+p.<lt>Combo</lt>
+p.100 Unidades (px).
+p.Según el tema del S.O.
+row.
+p.<lt>UpDown</lt>
+p.Según el tema del S.O.
+p.Según el tema del S.O.
+row.
+p.<lt>Slider</lt> (horizontal)
+p.100 Unidades (px).
+p.Según el tema del S.O.
+row.
+p.<lt>Slider</lt> (vertical)
+p.Según el tema del S.O.
+p.100 Unidades (px).
+row.
+p.<lt>Progress</lt>
+p.100 Unidades (px).
+p.Según el tema del S.O.
+row.
+p.<lt>View</lt>
+p.128 px o <lf>view_size</lf>.
+p.128 px o <lf>view_size</lf>.
+row.
+p.<lt>Panel</lt>
+p.Dimensión natural.
+p.Dimensión natural.
+table.
+
+p.Los márgenes y constantes aplicados a los controles son los necesarios para cumplir con las <b>human guidelines</b> de cada gestor de ventanas. Esto quiere decir que un <i>PushButton</i> con el texto <c>"Hello"</c> no tendrá las mismas dimensiones en WindowsXP que en macOS Mavericks o Ubuntu 16.
+
+bq.Las celdas vacías se dimensionarán con tamaño 0 y no afectarán a la composición.
+
+h2.Márgenes y formato
+
+p.El dimensionado natural que acabamos de ver ajusta el panel al tamaño mínimo necesario para albergar correctamente todos los controles, pero no siempre resulta estético. Podemos darle forma añadiendo márgenes o forzando un tamaño determinado para filas y columnas <r>formatlayout</r> <r>format_layout</r>.
+
+li.Utiliza <lf>layout_hsize</lf> para forzar la anchura de una columna.
+
+li.Utiliza <lf>layout_vsize</lf> para forzar la altura de una fila.
+
+li.Utiliza <lf>layout_hmargin</lf> para establecer un margen inter-columnas.
+
+li.Utiliza <lf>layout_vmargin</lf> para establecer un margen inter-filas.
+
+li.Utiliza <lf>layout_margin</lf> para establecer un margen en el borde del layout.
+
+code(cpp,formatlayout).Aplicando formato a <r>basiclayout</r>.
+layout_hsize(layout, 1, 235);
+layout_hmargin(layout, 0, 5);
+layout_vmargin(layout, 0, 5);
+layout_vmargin(layout, 1, 5);
+layout_vmargin(layout, 2, 5);
+layout_vmargin(layout, 3, 5);
+layout_margin(layout, 10);
+code.
+
+img(format_layout.png,0,.50).Resultado de <r>formatlayout</r>.
+Vista de un panel al que se le han aplicado márgenes.
+
+h2.Alineación
+
+p.Es habitual que la anchura un control sea inferior a la anchura de la columna que lo contiene, bien porque se ha forzado un ancho fijo o bien porque existan elementos más anchos en la misma columna. En estos casos, podemos indicar la alineación horizontal o vertical del control respecto a la celda <r>column_align</r>. En <r>alindef</r> tienes las alineaciones por defecto.
+
+li.Utiliza <lf>layout_halign</lf> para cambiar la alineación horizontal de una celda.
+
+li.Utiliza <lf>layout_valign</lf> para cambiar la alineación vertical de una celda.
+
+img(column_align.svg,360,.5).Alineación horizontal.
+Controles alineados a izquierda, derecha, centro o justificados.
+
+table(alindef).Alineación por defecto de controles.
+row.
+p.Control
+p.Horizontal
+p.Vertical
+row.
+p.<lt>Label</lt>
+p.<lt>ekLEFT</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Button</lt> (push)
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Button</lt> (check/radio)
+p.<lt>ekLEFT</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Button</lt> (flat)
+p.<lt>ekLEFT</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>PopUp</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Edit</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekTOP</lt>
+row.
+p.<lt>Edit</lt> (multiline)
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Combo</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>UpDown</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Slider</lt> (horizontal)
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Slider</lt> (vertical)
+p.<lt>ekCENTER</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Progress</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>View</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Panel</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Layout</lt> (sublayout)
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+table.
+
+h2.Sub-layouts
+
+p.Consideremos ahora el panel de <r>complex_layout</r>. No es difícil darse cuenta que esta disposición no encaja de ninguna manera en una rejilla rectangular, por lo que ha llegado el momento de utilizar <b>sublayouts</b>. Además de controles individuales, una celda admite también otro layout, por lo que podemos dividir el panel original en tantas partes como sean necesarias hasta conseguir la maquetación deseada. El layout principal irá dimensionando cada sublayout de forma recursiva e integrándolo en la composición final. En <lh>¡Hola Sublayout!</lh> tienes el código que genera este ejemplo.
+
+li.Utiliza <lf>layout_layout</lf> para asignar un layout completo a una celda de otro layout.
+
+img(complex_layout.png,0,.75).Composición de panel compleja.
+Ventana con diferentes controles organizados en bloques.
+
+p.En este caso hemos aplicado la filosofía del divide y vencerás, hasta asegurar que cada parte encaje en una rejilla individual <r>sublayouts</r>. Cada sublayout lo hemos codificado en una función independiente para darle mayor consistencia al código, aplicando márgenes y formato de forma individual dentro de cada una de ellas <r>subcode</r>. 
+
+img(sublayouts.svg,520,.75).Sublayouts necesarios para componer el panel de <r>complex_layout</r>.
+Esquema que muestra los límites de cada sub-layout.
+
+code(cpp,subcode).Integración de sublayouts (parcial).
+static Layout *i_main_layout(void)
+{
+    Layout *layout1 = layout_create(1, 2);
+    Layout *layout2 = i_top_layout();
+    Layout *layout3 = i_bottom_layout();
+    layout_layout(layout1, layout2, 0, 0);
+    layout_layout(layout1, layout3, 0, 1);
+    layout_margin(layout1, 5);
+    layout_vmargin(layout1, 0, 5);
+    return layout1;
+}
+code.
+
+h2.Expansión de celdas
+
+p.En ciertas ocasiones, el tamaño de un layout viene forzado por condiciones externas. Esto ocurre cuando tenemos un sublayout en una celda con alineación <lt>ekJUSTIFY</lt> (expansión interna) o cuando el usuario cambia el tamaño de una ventana re-dimensionable (expansión externa). Esto producirá un "exceso de píxeles" entre el dimensionado natural y el tamaño real de la celda <r>layout_expand</r>. Esta situación se resuelve repartiendo el sobrante por igual entre todas las columnas del sublayout, que a su vez, se irán expandiendo de forma recursiva hasta llegar a una celda vacía o un control individual. Podemos cambiar este reparto equitativo mediante estas funciones:
+
+li.Utiliza <lf>layout_hexpand</lf> para expandir una única celda y dejar el resto con su tamaño por defecto.
+
+li.Utiliza <lf>layout_hexpand2</lf> para expandir dos celdas indicando la proporción de crecimiento de cada una.
+
+li.Utiliza <lf>layout_hexpand3</lf> para expandir tres celdas.
+
+img(layout_expand.svg,520,.65).Cuando el tamaño del sublayout viene dado por condiciones externas, se reparte por igual el exceso de píxeles entre las columnas (expansión horizontal) y filas (expansión vertial).
+Comportamiento de un sublayout cuando su tamaño se expande para ajustarse a una celda.
+
+bq.La expansión vertical funciona exactamente igual, repartiendo el espacio sobrante entre las filas del layout.
+
+func(layout_create).Crea un nuevo layout especificando el número de columnas y filas.
+fret(Layout*).El nuevo layout.
+fpar(const uint32_t,ncols).El número de columnas.
+fpar(const uint32_t,nrows).El número de filas.
+
+func(layout_cell).Obtiene una celda del layout.
+fret(Cell*).La celda.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_label).Inserta un control <lt>Label</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(Label*,label).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_button).Inserta un control <lt>Button</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(Button*,button).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_popup).Inserta un control <lt>PopUp</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(PopUp*,popup).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_edit).Inserta un control <lt>Edit</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(Edit*,edit).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_combo).Inserta un control <lt>Combo</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(Combo*,combo).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_updown).Inserta un control <lt>UpDown</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(UpDown*,updown).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_slider).Inserta un control <lt>Slider</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(Slider*,slider).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_progress).Inserta un control <lt>Progress</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(Progress*,progress).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_view).Inserta una vista <lt>View</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(View*,view).La vista a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_textview).Inserta un control <lt>TextView</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(TextView*,view).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_imageview).Inserta un control <lt>ImageView</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(ImageView*,view).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_panel).Inserta un control <lt>Panel</lt> en un layout.
+fpar(Layout*,layout).El layout.
+fpar(Panel*,panel).El control a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_layout).Inserta un layout en una celda de otro layout.
+fpar(Layout*,layout).El layout principal.
+fpar(Layout*,sublayout).El layout a insertar.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_label).Obtiene el <lt>Label</lt> de una celda.
+fret(Label*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_button).Obtiene el <lt>Button</lt> de una celda.
+fret(Button*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_popup).Obtiene el <lt>PopUp</lt> de una celda.
+fret(PopUp*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_edit).Obtiene el <lt>Edit</lt> de una celda.
+fret(Edit*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_combo).Obtiene el <lt>Combo</lt> de una celda.
+fret(Combo*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_updown).Obtiene el <lt>UpDown</lt> de una celda.
+fret(UpDown*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_slider).Obtiene el <lt>Slider</lt> de una celda.
+fret(Slider*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_progress).Obtiene el <lt>Progress</lt> de una celda.
+fret(Progress*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_view).Obtiene el <lt>View</lt> de una celda.
+fret(View*).La vista.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_textview).Obtiene el <lt>TextView</lt> de una celda.
+fret(TextView*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_get_imageview).Obtiene el <lt>ImageView</lt> de una celda.
+fret(ImageView*).El control.
+fpar(const Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+
+func(layout_taborder).Establece como se moverá el foco del teclado al pulsar <c>[TAB]</c>.
+fpar(Layout*,layout).El layout.
+fpar(const orient_t,order).Recorrido por filas o columnas.
+
+func(layout_hsize).Establece un ancho fijo para la columna de un layout.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col).Índice de la columna.
+fpar(const real32_t,width).Anchura.
+
+func(layout_vsize).Fuerza un alto fijo para la fila de un layout.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,row).Índice de la fila.
+fpar(const real32_t,height).Altura.
+
+func(layout_hmargin).Establece un margen inter-columna dentro del layout. Es la separación entre dos columnas consecutivas.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col).Índice de la columna. El índice 0 se refiere a la separación entre la columna 0 y la columna 1. <c>ncols-2</c> es el máximo valor aceptado.
+fpar(const real32_t,margin).Margen.
+
+func(layout_vmargin).Establece un margen inter-fila dentro del layout. Es la separación entre dos filas consecutivas.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,row).Índice de la fila. El índice 0 se refiere a la separación entre la fila 0 y la fila 1. <c>nrows-2</c> es el máximo valor aceptado.
+fpar(const real32_t,margin).Margen.
+
+func(layout_hexpand).Establece la columna que se expandirá horizontalmente.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col).Índice de la columna.
+fnote.Ver <lh>Expansión de celdas</lh>.
+
+func(layout_hexpand2).Establece las dos columnas que se expandirán horizontalmente.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col1).Índice de la columna 1.
+fpar(const uint32_t,col2).Índice de la columna 2.
+fpar(const real32_t,exp).Expansión de <c>col1</c> entre 0 y 1.
+fnote.La expansión de <c>col2 = 1 - exp</c>. Ver <lh>Expansión de celdas</lh>.
+
+func(layout_hexpand3).Establece las tres columnas que se expandirán horizontalmente.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col1).Índice de la columna 1.
+fpar(const uint32_t,col2).Índice de la columna 2.
+fpar(const uint32_t,col3).Índice de la columna 3.
+fpar(const real32_t,exp1).Expansión de <c>col1</c> entre 0 y 1.
+fpar(const real32_t,exp2).Expansión de <c>col2</c> entre 0 y 1.
+fnote.<c>exp1 + exp2 <<> = 1</c>. La expansión de <c>col3 = 1 - exp1 - exp2</c>. Ver <lh>Expansión de celdas</lh>.
+
+func(layout_vexpand).Establece la fila que se expandirá verticalmente.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,row).Índice de la fila.
+fnote.Ver <lh>Expansión de celdas</lh>.
+
+func(layout_vexpand2).Establece las dos filas que se expandirán verticalmente.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,row1).Índice de la fila 1.
+fpar(const uint32_t,row2).Índice de la fila 2.
+fpar(const real32_t,exp).Expansión de <c>row1</c> entre 0 y 1.
+fnote.La expansión de <c>row2 = 1 - exp</c>. Ver <lh>Expansión de celdas</lh>.
+
+func(layout_vexpand3).Establece las tres filas que se expandirán verticalmente.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,row1).Índice de la fila 1.
+fpar(const uint32_t,row2).Índice de la fila 2.
+fpar(const uint32_t,row3).Índice de la fila 3.
+fpar(const real32_t,exp1).Expansión de <c>row1</c> entre 0 y 1.
+fpar(const real32_t,exp2).Expansión de <c>row2</c> entre 0 y 1.
+fnote.<c>exp1 + exp2 <<> = 1</c>. La expansión de <c>row3 = 1 - exp1 - exp2</c>. Ver <lh>Expansión de celdas</lh>.
+
+func(layout_halign).Establece la alineación horizontal de una celda. Tendrá efecto cuando la columna sea más ancha que la celda.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+fpar(const align_t,align).Alineación horizontal.
+
+func(layout_valign).Establece la alineación vertical de una celda. Tendrá efecto cuando la fila sea más alta que la celda.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+fpar(const align_t,align).Alineación vertical.
+
+func(layout_show_col).Muestra u oculta una columna del layout.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col).Índice de columna.
+fpar(const bool_t,visible).Visible u oculta.
+
+func(layout_show_row).Muestra u oculta una fila del layout.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,row).Índice de fila.
+fpar(const bool_t,visible).Visible u oculta.
+
+func(layout_margin).Establece un margen uniforme para el borde del layout.
+fpar(Layout*,layout).El layout.
+fpar(const real32_t,mall).Margen para los cuatro lados (izquierda, derecha, arriba y abajo).
+
+func(layout_margin2).Establece un margen horizontal y vertical para el borde del layout.
+fpar(Layout*,layout).El layout.
+fpar(const real32_t,mtb).Margen superior e inferior.
+fpar(const real32_t,mlr).Margen izquierdo y derecho.
+
+func(layout_margin4).Establece márgenes para el borde del layout.
+fpar(Layout*,layout).El layout.
+fpar(const real32_t,mt).Margen del borde superior.
+fpar(const real32_t,mr).Margen del borde derecho.
+fpar(const real32_t,mb).Margen del borde inferior.
+fpar(const real32_t,ml).Margen del borde izquierdo.
+
+func(layout_bgcolor).Asigna un color de fondo al layout.
+fpar(Layout*,layout).El layout.
+fpar(const color_t,color).El color. Pasando <c>ekCOLOR_TRANSPARENT</c> se restablece el color por defecto.
+
+func(layout_skcolor).Asigna un color al borde del layout.
+fpar(Layout*,layout).El layout.
+fpar(const color_t,color).El color. Pasando <c>ekCOLOR_TRANSPARENT</c> se restablece el color por defecto.
+
+func(layout_update).Actualiza la ventana asociada con el layout.
+fpar(Layout*,layout).El layout.
+fnote.Es equivalente a llamar a <lf>window_update</lf>.
+
+func(layout_dbind).Asocia un tipo <c>struct</c> con un layout.
+fpar(Layout*,layout).El layout.
+fpar(Listener*,listener).Notificará a través de este <c>listener</c> cada vez que el objeto cambie. Puede ser <c>NULL</c>.
+fpar(,type).El tipo de <c>struct</c>.
+fcode.
+layout_dbind(layout, Product);
+fcode.
+
+func(layout_dbind_obj).Asocia un objeto con un layout para visualizarlo y editarlo.
+fpar(Layout*,layout).El layout.
+fpar(type*,obj).El objeto a editar.
+fpar(,type).El tipo del objeto.
+fcode.
+Product *product = i_create(...);
+layout_dbind_obj(layout, product, Product);
+fcode.

@@ -1,0 +1,31 @@
+
+h1.Contenedores 2D
+
+p.Los contenedores 2D o <i>(Bounding boxes)</i> delimitan la zona del plano que ocupan diferentes elementos geométricos <r>bounding_box2d</r>. Son útiles en la detección de colisiones u operaciones de recortado <i>(clipping)</i>, que impiden que se dibujen figuras no visibles, mejorando el rendimiento global.
+
+img(bounding_box2d.svg,520,.65).Contenedor con varios elementos geométricos.
+Dibujo de un plano donde aparece un contenedor 2D que integra varias figuras.
+
+func(B2D,null).Comprueba si un contendor es nulo (sin dimensión).
+fret(bool_t).<c>TRUE</c> si es nulo, <c>FALSE</c> si contiene alguna geometría.
+fpar(const B2D*,box).El contenedor.
+
+func(B2D,add).Amplia las dimensiones del contenedor para albergar al punto de entrada. Si el punto ya está dentro de su área, las dimensiones no se modificarán.
+fpar(B2D*,box).El contenedor.
+fpar(const V2D*,p).El punto a incluir.
+
+func(B2D,addn).Amplia las dimensiones del contenedor para albergar varios puntos. Es equivalente a llamar sucesivas veces al método <lf>b2d_addf</lf>.
+fpar(B2D*,box).El contenedor.
+fpar(const V2D*,p).Vector de puntos a incluir.
+fpar(const uint32_t,n).Número de puntos.
+
+func(B2D,merge).Amplia las dimensiones de <c>dest</c> para contener a <c>src</c>.
+fpar(B2D*,dest).El contenedor que será ampliada.
+fpar(const B2D*,src).El contenedor que debe ser añadido.
+
+func(B2D,overlap).Comprueba si dos contenedores están solapados.
+fret(bool_t).<c>TRUE</c> si están solapados, <c>FALSE</c> si son disjuntos.
+fpar(const B2D*,box1).Primera caja.
+fpar(const B2D*,box2).Segunda caja.
+
+const(B2D,NULL).Representa un contenedor nulo (sin geometría).

@@ -1,0 +1,87 @@
+
+
+h1.Punteros
+
+ep.Manipulación segura de punteros.
+
+p.La librería <i>sewer</i> proporciona macros y funciones para la manipulación "segura" de punteros. Por "seguro" entendemos el hecho de que el SDK detectará el acceso indebido a un puntero justamente antes de que se produzca una <i>violación de segmento</i>. ¿Que sentido tiene detectar accesos indebidos a memoria, si el programa va a fallar de todos modos? La detección previa juega un papel muy importante al ejecutar tests automatizados. Antes del inevitable cierre del proceso, dejará un apunte en el registro de ejecución <i>log.txt</i>, indicando el motivo del cierre.
+
+code.
+// v2 = NULL
+// Segmentation fault
+V2Df v1 = *v2;
+
+// "v2 is NULL in file::line" 
+// will be record in log.txt
+// and then, Segmentation fault
+V2Df v1 = ptr_get(v2, V2Df);  
+code.
+
+func(ptr_get).Acceso al contenido del puntero (dereferencia), verificando previamente que no sea <c>NULL</c>.
+fpar(type*,ptr).Puntero.
+fpar(,type).Tipo de puntero.
+fcode.
+void compute(const V2Df *v1, const V2Df *v2)
+{
+    /* Safer than t = *v1; */
+    V2Df t = ptr_get(v1, V2Df);
+    ...
+}
+fcode.
+
+func(ptr_dget).Accede al contenido de un doble puntero, invalidándolo posteriormente.
+fpar(type**,ptr).Double puntero.
+fpar(,type).Tipo de puntero.
+fcode.
+Ctrl *create(Model **model, View **view)
+{
+    Ctrl *ctrl = heap_new(Ctrl);
+    ctrl->model = ptr_dget(model, Model);
+    ctrl->view = ptr_dget(view, View);
+    // *model = NULL
+    // *view = NULL
+    return ctrl;
+}
+fcode.
+
+func(ptr_dget_no_null).Igual que <c>ptr_dget</c>, pero el contenido del double puntero (<c>*dptr</c>) no puede ser <c>NULL</c>.
+fpar(type**,ptr).Double puntero.
+fpar(,type).Tipo de puntero.
+fcode.
+Ctrl *create(Model **model, View **view)
+{
+    // *model and *view can't be NULL
+    Ctrl *ctrl = heap_new(Ctrl);
+    ctrl->model = ptr_dget_no_null(model, Model);
+    ctrl->view = ptr_dget_no_null(view, View);
+    return ctrl;
+}
+fcode.
+
+func(ptr_assign).Asigna el contenido de un puntero a otro, si el destino no es <c>NULL</c>.
+fpar(,dest).Puntero destino.
+fpar(,src).Puntero origen.
+
+func(ptr_destopt).Destruye un objeto, si no es <c>NULL</c>.
+fpar(FPtr_destroy,func_destroy).Destructor.
+fpar(type,dptr).Doble puntero al objeto a destruir.
+fpar(,type).Tipo de objeto.
+fcode.
+cassert_no_null(dptr);
+if (*dptr != NULL)
+{
+    func_destroy(*dptr);
+    *dptr = NULL;
+}
+fcode.
+
+func(ptr_copyopt).Copia el objeto si no es <c>NULL</c>.
+fpar(FPtr_copy,func_copy).Constructor de copia.
+fpar(type,ptr).Objeto a copiar (origen).
+fpar(,type).Tipo de objeto.
+fcode.
+if (ptr != NULL)
+    return func_copy(ptr);
+else
+    return NULL;
+fcode.

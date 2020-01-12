@@ -1,0 +1,265 @@
+langrev.
+h1.Sets - Binary search trees
+
+ep.Data container where the elements are stored in the form of a binary tree, optimizing searches, insertions or deletions. For sets of pointers consult <lp>setpt</lp>.
+
+p.Like <i>arrays</i> <b>binary search trees (BST)</b>, also known as sets or maps, are containers that allow us to work with a collection of objects. The main difference with the first ones is that the elements are not stored linearly in contiguous positions of memory, but use a tree-shaped structure where each node has two descendants <r>createset</r> <r>rbtree</r>.
+
+code(cpp,createset).Creation of arrays and sets.
+typedef struct _product_t Product;
+struct _product_t
+{
+    type_t type;
+    String *code;
+    String *description;
+    Image *image64;
+    real32_t price;
+};
+
+static int i_compare(const Product *p1, const Product *p2)
+{
+    return str_scmp(p1->code, p2->code);
+}
+
+ArrSt(Product) *arrst = arrst_create(Product);
+ArrPt(Product) *arrpt = arrpt_create(Product);
+SetSt(Product) *setst = setst_create(i_compare, Product);
+SetPt(Product) *setpt = setpt_create(i_compare, Product);
+code.
+
+img(rbtree.svg,360,.5).Array and set representation.
+Representation of a set of elements in array and in a search tree.
+
+p.<i>BSTs</i> are structures optimized for cases where insertions, deletions and searches are very frequent. They are permanently sorted, hence it is possible to insert, delete or locate any element in logarithmic time <c>O(logn)</c>, no need to use sort functions like <lf>arrst_sort</lf> <r>insert_delete_tree</r>. For maintenance to be carried out efficiently, the tree that supports the structure must meet a number of characteristics:
+
+img(insert_delete_tree.svg,600,.8).In search trees the insertion or deletion does not break the order of the set.
+Scheme showing insertion or deletion of an element in a binary search tree.
+
+li.<b>Binary</b> : Each node can only have 0, 1 or 2 children.
+
+li.<b>Sorted</b> : All descendants to the left of a node are of lesser value and those to the right of greater value. The order and search criteria are set in the constructor by a comparison function (<c>i_compare</c> in the previous example) and cannot be changed during the lifetime of the container. The new elements will be inserted in their correct position according to this order. It does not support duplicate elements or in arbitrary positions.
+
+li.<b>Balanced</b>: A tree can fulfill the two previous properties, but have degenerated to a list where searches can no longer be resolved in logarithmic time <r>degenerate_tree</r>. Internally, the NAppGUI <c>Set</c> containers are implemented with the so called <i>red-black trees</i>, where a maximum height of <c>2log(n+1)</c> is guaranteed. This is achieved by restructuring the tree after each insertion or deletion, so adding a new element (or removing it) is resolved in a maximum of <c>O(logn)</c>. This is much faster than in arrays, where have to move all the elements to insert a record in a specific position, with an associated cost of <c>O(n)</c>.
+
+img(degenerate_tree.svg,360,.5).Degenerated and balanced search tree.
+Comparison of a degenerated (to a list) and balanced search tree.
+
+p.As we saw in <lh>Registers or pointers</lh>, we have two modalities when creating sets <r>setst_vs_setpt</r>. The register-based version is more efficient than the pointer-based version, although less flexible.
+
+li.Use <lf>setst_create</lf> to create a set of registers.
+
+li.Use <lf>setpt_create</lf> to create a set of pointers.
+
+img(setst_vs_setpt.svg,640,.9).Sets of registers and pointers.
+Comparison of recordsets and pointersets.
+
+h2.Iterators
+
+p.We cannot access the elements of a set using a random index, as was the case with arrays. The nodes are dispersed in different memory areas, which prevents calculating the position of a particular element from a base address. An iterator is nothing more than a pointer within the set that acts as a marker for the currently selected element <r>iterator</r>. From a specific position, we can move to the previous or subsequent element, but never make arbitrary jumps. We can control the position of the iterator with different functions:
+
+img(iterator.svg,400,.6).The iterators allow us to move through the structure.
+Shows the behavior of an iterator pointer within a search tree.
+
+li.Use <lf>setst_get</lf> to search for an item. The iterator will be fixed on it.
+
+li.Use <lf>setst_next</lf> to move the iterator to the next item.
+
+li.Use <lf>setst_prev</lf> to move the iterator to the previous item.
+
+li.Use <lf>setst_first</lf> to move the iterator to the first element of the set.
+
+li.Use <lf>setst_last</lf> to move the iterator to the last element of the set.
+
+h2.Arrays vs Sets comparative
+
+p.We have performed a test to see the behavior of these two types of structures in real situations, apart from mere theory <r>arrsettest</r>. The structure used has been <c>Product</c> described in <r>createset</r>. We will compare six types of containers <c>ArrSt(Product)</c> and <c>ArrPt(Product)</c> (unsorted), <c>ArrSt(Product)</c> and <c>ArrPt(Product)</c> (sorted), <c>SetSt(Product)</c> and <c> SetPt(Product)</c>.
+
+li.The items will be sorted by <c>code</c> field using the method <c>i_compare</c> described in <r>createset</r>.
+
+li.The elements have been created previously and reside in memory. Times only reflect the management performed by the containers.
+
+li.Field <c>code</c> take values from <c>"0"</c> until <c>"n-1"</c>, where <c>n=100,000</c> is the number of elements. The elements have been previously messed up using the function <lf>bmem_shuffle_n</lf>.
+
+li.The tests have been performed on a <b>Raspberry Pi 3 Model B</b> with NAppGUI compiled in Release version (<lh>Configurations</lh>). We have chosen this platform because of its clear technical inferiority with respect to others. In this way the asymptotic difference is more evident.
+
+table(arrsettest).Results of the comparison (in seconds).
+row.
+p.Operation
+p.ArrSt
+p.ArrPt
+p.ArrSt-Sort
+p.ArrPt-Sort
+p.SetSt
+p.SetPt
+row.
+p.Add(100k)
+p.0.006
+p.0.004
+p.27.600
+p.2.896
+p.0.159
+p.0.274
+row.
+p.Loop(100k)
+p.0.000
+p.0.000
+p.0.000
+p.0.000
+p.0.022
+p.0.025
+row.
+p.Search(100k)
+p.84.139
+p.588.080
+p.0.101
+p.0.218
+p.0.121
+p.0.232
+row.
+p.Sort(100k)
+p.0.085
+p.0.205
+p.-
+p.-
+p.-
+p.-
+row.
+p.Delete(100k)
+p.0.004
+p.0.003
+p.31.198
+p.3.064
+p.0.171
+p.0.253
+table.
+
+p.In view of these data, we can reach the following conclusions:
+
+li.Linear searches <c>O(n)</c> are tremendously slow.
+
+li.Keeping an array sorted after each insertion or deletion is expensive. It is more efficient to add all the elements and then order, although this will not always be possible. If the elements enter or leave arbitrarily but the set must always be ordered, it is better to use Sets.
+
+li.Register-based containers are more efficient in queries, but less when inserting or deleting. However, this test does not include the time to create or release dynamic memory, something inherent in pointer containers.
+
+li.Iterating in arrays is almost free, but iterating in sets has a small cost due to the logic of jumping between nodes.
+
+li.We cannot say that one container is better than another in general. It will depend on each specific case.
+
+li.For small groups (less than 1000 elements) the differences are practically imperceptible.
+
+li.For extremely small groups (up to 100 items) always use arrays. The asymptotic Sets improvement is marred by the much more efficient implementation of the Arrays.
+
+func(setst_create).Create an empty set of registers.
+fret(SetSt(type)*).The new set.
+fpar(FPtr_compare,func_compare).Function to compare two elements. <lh>Sort and search</lh>.
+fpar(,type).Object type.
+
+func(setst_destroy).Destroy a set and all its elements.
+fpar(SetSt(type)**,set).The set. Will be set to <c>NULL</c> after destruction.
+fpar(FPtr_remove,func_remove).Function that must free the memory associated with the object's fields, but not the object itself <lh>Destructors</lh>. If it is <c>NULL</c> only the set will be released and not the internal content of the elements.
+fpar(,type).Object type.
+
+func(setst_size).Get the number of set elements.
+fret(uint32_t).Number of items.
+fpar(const SetSt(type)*,set).The set.
+fpar(,type).Object type.
+
+func(setst_get).Search for an item in <c>O(logn)</c>. It is equivalent to <lf>arrst_bsearch</lf>. If exists, the internal structure iterator will be fixed in it.
+fret(type*).Pointer to the item if it exists, or <c>NULL</c> if not.
+fpar(SetSt(type)*,set).The set.
+fpar(type*,key).Search key. It is a pointer to an object where only the relevant search fields must be initialized.
+fpar(,type).Object type.
+fcode.
+Product key;
+Product *pr;
+key.id = 453;
+pr = setst_get(setst, &key, Product);
+fcode.
+fnote.<lh>Iterators</lh>.
+
+func(setst_insert).Insert a new item in the set.
+fret(type*).Pointer to the inserted element, which should be used to initialize the object. If an item with the same key already exists, it returns <c>NULL</c>.
+fpar(SetSt(type)*,set).The set.
+fpar(type*,key).Key to insert. It is a pointer to an object where only the relevant search fields must be initialized.
+fpar(,type).Object type.
+fnote.Inserting or deleting elements invalidates the internal set iterator <lh>Iterators</lh>. You must re-initialize it with <lf>setst_first</lf>.
+fcode.
+Product *pr;
+Product key;
+key.id = 345;
+pr = setst_insert(setst, &key, Product);
+if (pr != NULL)
+    i_init(pr, 345, 100.45f);
+else
+    error("Already exists");
+fcode.
+
+func(setst_delete).Remove an item from the set.
+fret(bool_t).<c>TRUE</c> if the item has been deleted, or <c>FALSE</c> if there is no item with that key.
+fpar(SetSt(type)*,set).The set.
+fpar(type*,key).Key to delete. It is a pointer to an object where only the relevant search fields must be initialized.
+fpar(FPtr_remove,func_remove).Remove function. See <lf>setst_destroy</lf>.
+fpar(,type).Object type.
+fnote.Inserting or deleting elements invalidates the internal set iterator <lh>Iterators</lh>. You must re-initialize it with <lf>setst_first</lf>.
+fcode.
+Product key;
+key.id = 345;
+if (setst_delete(setst, &key, product_remove, Product) == FALSE)
+    error("Doesn't exists");
+fcode.
+
+func(setst_first).Get the first set element and initialize the internal iterator.
+fret(type*).Pointer to the first element or <c>NULL</c> if the set is empty.
+fpar(SetSt(type)*,set).The set.
+fpar(,type).Object type.
+fnote.<lh>Iterators</lh>.
+
+func(setst_last).Get the last element of the set and initialize the internal iterator.
+fret(type*).Pointer to the last item or <c>NULL</c> if the set is empty.
+fpar(SetSt(type)*,set).The set.
+fpar(,type).Object type.
+fnote.<lh>Iterators</lh>.
+
+func(setst_next).Get the next set item, after increasing the internal iterator.
+fret(type*).Pointer to the next item or <c>NULL</c> if the iterator has reached the last.
+fpar(SetSt(type)*,set).The set.
+fpar(,type).Object type.
+fnote.Use <lf>setst_first</lf> to initialize the internal iterator <lh>Iterators</lh>.
+
+func(setst_prev).Gets the previous element of the set, after decrementing the internal iterator.
+fret(type*).Pointer to the previous item or <c>NULL</c> if the iterator has reached the first.
+fpar(SetSt(type)*,set).The set.
+fpar(,type).Object type.
+fnote.Use <lf>setst_last</lf> to initialize the internal iterator on reversed loops <lh>Iterators</lh>.
+
+func(setst_foreach).Go through all the elements of the set. Use <lf>setst_fornext</lf> to close the loop.
+fpar(type*,elem).Name of the variable 'element' within the loop. Adding the suffix <c>'_i'</c> we get the index.
+fpar(SetSt(type)*,set).The set.
+fpar(,type).Object type.
+fcode.
+setst_foreach(product, set, Product)
+    bstd_printf("Position:%d, Id:%d\n", product_i, product->id);
+setst_fornext(product, set, Product)
+fcode.
+
+func(setst_fornext).Close the loop opened by <lf>setst_foreach</lf>, increasing the internal iterator.
+fpar(type*,elem).Name of the variable 'element'. It must be the same as <c>setst_foreach</c>.
+fpar(SetSt(type)*,set).The set.
+fpar(,type).Object type.
+
+func(setst_foreach_rev).Go through all the elements of the set in reverse order. Use <lf>setst_forprev</lf> to close the loop.
+fpar(type*,elem).Name of the variable 'element' within the loop. Adding the suffix <c>'_i'</c> we get the index.
+fpar(SetSt(type)*,set).The set.
+fpar(,type).Object type.
+fcode.
+// Now in reverse order
+setst_foreach_rev(product, set, Product)
+    bstd_printf("Position:%d, Id:%d\n", product_i, product->id);
+setst_forprev(product, set, Product)
+fcode.
+
+func(setst_forprev).Close the loop opened by <lf>setst_foreach_rev</lf>, decreasing the internal iterator.
+fpar(type*,elem).Name of the variable 'element'. It must be the same as <c>setst_foreach_rev</c>.
+fpar(SetSt(type)*,set).The set.
+fpar(,type).Object type.
+

@@ -1,0 +1,26 @@
+
+h1.Bode
+
+p.En este proyecto abordamos la construcción de una interfaz de usuario interactiva para los <b>Diagramas de Bode</b>, herramienta muy utilizada en Ingeniería del Control <r>bode_win</r>.  El módulo de cálculo ha sido escrito en lenguaje C por <l>mailto:francisco.gil@ua.es''Javier Gil Chica</l>, profesor titular del Departamento de Física de la Universidad de Alicante. El código fuente al completo está disponible disponible en la carpeta <c>/src/demo/bode</c> de la distribución del SDK.
+
+img(bode_win.png,0,.65).Versión Windows.
+Captura de la versión Windows de Bode.
+
+img(bode_macos.png,0,.65).Versión macOS.
+Captura de la versión macOS de Bode.
+
+img(bode_linux.png,0,.65).Versión Linux Ubuntu.
+Captura de la versión Linux de Bode.
+
+img(bode_raspberry.png,0,.65).Versión Raspberry.
+Captura de la versión Raspberry de Bode.
+
+p.La ventana principal se ha dividido verticalmente en dos partes, mediante un <c>layout(2,1)</c> <r>bode_layout</r>. En la parte izquierda tenemos los parámetros <c>P, Q, T, R</c> y algunos botones. Se han utilizado los sublayouts <c>i_coeffs(4,9)</c> y <c>i_ranges(3,3)</c> para agrupar controles. En la zona de la derecha se ubican dos controles de dibujo <lt>View</lt> para las gráficas y otro sublayout <c>i_sliders(3,3)</c> con los parámetros <c>I, P, D</c>.
+
+p.El re-dimensionado horizontal se realiza íntegramente sobre la celda derecha (gráficas y sliders), manteniendo la zona de parámetros un tamaño horizontal constante. Durante el re-dimensionado vertical crecerán las gráficas con una proporción del 50% cada una. Para la parte izquierda, se ha reservado una celda vacía, que se expandirá horizontalmente, alineando el botón <c>[More Info]</c> al borde inferior de la ventana.
+
+img(bode_layout.svg,520,.65).Distribución de la interfaz de usuario de Bode.
+Esquema que muestra la división del espacio en la ventana de interfaz de Bode.
+
+codefile(demo/bode/bdview.c).
+

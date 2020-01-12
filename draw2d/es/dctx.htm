@@ -1,0 +1,212 @@
+
+h1.Contextos 2D
+
+p.Los gráficos vectoriales se componen a base de primitivas básicas tales como líneas, círculos, texto, etc, utilizando el algoritmo del pintor <r>painter_method</r>: Las operaciones entrantes se superponen o solapan a las ya existentes. El resultado se va almacenando en un búfer intermedio conocido como <i>canvas</i> o <i>surface</i>. Esta superficie de dibujo forma parte de un objeto denominado <b>contexto</b> que también mantiene ciertos parámetros relacionados con el aspecto de las primitivas: Colores, atributos de línea, sistema de referencia, gradientes, etc.
+
+img(painter_method.svg,-1,.65).El orden en que las primitivas de dibujo se envían al búfer del contexto influye en el resultado final.
+Diferencia en el dibujo cuando cambiamos el orden de las primitivas.
+
+p.Una de las ventajas de trabajar con formas paramétricas, es que pueden realizarse escalados de la imagen sin perdida de calidad <r>vector_vs_bitmap</r>. Esto es debido a que la conversión a píxeles, proceso denominado rasterización <r>rasterization</r>, se realiza en tiempo real y se ajusta constantemente al cambio de los vectores. En <lp>image</lp> bitmap, un aumento de tamaño tiene asociada una pérdida de calidad. 
+
+img(vector_vs_bitmap.svg,380,.5).Escalado vectorial y escalado bitmap.
+Diferencia entre gráficos vectoriales y bitmap al escalar.
+
+img(rasterization.svg,380,.5).Rasterización de un círculo.
+Círculo teórico (perfecto) y su conversión a píxeles.
+
+p.NAppGUI permite trabajar con dos tipos de contextos 2D <r>context_types</r>.
+
+li.Contexto ventana. El destino será un área dentro de una ventana de la interfaz de usuario gestionada por un control <lt>View</lt>. Este control mantiene su propio contexto de dibujo y lo envía "listo para usar" a través del evento <lt>EvDraw</lt> <r>wcontext</r>.
+
+code(cpp,wcontext).Dibujar en una ventana.
+static void i_OnDraw(App *app, Event *e)
+{
+    const EvDraw *p = event_params(e, EvDraw);
+
+    draw_clear(p->ctx, color_rgb(200, 200, 200));
+    draw_fill_color(p->ctx, color_rgb(0, 128, 0));
+    draw_rect(p->ctx, ekFILL, 100, 100, 200, 100);
+    draw_fill_color(p->ctx, color_rgb(0, 0, 255));
+    draw_circle(p->ctx, ekFILL, 450, 150, 75);
+}
+
+View *view = view_create();
+view_size(view, s2df(600, 400));
+view_OnDraw(view, listener(app, i_OnDraw, App));
+code.
+
+li.Contexto imagen. Aquí los comandos de dibujo se volcarán directamente en memoria para, posteriormente, obtener una imagen con el resultado final <r>icontext</r>.
+
+code(cpp,icontext).Dibujar en una imagen.
+static i_draw(void)
+{
+    Image *image = NULL;
+    DCtx *ctx = dctx_bitmap(600, 400, ekRGBA32);
+
+    draw_clear(ctx, color_rgb(200, 200, 200));
+    draw_fill_color(ctx, color_rgb(0, 128, 0));
+    draw_rect(ctx, ekFILL, 100, 100, 200, 100);
+    draw_fill_color(ctx, color_rgb(0, 0, 255));
+    draw_circle(ctx, ekFILL, 450, 150, 75);
+
+    image = dctx_image(&ctx);
+    image_to_file(image, "drawing.png", NULL);
+    image_destroy(&image);
+}
+code.
+
+img(context_types.svg,420,.5).Contextos ventana e imagen.
+Monitor con un contexto ventana y un módulo RAM con el contexto imagen.
+
+p.Como podemos observar, el dibujo en sí se realiza de la misma manera, lo único que cambia es como hemos obtenido el objeto <lt>DCtx</lt>. Esto permite que podamos escribir rutinas gráficas genéricas sin preocuparnos sobre cual será el destino del resultado final. En <lp>drawimg</lp> tienes un ejemplo completo del uso de contextos. Las imágenes que acompañan el resto del capítulo han sido obtenidas de esta aplicación.
+
+bq.Debido a que no es necesario disponer de una ventana para dibujar, draw2d puede utilizarse en aplicaciones de consola para componer o editar imágenes sin necesidad de visualizarlas.  
+
+h2.Sistemas de referencia
+
+p.El origen de coordenadas del dibujo se sitúa en la esquina superior izquierda <r>identity_transform</r>. Las <b>X</b> positivas se desplazan hacia la izquierda y las <b>Y</b> positivas hacia abajo. Las unidades se miden en píxeles (o puntos en <lh>Pantallas retina</lh>). Por ejemplo, el comando:
+
+code.
+draw_circle(ctx, ekSKFILL, 300, 200, 100);
+code.
+
+p(noindent).dibujará un círculo de 100 píxeles de radio cuyo centro se encuentra a 300 píxeles a la izquierda y 200 píxeles hacia abajo del origen. A este sistema inicial se le denomina <b>identidad</b> ya que todavía no ha sido manipulado, como veremos a continuación.
+
+img(identity_transform.svg,-1,.65).Sistema de referencia <b>identidad</b> en contextos 2D.
+Dibujo de varias formas geométricas, imágenes y textos sin aplicar ninguna transformación.
+
+bq.Aunque la escala inicial esté en píxeles, debemos desterrar la idea de que estamos manipulando directamente píxeles al dibujar. Los contextos de dibujo utilizan coordenadas en punto flotante. Por ejemplo, dibujar una línea entre los puntos (0.23, 1.432) y (-45.29, 12.6756) es perfectamente válido. Las transformaciones y el antialiasing pueden alterar ligeramente la posición o el grosor de ciertas líneas. Tampoco debemos esperar resultados "idénticos" a nivel de píxel al migrar las aplicaciones a diferentes plataformas, ya que cada sistema utiliza sus propios algoritmos de rasterización. Debemos pensar que estamos dibujando en el plano real. Para manipular directamente los píxeles de una imagen, consulta <lf>image_pixels</lf> y <lf>image_from_pixels</lf>. 
+
+p.Este sistema de referencia inicial se puede manipular mediante <lp>t2d</lp>. Las transformaciones más comunes en gráficos son: Traslaciones <r>codetras</r> <r>translate_transform</r>, Rotaciones <r>rottras</r> <r>rotate_transform</r> y Escalados <r>scaletras</r> <r>scale_transform</r>.
+
+li.<lf>draw_matrix</lf> cambiará el sistema de referencia del contexto.
+
+code(cpp,codetras).Traslación del origen de coordenadas 100 unidades en ambas direcciones.
+T2Df t2d;
+t2d_movef(&t2d, kT2D_IDENTITYf, 100, 100);
+draw_matrix(ctx, &t2d);
+i_draw(...);
+code.
+
+img(translate_transform.svg,-1,.65).Traslación <r>codetras</r>.
+Dibujo en el que se aplicado una traslación de 100, 100 píxeles.
+
+code(cpp,rottras).Rotación del origen de coordenadas 15 grados.
+T2Df t2d;
+t2d_rotatef(&t2d, kT2D_IDENTITYf, 15 * kBMATH_DEG2RADf);
+draw_matrix(ctx, &t2d);
+i_draw(...);
+code.
+
+img(rotate_transform.svg,-1,.65).Rotación <r>rottras</r>.
+Dibujo en el que se aplicado una rotación de 15 grados.
+
+code(cpp,scaletras).Escalado, reducción del tamaño a la mitad.
+T2Df t2d;
+t2d_scalef(&t2d, kT2D_IDENTITYf, .5f, .5f);
+draw_matrix(ctx, &t2d);
+i_draw(...);
+code.
+
+img(scale_transform.svg,-1,.65).Escalado <r>scaletras</r>.
+Dibujo en el que se aplicado un escalado del 50%.
+
+p.Las transformaciones se pueden acumular, pero debemos tener presente que no son operaciones conmutativas, sino que el orden en que se aplican influirá en el resultado final. Por ejemplo en <r>acumtras</r> <r>all_transform</r> observamos que el dibujo se ha desplazado <c>(100, 50)</c> píxeles, en lugar de los <c>(200, 100)</c>, debido a que la traslación está afectada por el escalado previo. Más detalles en <lh>Composición de transformaciones</lh>.
+
+code(cpp,acumtras).Composición de transformaciones.
+T2Df t2d;
+t2d_scalef(&t2d, kT2D_IDENTITYf, .5f, .5f);
+t2d_movef(&t2d, &t2d, 200, 100);
+t2d_rotatef(&t2d, &t2d, 15 * kBMATH_DEG2RADf);
+draw_matrix(ctx, &t2d);
+i_draw(...);
+code.
+
+img(all_transform.svg,-1,.65).Composición de transformaciones <r>acumtras</r>.
+Dibujo en el que se han aplicado varias transformaciones.
+
+h3.Sistemas cartesianos
+
+p.Existe una dicotomía al dibujar en 2D: Por un lado, tradicionalmente los sistemas de escritorio y las imágenes digitales sitúan el origen de coordenadas en la esquina superior izquierda con el eje Y creciendo hacia abajo <r>cartesian</r>. Por otro lado, los sistemas cartesianos utilizados en geometría lo sitúan en la esquina inferior izquierda, con Y creciendo hacia arriba. Esto genera un dilema sobre si un sistema es mejor que otro.
+
+img(cartesian.svg,580,.65).Sistema 2D en monitores (izquierda) y cartesiano (derecha).
+Sistema de referencia del monitor y sistema de referencia cartesiano.
+
+p.La respuesta es claramente no. Incluso, en el mismo dibujo, es posible que necesitemos combinar ambos en función del elemento que estemos tratando. Para textos e imágenes, el sistema de pantalla es más intuitivo ya que reproduce el papel o lienzo del mundo físico. Para funciones matemáticas, gráficos de barras, planos y otros aspectos relacionados con el mundo técnico, el cartesiano resulta mucho más cómodo y natural.
+
+li.<lf>draw_matrix_cartesian</lf> establece el sistema de referencia del contexto en coordenadas cartesianas. En <r>cartbar</r> <r>cartesian_transform</r> hemos utilizado un sistema cartesiano de 6x4 unidades mapeado sobre una ventana de 600x400 píxeles.
+
+code(cpp,cartbar).Dibujo en coordenadas cartesianas.
+T2Df t2d;
+draw_line_color(ctx, color_rgb(255, 0, 0));
+draw_line_width(ctx, .03);
+draw_fill_color(ctx, color_rgb(0, 0, 255));
+t2d_scalef(&t2d, kT2D_IDENTITYf, 100, 100);
+draw_matrix_cartesian(ctx, &t2d);
+draw_rect(ctx, ekSKFILL, 1.5f, .1f, 1, 2);
+draw_line_color(ctx, color_rgb(0, 128, 0));
+draw_line(ctx, 0, 0, 1.5f, 2.1f);
+code.
+
+img(cartesian_transform.svg,-1,.5).Coordenadas cartesianas <r>cartbar</r>.
+Dibujo de una línea y un rectángulo en coordenadas cartesianas.
+
+h2.Antialiasing
+
+p.Dada la naturaleza discreta de los monitores e imágenes digitales, se produce un efecto de escalonado (dientes de sierra) al transformar las primitivas vectoriales a píxeles <r>noantialias</r>. Este efecto se hace menos perceptible a medida que aumenta la resolución de la imagen, pero aún así el "pixelado" sigue estando patente. El <b>antialiasing</b>, es una técnica que reduce este efecto de escalón variando ligeramente los colores de los píxeles en el entorno cercano a las líneas y contornos <r>antialias</r>. Con esto se consigue engañar al ojo humano difuminando los bordes y generando imágenes de mayor calidad visual. Como contrapartida tenemos el coste en el rendimiento de aplicarlo, aunque hace años que los cálculos relativos al antialiasing se realizan directamente en hardware <r>graphics_card</r>, por lo que el impacto es mínimo.
+
+li.<lf>draw_antialias</lf> permite activar o desactivar los cálculos del antialiasing.
+
+img(noantialias.png,-1,-5).Antialiasing desactivado.
+Ampliación de una imagen donde se aprecian los píxeles de los contornos.
+
+img(antialias.png,-1,-5).Antialiasing activado.
+Ampliación de una imagen con el antialising activado.
+
+img(graphics_card.jpg,360,.5).Orchid Fahrenheit 1280 (1992). Una de las primeras tarjetas que incorporaban aceleración gráfica 2d.
+Captura de una tarjeta gráfica Orchid Fahrenheit 1280.
+
+h2.Pantallas retina
+
+p.Al final del 2014 Apple presentó su nueva línea iMac con <i>Retina Display</i> de alta resolución (5120x2880). Normalmente, estos monitores trabajan en modo <b>escalado</b> (2560x1440) lo que permite tener píxeles de doble densidad <r>retina_pixel</r>. Apple diferencia entre <b>puntos</b> en pantalla, que son los que realmente manipula la aplicación y los píxeles físicos. Por lo tanto, nuestra ventana de 600x400 realmente tendrá 1200x800 píxeles en ordenadores Retina, aunque la aplicación seguirá "viendo" solo 600x400 puntos. El sistema operativo realiza la conversión de forma transparente. De hecho, no tenemos que hacer nada para adaptar nuestro código, ya que funcionará de la misma forma tanto en iMac normales como en los equipados con monitores Retina.
+
+img(retina_pixel.svg,580,.65).Píxeles de doble densidad en <i>Retina Display</i> (derecha).
+Diferencia entre píxeles normales y píxeles de doble densidad.
+
+p.Esta doble densidad la aprovechará el rasterizador para generar imágenes de mayor calidad al disponer de más píxeles en el mismo área de pantalla. En <r>noretina</r> y <r>retina</r> vemos la calidad extra que aportan estos modelos.
+
+img(noretina.png,-1,-5).Monitor normal (con antialiasing).
+Ampliación de una imagen con el antialising activado.
+
+img(retina.png,-1,-5).<i>Retina Display</i> (con antialiasing).
+Ampliación de una imagen con el antialising activado en Retina Display de Apple.
+
+func(dctx_bitmap).Crea un contexto en memoria, con el fin de generar una imagen.
+fret(DCtx*).El contexto de dibujo.
+fpar(const uint32_t,width).Ancho de la imagen en píxeles.
+fpar(const uint32_t,height).Alto de la imagen en píxeles.
+fpar(const pixformat_t,format).Formato de píxel de la imagen generada.
+fnote.Al terminar de dibujar, debemos llamar a <lf>dctx_image</lf> para obtener la imagen.
+
+func(dctx_image).Obtiene la imagen resultado tras dibujar en el contexto creado con <lf>dctx_bitmap</lf>.
+fret(Image*).La imagen.
+fpar(DCtx**,ctx).El contexto, que será destruido tras generar la imagen.
+
+func(draw_clear).Borra todo el área del contexto, utilizando un color plano.
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const color_t,color).Color de fondo.
+
+func(draw_matrix).Establece el sistema de referencia del contexto (transformación afín).
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const T2Df*,t2d).Transformación.
+fnote.El origen de coordenadas está en la esquina superior izquierda. El eje Y aumenta hacia abajo.
+
+func(draw_matrix_cartesian).Establece el sistema de referencia en coordenadas cartesianas.
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const T2Df*,t2d).Transformación.
+fnote.El origen de coordenadas está en la esquina inferior izquierda. El eje Y aumenta hacia arriba. Ver <lh>Sistemas cartesianos</lh>.
+
+func(draw_antialias).Activa o desactiva el antialiasing.
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const bool_t,on).<c>TRUE</c> activo, <c>FALSE</c> inactivo.
+fnote.El antialias puede cambiar en cada primitiva. No es necesario establecer una política para todo el dibujo. Ver <lh>Antialiasing</lh>.

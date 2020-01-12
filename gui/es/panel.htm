@@ -1,0 +1,57 @@
+
+h1.Panel
+
+p.Un <b>Panel</b> es un control dentro de una ventana que agrupa otros controles. Define su propio sistema de referencia, es decir, si desplazamos un panel todos sus descendientes se moverán al unísono ya que sus ubicaciones serán relativas al origen de su predecesor. Admitirá otros (sub)-paneles como descendientes, lo que permite conformar una <b>Jerarquía de ventana</b> <r>window_hierarchy</r>. En pro de la portabilidad, esta librería <b>Gui</b> no permite indicar directamente coordenadas ni tamaños concretos para los elementos vinculados a un panel, sino que la asociación se lleva a cabo mediante un objeto <lt>Layout</lt> que se encarga de calcular en tiempo de ejecución las ubicaciones finales de los controles en función de la plataforma y gestor de ventanas. En <lh>¡Hola Subpanel!</lh> tienes un ejemplo elemental del uso de paneles.
+
+li.Utiliza <lf>panel_create</lf> para crear un nuevo panel.
+
+li.Utiliza <lf>panel_layout</lf> para añadir controles al panel.
+
+img(window_hierarchy.svg,380,.5).Jerarquía de ventana.
+Esquema que muestra la jerarquía producida por paneles, subpaneles y controles.
+
+p.Cada panel admite varios layouts y permite alternar entre ellos en tiempo de ejecución <r>multi_layout_panel</r>. Esto permite crear interfaces dinámicas responsivas con muy poco esfuerzo, ya que el propio panel se encarga de vincular y dimensionar los controles en función del layout activo en cada caso. En <lh>¡Hola Multi-layout!</lh> tienes un ejemplo.
+
+li.Utiliza <lf>panel_visible_layout</lf> para alternar entre layouts.
+
+img(multi_layout_panel.svg,700,.7).Panel con dos organizaciones diferentes para los mismos controles.
+Dos configuraciones diferentes de ventana utilizando los mismos controles.
+
+p.Debido a que los layout son estructuras lógicas fuera de la jerarquía de ventana, pueden compartir controles al estar vinculados con el mismo panel <r>multi_layout_asociation</r>. Lo que no está permitido es utilizar los mismos objetos en diferentes paneles, por el propio concepto de jerarquía. 
+
+img(multi_layout_asociation.svg,420,.5).Es posible reutilizar los mismos componentes entre layouts del mismo panel.
+Esquema que muestra como compartir correctamente los elementos entre layouts.
+
+func(panel_create).Crea un panel.
+fret(Panel*).El nuevo panel.
+
+func(panel_layout).Añade un layout a un panel.
+fret(uint32_t).El índice del layout recién añadido.
+fpar(Panel*,panel).El panel.
+fpar(Layout*,layout).El layout.
+
+func(panel_get_layout).Obtiene un layout de un panel.
+fret(Layout*).El layout.
+fpar(Panel*,panel).El panel.
+fpar(const uint32_t,index).El índice del layout.
+
+func(panel_visible_layout).Establece el layout activo dentro del panel.
+fpar(Panel*,panel).El panel.
+fpar(const uint32_t,index).El índice del layout.
+fnote.Para el cambio se haga efectivo, hay que llamar a <lf>panel_update</lf>.
+
+func(panel_update).Refresca el contenido de la ventana que contiene el panel.
+fpar(Panel*,panel).El panel.
+fnote.Es equivalente a llamar a <lf>window_update</lf>.
+
+func(panel_data).Asocia datos de usuario con el panel.
+fpar(Panel*,panel).El panel.
+fpar(type**,data).Datos de usuario.
+fpar(FPtr_destroy,func_destroy_data).Destructor de los datos de usuario. Será llamado al destruir el panel.
+fpar(,type).Tipo de datos de usuario.
+
+func(panel_get_data).Obtiene los datos de usuario asociados con el panel.
+fret(type*).Los datos de usuario.
+fpar(const Panel*,panel).El panel.
+fpar(,type).Tipo de datos de usuario.
+

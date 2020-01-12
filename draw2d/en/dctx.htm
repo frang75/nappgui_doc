@@ -1,0 +1,212 @@
+langrev.
+h1.2D Contexts
+
+p.Vector graphics are composed of basic primitives such as lines, circles, text, etc, using the painter's algorithm <r>painter_method</r>: Incoming operations overlap existing ones. The result is stored in an intermediate buffer known as <i>canvas</i> or <i>surface</i>. This drawing surface is part of an object called <b>context</b> that also maintains certain parameters related to the appearance of primitives: Colors, line attributes, reference system, gradients, etc..
+
+img(painter_method.svg,-1,.65).The order in which drawing primitives are sent to the context buffer influences the final result.
+Difference in the drawing when we change the order of the primitives.
+
+p.One of the advantages of working with parametric shapes is that image scaling can be done without loss of quality <r>vector_vs_bitmap</r>. This is because the conversion to pixels, a process called rasterization <r>rasterization</r>, is done in real time and constantly adjusts to the change of vectors. In bitmap <lp>image</lp>, an increase in size has associated a loss of quality. 
+
+img(vector_vs_bitmap.svg,380,.5).Vector scaling and bitmap scaling.
+Difference between vector graphics and bitmap when scaling.
+
+img(rasterization.svg,380,.5).Rasterization of a circle.
+Theoretical circle (perfect) and its conversion to pixels.
+
+p.NAppGUI allows working with two types of 2D contexts <r>context_types</r>.
+
+li.Window context. The destination will be an area within a user interface window managed by a <lt>View</lt> control. This control maintains its own drawing context and sends it "ready to use" through the <lt>EvDraw</lt> event <r>wcontext</r>.
+
+code(cpp,wcontext).Drawing in a window.
+static void i_OnDraw(App *app, Event *e)
+{
+    const EvDraw *p = event_params(e, EvDraw);
+
+    draw_clear(p->ctx, color_rgb(200, 200, 200));
+    draw_fill_color(p->ctx, color_rgb(0, 128, 0));
+    draw_rect(p->ctx, ekFILL, 100, 100, 200, 100);
+    draw_fill_color(p->ctx, color_rgb(0, 0, 255));
+    draw_circle(p->ctx, ekFILL, 450, 150, 75);
+}
+
+View *view = view_create();
+view_size(view, s2df(600, 400));
+view_OnDraw(view, listener(app, i_OnDraw, App));
+code.
+
+li.Image context. Here the drawing commands will be directly dumped into memory to subsequently obtain an image with the final result <r>icontext</r>.
+
+code(cpp,icontext).Draw on an image.
+static i_draw(void)
+{
+    Image *image = NULL;
+    DCtx *ctx = dctx_bitmap(600, 400, ekRGBA32);
+
+    draw_clear(ctx, color_rgb(200, 200, 200));
+    draw_fill_color(ctx, color_rgb(0, 128, 0));
+    draw_rect(ctx, ekFILL, 100, 100, 200, 100);
+    draw_fill_color(ctx, color_rgb(0, 0, 255));
+    draw_circle(ctx, ekFILL, 450, 150, 75);
+
+    image = dctx_image(&ctx);
+    image_to_file(image, "drawing.png", NULL);
+    image_destroy(&image);
+}
+code.
+
+img(context_types.svg,420,.5).Window and image contexts.
+Monitor with a window context and a RAM module with the image context.
+
+p.As we can see, the drawing itself is done in the same way, the only thing that changes is how we obtained the <lt>DCtx</lt> object. This allows us to write generic graphic routines without worrying about the destination of the final result. In <lp>drawimg</lp> you have a complete example of the use of contexts. The images that accompany the rest of the chapter have been obtained from this application.
+
+bq.Because it is not necessary to have a window to draw, draw2d can be used in console applications to compose or edit images without viewing them.  
+
+h2.Reference systems
+
+p.The drawing origin of coordinates is located in the upper left corner <r>identity_transform</r>. The positive <b>X</b> move to the left and the positive <b>Y</b> down. Units are measured in pixels (or points in <lh>Retina displays</lh>). For example, the command:
+
+code.
+draw_circle(ctx, ekSKFILL, 300, 200, 100);
+code.
+
+p(noindent).will draw a circle of 100 pixel radius whose center is 300 pixels to the left and 200 pixels down from the origin. This initial system is called <b>identity</b> since it has not yet been manipulated, as we will see below.
+
+img(identity_transform.svg,-1,.65).<b>Identity</b> reference system in 2D contexts.
+Drawing of various geometric shapes, images and texts without applying any transformation.
+
+bq.Although the initial scale is in pixels, we must banish the idea that we are directly manipulating pixels when drawing. Drawing contexts use floating point coordinates. For example, drawing a line between the points (0.23, 1.432) and (-45.29, 12.6756) is perfectly valid. Transformations and antialiasing may slightly alter the position or thickness of certain lines. Nor should we expect "identical" pixel-level results when migrating applications to different platforms, since each system uses its own rasterization algorithms. We must think that we are drawing on the real plane. To directly manipulate the pixels of an image, see <lf>image_pixels</lf> and <lf>image_from_pixels</lf>. 
+
+p.This initial reference system can be manipulated by <lp>t2d</lp>. The most common transformations in graphics are: Translations <r>codetras</r> <r>translate_transform</r>, Rotations <r>rottras</r> <r>rotate_transform</r> and Scaling <r>scaletras</r> <r>scale_transform</r>.
+
+li.<lf>draw_matrix</lf> will change the context reference system.
+
+code(cpp,codetras).Coordinate origin translation 100 units in both directions.
+T2Df t2d;
+t2d_movef(&t2d, kT2D_IDENTITYf, 100, 100);
+draw_matrix(ctx, &t2d);
+i_draw(...);
+code.
+
+img(translate_transform.svg,-1,.65).Translation <r>codetras</r>.
+Drawing in which a translation of 100, 100 pixels was applied.
+
+code(cpp,rottras).Coordinate origin rotation 15 degrees.
+T2Df t2d;
+t2d_rotatef(&t2d, kT2D_IDENTITYf, 15 * kBMATH_DEG2RADf);
+draw_matrix(ctx, &t2d);
+i_draw(...);
+code.
+
+img(rotate_transform.svg,-1,.65).Rotation <r>rottras</r>.
+Drawing in which a rotation of 15 degrees was applied.
+
+code(cpp,scaletras).Scaling, size halving.
+T2Df t2d;
+t2d_scalef(&t2d, kT2D_IDENTITYf, .5f, .5f);
+draw_matrix(ctx, &t2d);
+i_draw(...);
+code.
+
+img(scale_transform.svg,-1,.65).Scaling <r>scaletras</r>.
+Drawing in which a 50% scaling was applied.
+
+p.The transformations can be accumulated, but we must bear in mind that they are not commutative operations, but that the order in which they are applied will influence the final result. For example in <r>acumtras</r> <r>all_transform</r> we observe that the drawing has moved <c>(100, 50)</c> pixels, instead of <c>(200, 100)</c>, because the translation is affected by previous scaling. More details at <lh>Composition of transformations</lh>.
+
+code(cpp,acumtras).Composition of transformations.
+T2Df t2d;
+t2d_scalef(&t2d, kT2D_IDENTITYf, .5f, .5f);
+t2d_movef(&t2d, &t2d, 200, 100);
+t2d_rotatef(&t2d, &t2d, 15 * kBMATH_DEG2RADf);
+draw_matrix(ctx, &t2d);
+i_draw(...);
+code.
+
+img(all_transform.svg,-1,.65).Composition of transformations <r>acumtras</r>.
+Drawing in which several transformations have been applied.
+
+h3.Cartesian systems
+
+p.There is a dichotomy when drawing in 2D: On the one hand, traditionally desktop systems and digital images place the origin of coordinates in the upper left corner with the Y axis growing down <r>cartesian</r>. On the other hand, the Cartesian systems used in geometry place it in the lower left corner, with Y growing up. This creates a dilemma about whether one system is better than another.
+
+img(cartesian.svg,580,.65).2D system on monitors (left) and Cartesian (right).
+Monitor reference system and Cartesian reference system.
+
+p.The answer is clearly no. Even in the same drawing, we may need to combine both depending on the element we are treating. For texts and images, the screen system is more intuitive since it reproduces the paper or canvas of the physical world. For mathematical functions, bar graphs, plans and other aspects related to the technical world, the Cartesian is much more comfortable and natural.
+
+li.<lf>draw_matrix_cartesian</lf> set the context reference system in Cartesian coordinates. In <r>cartbar</r> <r>cartesian_transform</r> we have used a 6x4 unit Cartesian system mapped onto a 600x400 pixel window.
+
+code(cpp,cartbar).Drawing in Cartesian coordinates.
+T2Df t2d;
+draw_line_color(ctx, color_rgb(255, 0, 0));
+draw_line_width(ctx, .03);
+draw_fill_color(ctx, color_rgb(0, 0, 255));
+t2d_scalef(&t2d, kT2D_IDENTITYf, 100, 100);
+draw_matrix_cartesian(ctx, &t2d);
+draw_rect(ctx, ekSKFILL, 1.5f, .1f, 1, 2);
+draw_line_color(ctx, color_rgb(0, 128, 0));
+draw_line(ctx, 0, 0, 1.5f, 2.1f);
+code.
+
+img(cartesian_transform.svg,-1,.5).Cartesian coordinates <r>cartbar</r>.
+Drawing a line and a rectangle in Cartesian coordinates.
+
+h2.Antialiasing
+
+p.Given the discrete nature of monitors and digital images, a staggered effect (sawtooth) is produced by transforming vector primitives to pixels <r>noantialias</r>. This effect becomes less noticeable as the resolution of the image increases, but still the "pixelated" remains patent. The <b>antialiasing</b>, is a technique that reduces this step effect by slightly varying the colors of the pixels in the environment near the lines and contours <r>antialias</r>. With this, the human eye can be deceived by blurring the edges and generating images of greater visual quality. In return we have the cost in the performance of applying it, although for years that the calculations related to antialiasing are made directly in hardware <r>graphics_card</r>, so the impact is minimal.
+
+li.<lf>draw_antialias</lf> allows to activate or deactivate the antialiasing calculations.
+
+img(noantialias.png,-1,-5).Antialiasing off.
+Enlargement of an image where the contour pixels are appreciated.
+
+img(antialias.png,-1,-5).Antialiasing on.
+Enlargement of an image with antialising activated.
+
+img(graphics_card.jpg,360,.5).Orchid Fahrenheit 1280 (1992). One of the first cards that incorporated 2d graphic acceleration.
+Capturing an Orchid Fahrenheit 1280 graphics card.
+
+h2.Retina displays
+
+p.At the end of 2014 Apple introduced its news iMac with high resolution <i>Retina Display</i> (5120x2880). Normally, these monitors work in <b>scaled</b> mode (2560x1440) allowing double density pixels <r>retina_pixel</r>. Apple differentiates between <b>points</b> on the screen, which are what really manipulates the application and physical pixels. Therefore, our 600x400 window will really have 1200x800 pixels on Retina computers, although the application will still "see" only 600x400 points. The operating system converts transparently. In fact, we don't have to do anything to adapt our code, since it will work in the same way on both normal iMac and those equipped with Retina monitors.
+
+img(retina_pixel.svg,580,.65).Double density pixels on <i>Retina Display</i> (right).
+Difference between normal pixels and double density pixels.
+
+p.This double density will be used by the rasterizer to generate higher quality images by having more pixels in the same screen area. In <r>noretin</r> and <r>retina</r> we see the extra quality that these models provide.
+
+img(noretina.png,-1,-5).Normal screen (with antialiasing).
+Enlargement of an image with antialising activated.
+
+img(retina.png,-1,-5).<i>Retina Display</i> (with antialiasing).
+Enlarge an image with antialising activated on Apple Retina Display.
+
+func(dctx_bitmap).Create a memory context, in order to generate an image.
+fret(DCtx*).Drawing context.
+fpar(const uint32_t,width).Image width in pixels.
+fpar(const uint32_t,height).Image height in pixels.
+fpar(const pixformat_t,format).Pixel format of the generated image.
+fnote.When we finish drawing, we must call <lf>dctx_image</lf> to get the picture.
+
+func(dctx_image).Get the result image after drawing in the context created with <lf>dctx_bitmap</lf>.
+fret(Image*).The image.
+fpar(DCtx**,ctx).The context, which will be destroyed after generating the image.
+
+func(draw_clear).Clears the entire context area, using a solid color.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const color_t,color).Background color.
+
+func(draw_matrix).Set the context reference system (affine transformation).
+fpar(DCtx*,ctx).Drawing context.
+fpar(const T2Df*,t2d).Transformation.
+fnote.The origin of coordinates is in the upper left corner. The Y axis increases down.
+
+func(draw_matrix_cartesian).Set the reference system in Cartesian coordinates.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const T2Df*,t2d).Transformation.
+fnote.The origin of coordinates is in the lower left corner. The Y axis increases upwards. See <lh>Cartesian systems</lh>.
+
+func(draw_antialias).Enable or disable antialiasing.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const bool_t,on).<c>TRUE</c> active, <c>FALSE</c> inactive.
+fnote.The antialias can change in each primitive. It is not necessary to establish a policy for the whole drawing. See <lh>Antialiasing</lh>.

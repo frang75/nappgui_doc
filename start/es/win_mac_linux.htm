@@ -1,0 +1,644 @@
+
+h1.Portabilidad
+
+ep.Es muy difícil escribir software que funcione correctamente y de manera eficiente. Entonces, una vez que un programa funciona en un determinado entorno, no queremos repetir parte del trabajo al moverlo a un compilador, procesador o sistema operativo diferente. <b>Idealmente, no debería ser necesario realizar ningún cambio en absoluto</b>.
+Kernighan & Pike - The Practice of Programming.
+
+p.En <lp>quick</lp> y <lp>newprj</lp> utilizamos Visual Studio 2019 para generar las aplicaciones de ejemplo dentro de la solución <i>NAppGUI</i>. Entendemos por <b>portabilidad</b> la capacidad de compilar y depurar nuestros programas en otras plataformas diferentes a las que fueron escritos, sin que por ello tengamos que tocar ni una sola línea de código. Entendemos por <b>plataforma</b> a la combinación compilador/arquitectura. Por ejemplo,  <c>v142_x64</c> hace referencia a binarios creados con Visual Studio 2019 para procesadores Intel 64bits. En <r>portability_steps</r> se resumen las diferentes etapas.
+
+img(portability_steps.svg,620,.75).Etapas en la migración del código entre plataformas. 
+Tres ordenadores Windows, macOS y Linux conectados en red al mismo repositorio de código fuente.
+
+li.<b>Copia de trabajo:</b> En cada máquina que vaya a compilar el código deberá existir una copia del código fuente del proyecto. Normalmente esto se llevará a cabo mediante un sistema de control de versiones como Subversion o Git, aunque se podría actualizar también desde una memoria externa.
+
+li.<b>CMake:</b> CMake creará un proyecto de compilación (o solución) a partir del código fuente utilizando los scripts del directorio <c>/prj</c> de la distribución del SDK. Esto se realizará de forma totalmente automática.
+
+li.<b>Compilar:</b> Utilizando Visual Studio, Xcode o GCC se compilará la solución y se generarán las librerías y ejecutables contenidas en la misma.
+
+li.<b>Ejecutar/Depurar:</b> Los binarios se podrán ejecutar y depurar en la plataforma de destino, poniendo punto y final al proceso de portabilidad.
+
+h2.Plataformas
+
+p.En <r>platforms</r> tienes la lista de plataformas soportadas por NAppGUI. La versión gratuita incluye el soporte completo para la <c>v142_x64</c>. En la carpeta <c>/lib</c> de tu distribución podrás comprobar las que tienes instaladas. Tan solo con añadir las nuevas versiones a este directorio CMake las reconocerá y podrás compilar en dicha plataforma.
+
+table(platforms).Plataformas soportadas por NAppGUI.
+row.
+p.
+p.Plataforma
+p.Compilador
+p.CPU
+p.S.O.Mínimo
+row.
+img(vs2019.png,32,.05).
+p.v142_x64
+p.VS2019
+p.Intel x64
+p.Vista
+row.
+img(vs2019.png,32,.05).
+p.v142_x86
+p.VS2019
+p.Intel x86
+p.Vista
+row.
+img(vs2017.png,32,.05).
+p.v141_x64
+p.VS2017
+p.Intel x64
+p.Vista
+row.
+img(vs2017.png,32,.05).
+p.v141_x86
+p.VS2017
+p.Intel x86
+p.Vista
+row.
+img(vs2017.png,32,.05).
+p.v141_xp_x64
+p.VS2017
+p.Intel x64
+p.XP
+row.
+img(vs2017.png,32,.05).
+p.v141_xp_x86
+p.VS2017
+p.Intel x86
+p.XP
+row.
+img(vs2015.png,32,.05).
+p.v140_x64
+p.VS2015
+p.Intel x64
+p.Vista
+row.
+img(vs2015.png,32,.05).
+p.v140_x86
+p.VS2015
+p.Intel x86
+p.Vista
+row.
+img(vs2015.png,32,.05).
+p.v140_xp_x64
+p.VS2015
+p.Intel x64
+p.XP
+row.
+img(vs2015.png,32,.05).
+p.v140_xp_x86
+p.VS2015
+p.Intel x86
+p.XP
+row.
+img(vs2013.png,32,.05).
+p.v120_x64
+p.VS2013
+p.Intel x64
+p.Vista
+row.
+img(vs2013.png,32,.05).
+p.v120_x86
+p.VS2013
+p.Intel x86
+p.Vista
+row.
+img(vs2013.png,32,.05).
+p.v120_xp_x64
+p.VS2013
+p.Intel x64
+p.XP
+row.
+img(vs2013.png,32,.05).
+p.v120_xp_x86
+p.VS2013
+p.Intel x86
+p.XP
+row.
+img(vs2012.png,32,.05).
+p.v110_x64
+p.VS2012
+p.Intel x64
+p.Vista
+row.
+img(vs2012.png,32,.05).
+p.v110_x86
+p.VS2012
+p.Intel x86
+p.Vista
+row.
+img(vs2012.png,32,.05).
+p.v110_xp_x64
+p.VS2012
+p.Intel x64
+p.XP
+row.
+img(vs2012.png,32,.05).
+p.v110_xp_x86
+p.VS2012
+p.Intel x86
+p.XP
+row.
+img(vs2010.png,32,.05).
+p.v100_x64
+p.VS2010
+p.Intel x64
+p.XP
+row.
+img(vs2010.png,32,.05).
+p.v100_x86
+p.VS2010
+p.Intel x86
+p.XP
+row.
+img(vs2008.png,32,.05).
+p.v90_x64
+p.VS2008
+p.Intel x64
+p.XP
+row.
+img(vs2008.png,32,.05).
+p.v90_x86
+p.VS2008
+p.Intel x86
+p.XP
+row.
+img(vs2005.png,32,.05).
+p.v80_x64
+p.VS2005
+p.Intel x64
+p.XP
+row.
+img(vs2005.png,32,.05).
+p.v80_x86
+p.VS2005
+p.Intel x86
+p.XP
+row.
+img(catalina.png,32,.05).
+p.sdk10_15_x64
+p.Xcode 11.3
+p.Intel x64
+p.Catalina
+row.
+img(mojave.png,32,.05).
+p.sdk10_14_x64
+p.Xcode 10.2.1
+p.Intel x64
+p.Mojave
+row.
+img(high_sierra.png,32,.05).
+p.sdk10_13_x64
+p.Xcode 9.4.1
+p.Intel x64
+p.High Sierra
+row.
+img(sierra.png,32,.05).
+p.sdk10_12_x64
+p.Xcode 8.3.3
+p.Intel x64
+p.Sierra
+row.
+img(el_capitan.png,32,.05).
+p.sdk10_11_x64
+p.Xcode 7.3.1
+p.Intel x64
+p.El Capitan
+row.
+img(yosemite.png,32,.05).
+p.sdk10_10_x64
+p.Xcode 6.4
+p.Intel x64
+p.Yosemite
+row.
+img(mavericks.png,32,.05).
+p.sdk10_9_x64
+p.Xcode 6.2
+p.Intel x64
+p.Mavericks
+row.
+img(mountain_lion.png,32,.05).
+p.sdk10_8_x64
+p.Xcode 5.1.1
+p.Intel x64
+p.Mountain Lion
+row.
+img(lion.png,32,.05).
+p.sdk10_7_x64
+p.Xcode 4.6.3
+p.Intel x64
+p.Lion
+row.
+img(snow_leopard.png,32,.05).
+p.sdk10_6_x64
+p.Xcode 3.2.6
+p.Intel x64
+p.Snow Leopard
+row.
+img(snow_leopard.png,32,.05).
+p.sdk10_6_x86
+p.Xcode 3.2.6
+p.Intel x86
+p.Snow Leopard
+row.
+img(ubuntu_logo.png,32,.05).
+p.gcc7_gtk3_x64
+p.GCC 7.3.0
+p.Intel x64
+p.18.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.gcc5_gtk3_x64
+p.GCC 5.3.1
+p.Intel x64
+p.16.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.gcc5_gtk3_x86
+p.GCC 5.3.1
+p.Intel x86
+p.16.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.gcc4_gtk3_x64
+p.GCC 4.8.2
+p.Intel x64
+p.14.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.gcc4_gtk3_x86
+p.GCC 4.8.2
+p.Intel x86
+p.14.04 LTS
+row.
+img(raspbian.png,32,.05).
+p.gcc6_gtk3_arm
+p.GCC 6.3.0
+p.ARM
+p.9.1 Strech
+table.
+
+h2.Portabilidad Windows
+
+p.Podemos utilizar cualquier versión de Visual Studio a partir de 2005 para compilar bajo Windows. Como ya vimos el <lp>quick</lp> lo primero que tenemos que hacer es lanzar CMake sobre el código fuente:
+
+li.<b>Where is the source code:</b> <c>C:\nappgui\src</c>.
+
+li.<b>Where to build the binaries:</b> <c>C:\nappgui_build</c>.
+
+p.La primera vez CMake preguntará que versión de Visual Studio queremos utilizar <r>cmake_depends_link</r> y que, obviamente, deberemos tener instalada en la máquina en cuestión. La arquitectura seleccionada por defecto se puede cambiar desde el mismo diálogo <r>generator_platform</r>. 
+
+img(cmake_depends_link.svg,560,.65).Selección de la versión de Visual Studio desde el asistente de CMake.
+Desplegable que muestra las diferentes versiones de Visual Studio con las que podemos compilar. 
+
+img(generator_platform.png,0,.80).Selección de la arquitectura en el panel del generador.
+CMake Optional platform for generator.
+
+p.Una vez pulsemos <c>[Configure]</c>, <c>[Generate]</c> y <c>[Open Project]</c>, tendremos el proyecto listo para compilar. Desde Visual Studio <c>Build->Build Solution</c> y depuramos <c>Debug->Start Debugging</c> <r>vs2010_debug</r>.
+
+img(vs2010_debug.png,620,.80).Depurando la aplicación <i>Die</i> en Visual Studio 2010.
+Visual Studio 2010 depurando una aplicación C.
+
+bq.Para cambiar la versión de Visual Studio tenemos que borrar la cache de CMake <c>File->Delete Cache</c> o cambiar el directorio de destino: <b>Where to build the binaries</b>. Es posible tener diferentes soluciones a partir del mismo código en varios directorios, cada una con su propia versión de Visual Studio.
+
+p.A partir de Visual Studio 2010, se produce una disociación entre el editor y el compilador. El término <i>Plaform Toolset</i> identifica al propio compilador, que se podrá seguir utilizando con IDEs mas modernos. Si no indicamos nada, CMake utilizará el toolset incluido por defecto en cada versión de VS, pero se puede cambiar desde <i>Optional toolset to use</i>. Por ejemplo, podemos combinar <c>Visual Studio 15 2017</c> con el toolset de VS2013 <c>v120_xp</c> <r>optional_toolset</r>.
+
+img(optional_toolset.png,-1,.70).Uso del toolset <c>v120_xp</c> con el editor de VS2017.
+Opción Optional toolset to use de CMake.
+
+h3.Visual C++ Redistributable
+
+p.Por defecto, Visual Studio enlaza dinámicamente las funciones de la librería de C, lo que provoca que los <c>.exe</c> puedan no funcionar en máquinas que no dispongan de las DLL de <c>VC++</c> <r>vc_redistributable_error</r>. Esto obliga a las aplicaciones a incluir una copia de <c>MSVCRT.dll</c>, <c>VCRUNTIME.dll</c>, ... o a instalar los famosos paquetes <i>Visual C++ Redistributable</i> para asegurar que la aplicación pueda correr sin problemas.
+
+img(vc_redistributable_error.png,600,.90).Error por la falta de las .dll de VC++.
+Mensaje de error provocado por la falta de las librerías de VC++.
+
+p.NAppGUI utiliza un reducido conjunto de la librería C, ya accede directamente al API de Windows siempre que sea posible (más detalles en <lh>Librería estándar de C</lh>). Por esta razón, todas las aplicaciones creadas con NAppGUI realizan un enlace estático (opción <c>/MT</c>) de las funciones que necesitan de la stdlib, evitando dependencias a costa de aumentar ligeramente (unos pocos Kb) el tamaño del ejecutable final. Esto garantiza que las aplicaciones correrán sin problemas en todas las máquinas Windows sin necesidad de DLLs adicionales y sin tener que instalar los <i>VC++ Redistributable</i>.
+
+bq.Las aplicaciones NAppGUI no requieren los Visual C++ Redistributable. Tampoco utilizan las MFC "Microsoft Foundation Classes" ni la plataforma .NET.
+
+h3.Soporte WindowsXP
+
+p.A partir de VS2012, el <i>Platform Toolset</i> genera ejecutables no compatibles con WindowsXP. Si queremos que nuestras aplicaciones corran en este sistema, deberemos seleccionar el toolset alternativo acabado en <c>_xp</c>: <c>V141_xp</c>, <c>V140_xp</c>, <c>V120_xp</c>, <c>V110_xp</c>. O bien, <c>v100</c>, <c>v90</c> ó <c>v80</c>, que sí soportan XP <r>vs2005_debug</r>.
+
+bq.El soporte para WindowsXP se ha eliminado definitivamente en Visual Studio 2019. No existe el Platform Toolset v142_xp.
+
+img(vs2005_debug.png,800,.80).Depurando la aplicación <i>Die</i> en WindowsXP con VS2005 (toolset v80).
+Uso de Visual Studio 2005 en WindowsXP depurando una aplicación escrita en C.
+
+bq.NAppGUI no funciona en Windows anterior a XP ni con Visual Studio anterior a 2005.
+
+h3.Soporte SSE
+
+p.Con el Pentium III, Intel incorporó un juego de instrucciones adicional para operaciones en coma flotante denominado SSE <i>Streaming SIMD Extensions</i>. Esto permite optimizar los cálculos matemáticos a costa de perder la compatibilidad, ya que las aplicaciones que utilicen SSE no funcionarán en los modelos Pentium II o anteriores. En NAppGUI se han reservado los toolset <c>v80_x86</c> y <c>v90_x86</c> para crear aplicaciones compatibles con los procesadores más antiguos <r>ssevers</r>. A partir de <c>v100_x86</c>, se utilizará SSE2 en todos los toolset.
+
+table(ssevers).Soporte SSE
+row.
+p.Toolset
+p.SSE
+p.CPU Mínima
+row.
+p.v80_x86
+p.x87 (no SSE)
+p.Pentium II/AMD K6
+row.
+p.v90_x86
+p.SSE
+p.Pentium III/AMD Duron
+row.
+p.v100_x86
+p.SSE2
+p.Pentium IV/AMD Sempron
+row.
+p.v110_x86
+p.SSE2
+p.Pentium IV/AMD Sempron
+row.
+p....
+p.SSE2
+p....
+table.
+
+bq.El soporte SSE solo se deshabilita en arquitecturas de 32 bits (x86). Todas las CPU de 64 bits (x64) incorporan SSE2.
+
+h2.Portabilidad macOS
+
+p.Compilar para los iMac, macBook y macMini de Apple sigue la misma filosofía que en Windows, tan solo necesitaremos CMake y <l>https://developer.apple.com/xcode/''Xcode</l>. Como ya hemos hecho en Windows, abrimos CMake y asignamos los directorios:
+
+li.<b>Where is the source code:</b> <c>/Users/fran/nappgui/src</c> (o <c>WORKING_DIR/nappgui/src</c>).
+
+li.<b>Where to build the binaries:</b> <c>/Users/fran/nappgui_build</c>. Directorio donde irá a parar el código generado.
+
+p.Pulsa <c>[Configure]</c>. Esta vez, la primera vez CMake nos pedirá seleccionar el compilador. Al contrario que Visual Studio, solo ofrece una opción para Xcode <r>cmake_xcode</r>. Aceptamos, pulsamos <c>[Generate]</c> y después <c>[Open Project]</c>.
+
+img(cmake_xcode.png,0,.55).Selección del generador Xcode en CMake.
+Seleccionando Xcode desde el asistente de CMake.
+
+p.Al abrir la solución Xcode <c>(NAppGUI.xcodeproj)</c>, vemos los diferentes proyectos que la forman, incluídos <i>Die</i> y <i>Dice</i>. Seleccionamos <i>Die</i> en el desplegable superior izquierdo y después pulsamos <c>Play</c> o <c>Product->Run</c> <r>xcode_debug</r>. Esto compilará el programa y lo lanzará en modo depuración, donde podremos establecer puntos de ruptura para inspeccionar la pila y el valor de las variables.
+
+img(xcode_debug.png,0,.80).Depurando la aplicación <i>Die</i> en Xcode.
+Depurando la aplicación Die desde Xcode 10.2.1.
+
+h3.Base SDK y Deployment Target
+
+p.Cada año, Apple lanza una nueva versión de macOS, que viene acompañada de un nuevo SDK y de la actualización de Xcode que incluye dicho SDK.
+
+bq.<b>Base SDK</b> es la versión incluída en cada nueva versión mayor de Xcode, que coincide con la última versión del sistema macOS aparecida en el mercado.
+
+p.Apple tiene una política mucho más restrictiva que Microsoft en lo referente a la compatibilidad de las aplicaciones con versiones anteriores del sistema operativo. Por defecto, un programa compilado con SDK 10.14 (macOS Mojave) no funcionará en el inmediatamente anterior macOS High Sierra <r>deployment_target</r>.
+
+img(deployment_error.png,400,.45).<i>Die</i> con <i>Base SDK</i> 10.14 no funcionará en High Sierra.
+Error al ejecutar una aplicación con deployment target 10.14 en macOS High Sierra.
+
+p.Para evitar este problema, y que las aplicaciones funcionen en macOS más antiguos, existe el parámetro <b>Deployment Target</b>. Al utilizarlo, se activará una macro que anulará las nuevas características del Base SDK. Esto permitirá que el programa corra en versiones antiguas a costa, claro está, de no tener acceso a las últimas funcionalidades de los iMac. Podrás seleccionar el Deployment Target a través de la lista de opciones de CMake, después de pulsar <c>[Configure]</c> <r>deployment_target</r>.
+
+img(deployment_target.png,620,.65).Selección del <b>Deployment Target</b> de nuestra solución.
+Seleccionando el Xcode Deployment Target desde CMake.
+
+bq.Xcode 8 considera obsoletos los Deployment Target inferiores a 10.9 <r>deprecated_10_9</r>. Utiliza Xcode 7 si quieres compatibilidad con Mac OSX 10.8 Mountain Lion y anteriores.
+
+img(deprecated_10_9.png,-1,.45).Deployment Target 10.9 obsoleto a partir de Xcode 8.
+Warning osx 10.9 deprecated.
+
+h3.xcode-select
+
+p.Ya hemos visto que CMake solo ofrece una opción para Xcode, aunque es posible tener varias versiones en la misma máquina, cada una dentro de su propio <i>bundle</i> <c>Xcode.app</c>. Siempre existirá un Xcode por defecto en el sistema (el más reciente) pero se puede cambiar mediante la utilidad <c>xcode-select</c>:
+
+code.Consulta de la versión actual de Xcode.
+xcode-select -p
+/Applications/Xcode.app/Contents/Developer
+code.
+
+code.Cambio de la versión activa de Xcode.
+sudo xcode-select -s /Applications/Xcode8.app/Contents/Developer
+code.
+
+code.Establecer la versión por defecto de Xcode.
+sudo xcode-select -r
+code.
+
+bq.Deberás pulsar <c>[Configure]</c> y <c>[Generate]</c> en CMake cada vez que utilices <c>xcode-select</c> para que tu proyecto actualice el cambio de compilador.
+
+h3.macOS 32bits
+
+p.Desde la versión macOS High Sierra, Apple ha <l>https://support.apple.com/en-us/HT208436''declarado obsoleta</l> la arquitectura de 32 bits, emitiendo avisos a los usuarios en el caso de detectar ejecutables <c>i386</c> <r>macos_32bit_warnings</r>. A partir de Xcode 10, no se puede compilar en esta arquitectura <r>macos_i386_error</r>.
+
+img(macos_32bit_warnings.png,-1,.80).Avisos de macOS en aplicaciones de 32bits. 
+Aviso de macOS al intentar ejecutar aplicaciones de 32bits.
+
+img(macos_i386_error.png,520,.80).Error en Xcode 10 al intentar compilar en 32bits.
+Mensaje de error en Xcode 10 al compilar en 32bits.
+
+bq.El soporte para aplicaciones 32bits ha desaparecido definitivamente en <b>macOS Catalina</b>, que solo permite ejecutar aplicaciones de 64bits.
+
+p.Esto tiene cierto sentido ya que todos los modelos de iMac basados en Intel incorporan procesadores de 64 bits, a excepción de unos pocos modelos de 2006 en policarbonato blanco que montaban el Intel Core Duo de 32 bits <r>imac32bits</r>. Estos iMac admitían como máximo el Mac OSX 10.6 Snow Leopard, siendo requisito fundamental a partir de 10.7 Lion, el disponer de una CPU de 64 bits. Para compilar sin problemas en 32bits hay que utilizar, como máximo, Xcode 6 <r>snow_leopard_debug</r>.
+
+img(imac32bits.png,520,.65).Únicos modelos de Apple con procesador Intel de 32bits.
+iMac, macBook y macMini con procesadores Intel de 32bits.
+
+img(snow_leopard_debug.png,0,.80).Compilación en 32bits con Xcode 3.2.6 (Snow Leopard).
+Depurando la aplicación Die desde Xcode en Snow Leopard.
+
+h2.Portabilidad Linux
+
+p.En el mundo Linux, se utiliza el compilador <c>gcc</c> y la herramienta <c>make</c> para generar los binarios, pero no existe un entorno de desarrollo "oficial". Nosotros utilizaremos <l>https://www.eclipse.org/cdt/''Eclipse CDT</l> pero existen otras alternativas, incluída el trabajar directamente con un terminal. La metodología de trabajo no cambia en absoluto. Abrimos CMake, seleccionamos los directorios, pulsamos <c>[Configure]</c> y después <c>[Generate]</c> <r>cmake_linux</r>.
+
+img(cmake_linux.png,0,.80).Configurando NAppGUI en Linux.
+Configurar los directorios de CMake en Linux.
+
+p.En Linux deberemos utilizar el generador <c>Unix Makefiles</c> de CMake, el cual creará una serie de guiones <c>Makefile</c> en <c>/home/fran/nappgui_build</c> (o el directorio de salida que hayamos seleccionado). Estos <c>Makefile</c> contienen los comandos necesarios para compilar y enlazar todos los proyectos de la solución. Abrimos un terminal y ejecutamos <c>make</c>:
+
+code(text).Generar la solución mediante <c>make</c>.
+cd /home/fran/nappgui_build
+make
+[ 15%] Building C object games/die/CMakeFiles/Die.dir/dgui.c.o
+[ 30%] Building C object games/die/CMakeFiles/Die.dir/die.c.o
+[ 45%] Building C object games/die/CMakeFiles/Die.dir/draw/ddraw.c.o
+[ 60%] Building C object games/die/CMakeFiles/Die.dir/resgen/all.c.o
+[ 75%] Linking CXX executable Debug/Die
+[ 95%] Built target Die
+code.
+
+p.Una vez terminada la compilación, podemos lanzar los ejecutables directamente desde el terminal:
+
+code(text).Lanzar la aplicación <i>Die</i>.
+./die/Debug/Die
+code.
+
+p.Y si somos unos auténticos hackers, seremos capaces de depurar los programas directamente desde <c>gdb</c> <r>debug_gdb</r>.
+
+code(text).Depurando <i>Die</i> con <i>gdb</i>
+gdb ./die/Debug/Die
+(gdb) run
+...
+code.
+
+img(debug_gdb.png,0,.80).Depurando <i>Die</i> con GDB desde el terminal.
+Uso de GDB para depurar una aplicación C.
+
+h3.Eclipse CDT
+
+p.Trabajar directamente con el terminal nos dará el mayor nivel de libertad posible para programar. Con volver a la consola y teclear <c>make</c> se re-compilará todo lo necesario. Ahora bien, utilizar <c>GDB</c> directamente resultará bastante tedioso, por lo que daremos el salto a Eclipse CDT. Este entorno nos permitirá programar con una metodología similar a la de Visual Studio y Xcode: Situar puntos de ruptura, inspeccionar la pila y variables, buscar archivos dentro del directorio de código, ediciones múltiples, búsquedas masivas, etc.
+
+p.La única diferencia es que deberemos utilizar el generador <c>Eclipse CDT4 - Unix Makefiles</c> en CMake <r>make_generators</r> que adicionalmente a los <c>Makefile</c> creará los archivos <c>.cproject</c> y <c>.project</c> necesarios para importar el proyecto dentro de Eclipse.
+
+img(make_generators.png,0,.65).Generadores basados en <c>Makefile</c>. 
+Generadores CMake para Linux basados en Makefile.
+
+p.Abrimos Eclipse y hacemos <c>File->Import->Existing Projects into Workspace</c>. Aparecerá un cuadro de diálogo donde indicamos el directorio <i>build</i> que hayamos configurado en CMake (<c>/home/fran/nappgui_build</c>). Eclipse abrirá el proyecto situando a la izquierda un árbol con todos los archivos y compilaremos con <c>Project->Build All</c>. A la hora de depurar (Die en este caso) crearemos un perfil desde <c>Run->Debug Configurations->C/C++ Application</c>. Pulsamos <c>[Search Project...]</c> y seleccionamos <i>Die</i> en la lista desplegable. Finalmente pulsamos <c>[Debug]</c> para depurar la aplicación de forma interactiva <r>eclipse_debug</r>.
+
+img(eclipse_debug.png,0,.80).Depurando la aplicación <i>Die</i> con Eclipse.
+Depurando la aplicación Die desde Eclipse.
+
+h3.update-alternatives
+
+p.NAppGUI soporta el compilador GCC desde la versión 4.3 (2008). Dada la cantidad de distribuciones Linux existentes y de que cada una incluye su propia versión de GCC, utilizaremos Ubuntu como sistema operativo de referencia <r>gccvers</r>.
+
+table(gccvers).Versiones de GCC.
+row.
+p.
+p.GCC
+p.Ubuntu
+row.
+img(ubuntu_logo.png,32,.05).
+p.8.3.0
+p.18.10
+row.
+img(ubuntu_logo.png,32,.05).
+p.7.3.0
+p.18.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.5.3.1
+p.16.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.4.8.2
+p.14.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.4.6.3
+p.12.04 LTS
+row.
+img(ubuntu_logo.png,32,.05).
+p.4.4
+p.10.04 LTS
+table.
+
+p.Es posible tener varias versiones de GCC instaladas en la misma máquina y alternar entre ellas de forma similar a como hacíamos con <c>xcode-select</c>, mediante la utilidad <c>update-alternatives</c> de Linux. Suponemos que estamos en Ubuntu 18.04:
+
+code(text).Versión de gcc instalada.
+gcc --version
+gcc 7.3.0
+code.
+
+code(text).Instalar gcc-6
+sudo apt-get install gcc-6 g++-6
+code.
+
+code(text).Registrar gcc-7 y gcc-6
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 50 --slave /usr/bin/g++ g++ /usr/bin/g++-6
+code.
+
+code(text).Cambiar a gcc-6.
+sudo update-alternatives --set gcc /usr/bin/gcc-6
+gcc --version
+gcc 6.5.0
+g++ --version
+g++ 6.5.0
+code.
+
+code(text).Volver a la versión por defecto de gcc.
+sudo update-alternatives --auto gcc
+gcc --version
+gcc 7.3.0
+g++ --version
+g++ 7.3.0
+code.
+
+h3.Toolkits
+
+p.A diferencia de Windows y macOS, en Linux se pueden crear interfaces de usuario utilizando diferentes librerías (o <i>toolkits</i>) siendo GTK y Qt las dos más famosas. NAppGUI utiliza GTK+3 para la parte gráfica en Linux (ver <lh>Dependencias</lh>), aunque en un futuro es posible que incorpore también el soporte para Qt, ya que es la base del sistema de escritorio KDE, utilizado en Kubuntu.
+
+p.GTK+3 se encuentra de forma natural en Ubuntu y muchas otras distribuciones, aunque para compilar es necesario instalar la versión de desarrollador.
+
+code(text).Instalar la versión de desarrollo de GTK+3.	
+sudo apt-get install libgtk-3-dev
+code.
+
+h3.Linux 32bits
+
+p.Para compilar aplicaciones 32bits desde un sistema Ubuntu 64bits es necesario instalar el paquete <c>multilib</c>:
+
+code(text).
+sudo apt-get install gcc-multilib
+code.
+
+p.Pero actualmente existen <l>https://ubuntuforums.org/showthread.php?t=2038875''problemas</l> para realizar compilación cruzada que incluya la librería GTK+, por lo que no será posible utilizar la misma máquina de desarrollo para generar en ambas arquitecturas, como ocurre en Windows. Las aplicaciones de consola o librerías que no accedan a GTK sí que se pueden compilar en 32bits desde un ordenador de 64bits.
+
+bq.No es posible compilar en 32bits desde un sistema Ubuntu de 64bits aplicaciones que utilicen GTK+3. 
+
+h3.Arquitectura ARM
+
+p.La arquitectura <l>https://en.wikipedia.org/wiki/ARM_architecture''ARM</l> <i>Advanced RISC Machine</i> es la predominante en el mercado de los dispositivos embebidos como teléfonos inteligentes y tablets. Actualmente, NAppGUI no ofrece soporte para el desarrollo de aplicaciones móviles iOS/Android, pero sí para otro tipo de placas que soporten versiones de Linux ARM "de escritorio", como la Raspberry PI con Raspbian. Para portar nuestro código a Raspberry Pi hay que seguir los mismos pasos que en Ubuntu Linux <r>raspberry_debug</r>. Ambas distribuciones están basadas en Debian, por lo que disponemos de GCC, CMake y Eclipse de forma directa a través de <c>apt-get</c>. 
+
+img(raspberry_debug.png,0,.80).Depuración de la aplicación <i>Die</i> en una Raspberry Pi. 
+Depuración de una aplicación C en una Raspberry Pi, utilizando Eclipse.
+
+h2.Configuraciones
+
+p.Una aplicación NAppGUI se puede compilar en tres configuraciones diferentes, en función del nivel de depuración que necesitemos.
+
+li.<i>Debug</i>: Incluye información de depuración en los binarios y no se realizan optimizaciones del código. Es la versión para el desarrollador.
+
+li.<i>Release</i>: Se elimina la información de depuración y se realizan todas las optimizaciones posibles. Es la versión para el usuario. 
+
+li.<i>ReleaseWithAssert</i>: Es la versión de Release, pero dejando activas las sentencias <lp>cassert</lp>. Está dirigida al usuario final, pero en casos donde es necesario obtener información detallada de posibles anomalías, a costa de una bajada del rendimiento global del programa.
+
+p.Tanto Visual Studio como Xcode son entornos multi-configuración, es decir, podemos alternar entre una y otra directamente desde el propio editor. En Visual Studio tenemos un desplegable en la parte superior del editor <r>config_vs</r>.
+
+img(config_vs.png,0,.65).Cambio de configuración en Visual Studio.
+Menú de selección de configuración en Visual Studio.
+
+p.En Xcode está un poco más escondido. Hacemos <c>Product->Scheme->Edit Scheme</c>. Aparecerá una ventana emergente. Seleccionamos <c>Run->Info->Build Configuration</c> <r>config_xcode</r>.
+
+img(config_xcode.png,0,.65).Cambio de configuración en Xcode.
+Menú de selección de configuración en Xcode.
+
+p.Desafortunadamente, <c>Unix make</c> no soporta múltiples configuraciones. Esto nos obliga a introducir la propiedad <c>CMAKE_BUILD_CONFIG</c> <r>config_cmake</r> para establecer la configuración en CMake antes de generar los <c>Makefile</c>. Deberemos volver a pulsar <c>[Configure]</c> y <c>[Generate]</c> para que la nueva configuración surja efecto.
+
+img(config_cmake.png,0,.80).Cambio de configuración en CMake (Unix Makefile).
+Menú de selección de configuración en CMake.
+
+h2.Instaladores
+
+p.El último paso, una vez creado y depurado un programa, será el de crear un paquete/instalador que contenga el ejecutable y sus posibles dependencias, para distribuirlo de forma cómoda al usuario final. Este proceso de empaquetado se ha automatizado en NAppGUI gracias a CPack, una utilidad incluida con CMake. El proceso es sencillo, tan solo hay que seguir tres pasos:
+
+li.Indicar que deseamos empaquetar una aplicación a través del último parámetro del comando <c>desktopApp</c> (<c>CMakeLists.txt</c>), que ya vimos en <lh>Soluciones y proyectos</lh>. Cambiamos <c>NO</c> por <c>YES</c>.
+
+code(text).
+desktopApp(Die die "" NRC_EMBEDDED YES)
+code.
+
+bq.El empaquetado de un programa consume tiempo. Cambiar a <c>YES</c> únicamente cuando vayamos a distribuir. Durante el proceso de desarrollo mantener el valor <c>NO</c>.
+
+li.En CMake hay una variable denominada <c>CMAKE_PACKAGE_PATH</c> en la que debemos establecer el directorio en el que van a guardar los paquetes generados.
+
+li.Seleccionar el tipo de empaquetado a través de la variable <c>CMAKE_PACKAGE_GEN</c> que admite tres valores:
+
+lili.<c>TGZ</c>: Crea un paquete comprimido <c>.tar.gz</c> que puede abrirse con cualquier utilidad <c>.zip</c> instalada en el ordenador <r>pack_tgz</r>. 
+
+img(pack_tgz.png,0,.80).Empaquetado .tar.gz en Linux.
+Empaquetado de una aplicación con .tar.gz.
+
+lili.<c>DragNDrop</c>: (Solo macOS). Crea una unidad <c>dmg</c> con un bundle <c>.app</c> y un enlace a la carpeta <c>/Applications</c> <r>pack_drag_n_drop</r>.
+
+img(pack_drag_n_drop.png,0,.80).Empaquetado dmg en macOS.
+Empaquetado de una aplicación con .tar.gz.
+
+lili.<c>NSIS</c>: (Solo Windows). Crea un instalador mediante la utilidad <i>Nullsoft scriptable install system</i> <r>pack_nsis</r>. Es necesario tener instalado el software <l>https://nsis.sourceforge.io/Download''NSIS</l> (solo para crear el instalador). El usuario que recibe el paquete no es necesario que tenga dicho software instalado.
+
+img(pack_nsis.png,0,.80).Instalador NSIS.
+Instalador NSIS con la aplicación que acabamos de crear.
+
+p.Cada paquete incluye una copia de la licencia con la que vamos a distribuir la aplicación. El contenido de la misma podemos editarlo a partir del archivo <c>/res/license.txt</c> incluido en el directorio de recursos de cada proyecto. 
+

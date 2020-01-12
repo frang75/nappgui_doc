@@ -1,0 +1,26 @@
+langrev.
+
+h1.Resource packs
+
+ep.Allows access to resource packages. More information in <lp>resources</lp>.
+
+func(respack_destroy).Destroy a resource package.
+fpar(ResPack**,pack).Resource Package. Will be set to <c>NULL</c> after destruction.
+
+func(respack_text).Get a text from a resource package.
+fret(const char_t*).UTF8 C string terminated in null character <c>'\0'</c>.
+fpar(const ResPack*,pack).Resource package.
+fpar(const ResId,id).Resource identifier.
+
+func(respack_image).Get an image of a resource package.
+fret(const Image*).Image.
+fpar(const ResPack*,pack).Resource package.
+fpar(const ResId,id).Resource identifier.
+fnote.This function is added by <lp>draw2d</lp> library, which is the one who knows how to manipulate images. It will not be available for projects that depend only on <lp>core</lp>. In these cases, it is possible to access the contents of the image file through <lf>respack_file</lf>.
+
+func(respack_file).Get a pointer to the contents of a file, included in a resource package.
+fret(const byte_t*).Pointer to file content (raw bytes).
+fpar(const ResPack*,pack).Resource package.
+fpar(const ResId,id).Resource identifier.
+fpar(uint32_t*,size).Get the file size in bytes.
+

@@ -1,0 +1,140 @@
+langrev.
+
+h1.Files and directories
+
+ep.Access to the local file system of the computer.
+
+p.The file system is the hierarchical structure composed of directories and files that allows to organize the persistent data of the computer <r>filesystem</r>. It is something that computer users are very familiar with, especially after the irruption of the graphic systems that introduced the desktop simile, folder and document. It starts in a directory called root (<c>/</c> in Unix or <c>C:\</c> in Windows) and, from here, they hang all the sub-directories and files forming a tree that grows in depth.
+
+img(filesystem.svg,420,.5).Typical structure of a file system.
+Scheme of a typical file system.
+
+p.At the programming level, the file system is managed through system calls that allow you to create directories, browse their contents, open files, delete them, obtain attributes, etc. A process can read or write data to a file after opening an I/O channel (<lp>stream</lp>) which provides a flow of binary data from or to the process itself <r>filestream</r>.
+
+img(filestream.svg,420,.5).After opening a file, the process has an I/O channel to read or write data.
+Scheme of I/O stream from the process to the file.
+
+h2.Filename and pathname
+
+p.These two concepts are recurrent and widely used by API functions that manipulate files. When we navigate through the contents of a directory <lf>bfile_dir_get</lf>, we obtain a sequence of <i>filenames</i> that is the "flat" name of the element (file or subdirectory) without including its path within the file system (without characters <c>'/'</c> or <c>'\'</c>). On the other hand the <i>pathname</i> is a sequence of one or several <i>filenames</i> separated by <c>'/', '\'</c>, which indicates the way forward to locate a certain element. This path can be <b>absolute</b> when it starts with the root directory (<c>C:\Users\john\docs\images\party.png</c>) or <b>relative</b> (<c>docs\images\party.png</c>) when it indicates the partial route from the process current <i>working directory</i>. This working directory by default can be changed with <lf>bfile_dir_set_work</lf>.
+
+h2.Home and AppData
+
+p.These are two typical directories used by applications to store files relative to a particular user. On the one hand, <i>home</i> indicates the personal directory of the user currently registered in the system, typically <c>C:\Users\john</c> (Windows), <c>/home/john</c> (Linux) or <c>/Users/john</c> (macOS) and we can get it with <lf>bfile_dir_home</lf>. On the other hand <i>appdata</i> <lf>bfile_dir_data</lf> is a directory reserved for saving temporary or configuration data of applications. Typical locations can be <c>C:\Users\john\AppData\Roaming</c> (Windows), <c> /home/john/.config</c> (Linux) or <c>/User/john/Library</c> (macOS). The usual thing will be to create a sub-folder with the name of the application <c>/User/john/Library/TheApp</c>.
+
+func(bfile_dir_work).Gets the current working directory of the process. It is the directory from which the relative <i>pathnames</i> will be interpreted.
+fret(uint32_t).The number of bytes written in <c>pathname</c>, including the null character <c>'\0'</c>.
+fpar(char_t*,pathname).Buffer where the directory will be written.
+fpar(const uint32_t,size).Size in bytes of the buffer <c>pathname</c>.
+fnote.<lh>Filename and pathname</lh>
+
+func(bfile_dir_set_work).Change the current working directory of the application. The relative <i>pathnames</i> will be interpreted from here.
+fret(bool_t).<c>TRUE</c> if the working directory has changed, <c>FALSE</c> if there have been any errors.
+fpar(const char_t*,pathname).The name of the directory.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.<lh>Filename and pathname</lh>
+
+func(bfile_dir_home).Get the <c>home</c> directory of the current user.
+fret(uint32_t).The number of bytes written in <c>pathname</c>, including the null character <c>'\0'</c>.
+fpar(char_t*,pathname).Buffer where the directory will be written.
+fpar(const uint32_t,size).Size in bytes of the buffer <c>pathname</c>.
+fnote.<lh>Filename and pathname</lh>
+
+func(bfile_dir_data).Gets the <i>AppData</i> directory where application configuration data can be saved.
+fret(uint32_t).The number of bytes written in <c>pathname</c>, including the null character <c>'\0'</c>.
+fpar(char_t*,pathname).Buffer where the directory will be written.
+fpar(const uint32_t,size).Size in bytes of the buffer <c>pathname</c>.
+fnote.<lh>Home and AppData</lh>
+
+func(bfile_dir_exec).Gets the absolute <i>pathname</i> of the current executable.
+fret(uint32_t).The number of bytes written in <c>pathname</c>, including the null character <c>'\0'</c>.
+fpar(char_t*,pathname).Buffer where the directory will be written.
+fpar(const uint32_t,size).Size in bytes of the buffer <c>pathname</c>.
+fcode.
+char_t path[512];
+bfile_dir_exec(path, 512);
+path = "C:\Program Files\TheApp\theapp.exe"
+fcode.
+
+func(bfile_dir_create).Create a new directory. It will fail if any intermediate directory of <c>pathname</c> does not exist. 
+fret(bool_t).<c>TRUE</c> if the directory has been created, <c>FALSE</c> if there have been any errors.
+fpar(const char_t*,pathname).Name of the directory to be created, ending in a null character <c>'\0'</c>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.<lf>hfile_dir_create</lf> create all intermediate directories at once.
+
+func(bfile_dir_open).Open a directory to browse its contents. Then you have to use <lf>bfile_dir_get</lf> to iterate. The <i>filename</i> is not ordered under any criteria. At the end, you should call <lf>bfile_dir_close</lf>.
+fret(Dir*).The directory handler or <c>NULL</c> if there has been an error.
+fpar(const char_t*,pathname).Name of the directory, ending in a null character <c>'\0'</c>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(bfile_dir_close).Close a previously open directory with <lf>bfile_dir_open</lf>.
+fpar(Dir**,dir).The directory handler. It will be set to <c>NULL</c> after the closing.
+
+func(bfile_dir_get).Gets the attributes of the current file when we go through a directory. Previously we have to open the directory with <lf>bfile_dir_open</lf>.
+fret(bool_t).<c>TRUE</c> if the file attributes have been read correctly. When there are no more files to go, it returns <c>FALSE</c> with <c>error=</c><lt>ekFNOFILES</lt>. 
+fpar(Dir*,dir).Open directory handler.
+fpar(char_t*,filename).Here will write the name of the file or sub-directory, ending in a null character <c>'\0'</c> and without including any path. Can be <c>NULL</c>.
+fpar(const uint32_t,size).Size in bytes of the <c>name</c> buffer.
+fpar(file_type_t*,type).Get the file type. Can be <c>NULL</c>.
+fpar(uint64_t*,fsize).Gets the file size in bytes. Can be <c>NULL</c>.
+fpar(Date*,updated).Gets the date of the last update of the file. Can be <c>NULL</c>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.This function will advance to the next file within the open directory after obtaining the current item's data. If there is not enough space in <c>name</c>, will return <c>FALSE</c> with <c>error=</c><lt>ekFBIGNAME</lt> and will not advance to the next file. Use <lf>hfile_dir_loop</lf> to browse the contents of a directory more comfortably.
+
+func(bfile_dir_delete).Delete a directory. It will fail if the directory is not completely empty. Use <lf>hfile_dir_destroy</lf> to completely and recursively erase a directory that may have content.
+fret(bool_t).<c>TRUE</c>if the directory has been deleted, <c>FALSE</c> otherwise.
+fpar(const char_t*,pathname).Name of the directory, ending in a null character <c>'\0'</c>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(bfile_create).Create a new file. If previously it already exists its content will be erased. The new file will be opened for writing.
+fret(File*).The file handler or <c>NULL</c> if there has been an error.
+fpar(const char_t*,pathname).File name including its absolute or relative path.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(bfile_open).Open an existing file. Do not create it, if file does not exist this function will fail.
+fret(File*).The file handler or <c>NULL</c> if there has been an error.
+fpar(const char_t*,pathname).File name including its absolute or relative path.
+fpar(const file_mode_t,mode).Opening mode.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(bfile_close).Close a file previously opened with <lf>bfile_create</lf> or <lf>bfile_open</lf>.
+fpar(File**,file).File handler. It will be set to <c>NULL</c> after closing.
+
+func(bfile_lstat).Get the attributes of a file through its <i>pathname</i>.
+fret(bool_t).<c>TRUE</c>if it worked correctly, or <c>FALSE</c> otherwise.
+fpar(const char_t*,pathname).File name including its absolute or relative path.
+fpar(file_type_t*,type).Get the file type. Can be <c>NULL</c>.
+fpar(uint64_t*,fsize).Gets the file size in bytes. Can be <c>NULL</c>.
+fpar(Date*,updated).Gets the date of the last update of the file. Can be <c>NULL</c>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(bfile_fstat).Get the attributes of a file through its handler.
+fret(bool_t).<c>TRUE</c>if it worked correctly, or <c>FALSE</c> otherwise.
+fpar(File*,file).File manager.
+fpar(file_type_t*,type).Get the file type. Can be <c>NULL</c>.
+fpar(uint64_t*,fsize).Gets the file size in bytes. Can be <c>NULL</c>.
+fpar(Date*,updated).Gets the date of the last update of the file. Can be <c>NULL</c>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+
+func(bfile_read).Read data from an open file.
+fret(bool_t).<c>TRUE</c> if the data has been read correctly. If there is no more data (end of the file) it returns <c>FALSE</c> with <c>rsize = 0</c> and <c>error=</c><lt>ekFOK</lt>.
+fpar(File*,file).File handler.
+fpar(byte_t*,data).Buffer where the read data will be written.
+fpar(const uint32_t,size).The number of maximum bytes to read.
+fpar(uint32_t*,rsize).Receive the number of bytes actually read. Can be <c>NULL</c>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.<lh>File stream</lh> implements high-level functions for reading/writing files.
+
+func(bfile_write).Write data in an open file.
+fret(bool_t).<c>TRUE</c> if the data has been written, or <c>FALSE</c> if there have been any errors.
+fpar(File*,file).File handler.
+fpar(const byte_t*,data).Buffer that contains the data to write.
+fpar(const uint32_t,size).The number of bytes to write.
+fpar(uint32_t*,wsize).It receives the number of bytes actually written. Can be <c>NULL</c>.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.
+fnote.<lh>File stream</lh> implements high-level functions for reading/writing files.
+
+func(bfile_delete).Delete a file from the file system.
+fret(bool_t).<c>TRUE</c> if the file has been deleted, or <c>FALSE</c> if any error has occurred.
+fpar(const char_t*,pathname).File name including its absolute or relative path.
+fpar(ferror_t*,error).Error code if the function fails. Can be <c>NULL</c>.

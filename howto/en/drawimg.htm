@@ -1,0 +1,14 @@
+h1.Drawing on an image
+
+p.In this example we see how to generate vector graphics in two different contexts using the same drawing code <r>drawimg_win</r>. On the left side we render directly into the window through a <lt>View</lt> control. On the right side generate an image using different resolutions. To show it we use a <lt>ImageView</lt> control configured to stretch the image in case it is smaller than the control itself, which makes clear the loss of quality. The <b>source code</b> is in folder <c>/src/howto/drawimg</c> of the SDK distribution.
+
+img(drawimg_win.png,0,1).2D Contexts: Window (left), Image (right).
+Application where different drawing contexts are used.
+
+img(drawimg_macos.png,0,1).macOS version.
+Macos version of application.
+
+img(drawimg_linux.png,0,1).Linux version.
+Linux version of application.
+
+codefile(howto/drawimg/drawimg.c).

@@ -1,0 +1,150 @@
+
+h1.Habilitar SSH
+
+# IMPORTANTE!!!!!
+# OJO!!!! Cuando en Windows no funciona el authorized_keys
+# https://stackoverflow.com/questions/16212816/setting-up-openssh-for-windows-using-public-key-authentication
+
+p.La base de la <lp>contint</lp> es la comunicación en red o, más concretamente, la posibilidad de ejecutar comandos de forma remota desde una máquina a otra. A día de hoy el estándar es SSH <i>(Secure Shell)</i>, un protocolo y aplicación que permite ejecutar comandos a través de una red, añadiendo una capa de cifrado entre emisor y receptor <r>sshls</r> <r>ssh</r>. Deberemos asegurar que SSH está presente y funcionando en todas las máquinas del <i>Build Grid</i>.
+
+code(text,sshls).Obtener la lista de archivos de una máquina remota mediante SSH.
+C:\Users>ssh fran@192.168.1.24 ls
+fran@192.168.1.24's password:
+Desktop
+Documents
+Downloads
+examples.desktop
+Music
+Pictures
+Public
+Templates
+Videos
+code.
+
+img(ssh.svg,480,.65).El protocolo SSH encripta la información que intercambian dos nodos.
+Comunicación de dos ordenadores mediante SSH indicando la encriptación de la información.
+
+h2.SSH en Windows
+
+p.Windows 10 incluye soporte para SSH, pero no está activo por defecto. Debes activarlo en <c>Settings->Apps->Manage Optional Features->Add a Feature->OpenSSH Client/Server</c> <r>sshwin</r>. Para asegurar que servicio está funcionando ejecuta <c>services.msc</c> y arranca <c>OpenSSH SSH Server</c> si no está corriendo ya.
+
+img(sshwin.png,480,.5).Activación de SSH en Windows.
+Captura de las opciones SSH en Windows 10.
+
+h2.SSH en macOS
+
+p.SSH también está incluido en los sistemas operativos de Apple. Para activarlo: 
+
+li.Abre <c>System Preferences</c> desde el menú Apple y haz clic en el panel <i>Sharing</i>.
+
+li.Activa la opción <i>Remote Login</i> <r>sshmac</r>.
+
+li.Esto arrancará instantáneamente varios servicios, incluidos SFTP y SSH.
+
+p.Por razones de seguridad, SSH no accede a todas las variables de entorno del shell bash en macOS. Esto puede provocar que un comando remoto falle, pero que tecleado desde un terminal en la propia máquina sí que funcione. Por ejemplo, esto ocurre al intentar ejecutar <c>cmake</c> o <c>svn</c> de forma remota. Para subsanarlo:
+
+li.Añadimos las rutas necesarias a la variable <c>PATH</c> en <c>/.ssh/environment</c>.
+
+code(text).Modificación de <c>PATH</c> en <c>/.ssh/environment</c>
+PATH=$PATH:/bin:/usr/bin:/Applications/CMake.app/Contents/bin
+code.
+
+li.Editamos el archivo <c>/etc/ssh/sshd_config</c>, habilitando la variable <c>PermitUserEnvironment yes</c>.
+
+li.Paramos y re-lanzamos el servicio mediante el check <i>Remote Login</i> de <i>Sharing</i>.
+
+img(sshmac.png,-1,.55).Activación de SSH en macOS.
+Captura de las opciones SSH en macOS.
+
+h2.SSH en Linux
+
+p.Por defecto, SSH no está incluido en Ubuntu. Para esta distribución y otras basadas en Debian, el servicio se instala y activa con este comando.
+
+code.
+sudo apt-get install openssh-server -y
+code.
+
+h2.SSH sin password
+
+p.Una vez activado el SSH en todas las máquinas de la red, ya podemos ejecutar comandos remotos desde el <i>Build Master</i> como hemos visto en <r>sshls</r>. El problema es que SSH nos pedirá continuamente la contraseña del usuario remoto, algo que va a entorpecer la automatización del sistema de IC. Para evitar esto, tenemos que instalar el certificado <i>rsa</i> del <i>Build Master</i> en todas las máquinas remotas (los <i>Build Host</i>) para que reconozcan al emisor del comando y no le pidan contraseña.
+
+li.Desde el <i>Build Master</i>, abre un terminal y teclea <c>ssh-keygen</c>. Esto generará dos certificados <i>rsa</i> en <c>.ssh</c> uno privado, que se quedará en el master y otro público que irá al host.
+
+code(text).Generando el certificado rsa en el Master.
+fran~>ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/fran/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/fran/.ssh/id_rsa.
+Your public key has been saved in /home/fran/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:Up6KjbnEV4Hgfo75YM393QdQsK3Z0aTNBz0DoirrW+c fran@192.168.1.24
+The key's randomart image is:
++---[RSA 2048]----+
+|    .      ..oo..|
+|   . . .  . .o.X.|
+|    . . o.  ..+ B|
+|   .   o.o  .+ ..|
+|    ..o.S   o..  |
+|   . %o=      .  |
+|    @.B...     . |
+|   o.=. o. . .  .|
+|    .oo  E. . .. |
++----[SHA256]-----+
+code.
+
+li.Copia el archivo <c>id_rsa.pub</c> en el directorio de usuario de cada <i>Build Host</i>.
+
+code.Paso del certificado rsa del Master al Host
+cd .ssh
+scp id_rsa.pub fran@192.168.1.24:./.ssh
+code.
+
+li.Abre un terminal en el Host y teclea:
+
+code.Instalando el certificado rsa
+cd .ssh
+type id_rsa.pub >> authorized_keys   (Windows)
+...
+cd .ssh
+cat id_rsa.pub >> authorized_keys    (macOS/Linux)
+code.
+
+li.Si todo ha ido bien, ya podemos ejecutar un comando remoto sin que nos pida contraseña <r>remote</r>, ya que el servidor SSH que corre en el <i>Build Host</i>, reconoce al computador <i>Build Master</i>.
+
+code(text).SSH sin contraseña.
+C:\Users>ssh fran@192.168.1.24 ls
+Desktop
+Documents
+Downloads
+examples.desktop
+Music
+Pictures
+Public
+Templates
+Videos
+code.
+
+img(remote.svg,-1,.65).Ejecución de un comando en una máquina remota sin necesidad de utilizar <i>password</i>.
+Comando ssh en máquina remota sin password.
+
+h2.SSH desde C
+
+p.El sistema de IC debe ser capaz de lanzar comandos SSH desde el propio programa en vez del terminal, con el fin de coordinar a los <i>Build Host</i> para completar las tareas de los <i>Build Profile</i>. En <r>sshc</r> vemos como hacerlo desde el lenguaje C. En <lh>Lanzando procesos</lh> tienes más información sobre el API de multi-procesamiento de NAppGUI.
+
+code(cpp,sshc).Ejecución de un comando SSH desde un procedimiento en C.
+Proc *proc = bproc_exec("ssh fran@192.168.1.24 ls", NULL, NULL);
+if (proc != NULL)
+{
+    byte_t buffer[512];
+    uint32_t rsize;
+    Stream *stm = stm_memory(1024);
+    while (bproc_read(proc, buffer, sizeof(buffer), &rsize, NULL) == TRUE)
+        stm_write(stm, buffer, rsize);
+
+    bproc_wait(proc);
+    bproc_close(&proc);
+    return stm;
+}
+code.

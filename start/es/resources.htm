@@ -1,0 +1,294 @@
+
+h1.Recursos
+
+p.Los recursos son datos necesarios para la aplicación pero que no residen en el área del ejecutable. En otras palabras, no son accesibles directamente mediante las variables del programa, sino que hay que realizar una carga previa para poderlos utilizar. Los más habituales son los textos y las imágenes utilizadas en la interfaz de usuario, aunque cualquier tipo de archivo puede convertirse en un recurso (sonidos, tipografías, modelos 3d, páginas html, etc). Vamos a seguir trabajando en la aplicación <lp>die</lp> <r>die_application</r>, esta vez profundizando en el uso de recursos.
+
+img(die_application.png,0,.65).Aplicación Die.
+Captura de la aplicación de ejemplo Die.
+
+h2.Tipos de recursos
+
+li.<b>Textos</b>: Si bien es muy sencillo incluir textos en el código como variables de C, en la práctica esto no es aconsejable por dos motivos: El primero es que, normalmente, no son los programadores los que redactan los mensajes que muestra el programa. Separándolos en un archivo a parte, otros miembros del equipo pueden revisarlos y editarlos sin tener que acceder directamente al código. La segunda razón es la internacionalización. Es requisito casi indispensable a día de hoy poder cambiar el idioma del programa y esto puede involucrar a varios miembros del equipo, así como el hecho de que varias cadenas de texto harán referencia al mismo mensaje. Por tanto, extraerlos del código fuente será casi indispensable.
+
+li.<b>Imágenes</b>: No es habitual que los iconos del programa cambien en función del idioma, aunque pueda darse el caso. Lo complicado aquí es transformar un archivo .jpg o .png en una variable C <r>serialimg</r>. Hay que serializar el archivo y pegarlo en el código, algo muy tedioso y difícil de mantener para el programador. Es preferible tener las imágenes en una carpeta separada y acceder a ellas en tiempo de ejecución.
+
+code(cpp,serialimg).Imagen .png incrustada en el código fuente.
+const uint32_t IMG_SIZE = 1262;
+
+const byte_t IMG[] = { 
+            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 
+            ... };
+code.
+
+li.<b>Archivos</b>: Al margen de texto e imágenes, cualquier archivo puede convertirse en un recurso. En este caso, la aplicación recibirá un bloque de bytes con el contenido del mismo, que deberá saber interpretar.
+
+h2.Crear recursos
+
+p.Si vamos al directorio fuente de la aplicación (<c>C:\nappgui\die</c>), vemos que hay una carpeta llamada <c>res</c> añadida por CMake al crear el proyecto. Dentro hay varios iconos <c>logo.*</c> y un <c>license.txt</c>. Ahora crea una subcarpeta dentro de <c>res</c> que se llame <b>all</b> y, dentro de ella, crea el archivo <c>strings.msg</c>. Ábrelo y añade estas líneas:
+
+codefile(demo/die/res/all/strings.msg).Fichero de mensajes de Die.
+
+p.Acto seguido, copia en la carpeta <c>all</c> la imagen <c>cards.png</c> y los iconos <c>spain.png</c> y <c>usa.png</c>. Este recién creado directorio es un <b>paquete de recursos</b>, y todo su contenido será cargado "en bloque" por la aplicación <r>resfolder</r>. 
+
+img(resfolder.png, 0, .6).Paquete de recursos en <c>src/die/res/all</c>.
+Captura del explorador de Windows mostrando el directorio de recursos de la aplicación.
+
+bq.Cada subcarpeta dentro de <c>res</c> será considerada un paquete de recursos diferente y podrá ser cargada o liberada en tiempo de ejecución por el programa.
+
+p.Cada línea dentro del archivo <c>strings.msg</c> define un nuevo mensaje y consta de un identificador (p.e. <c>TEXT_FACE</c>) seguido del texto que se mostrará en el programa (<i>Face</i> en este caso). Se considera texto desde el primer carácter no blanco después del identificador hasta el final de la línea. No es necesario ponerlo entre comillas (<c>"Face"</c>) como ocurre en C:
+
+code(text).
+BILLY   Billy "the Kid" was an American Old West outlaw.
+OTHER   Other text.
+code.
+
+p(noindent).Tampoco hay que utilizar secuencias de escape, con la única excepción de <c>'\n'</c> para mensajes multilínea:
+
+code(text).
+TWO_LINES   This is the first line\nAnd this is the second.
+code.
+
+p(noindent).El identificador del mensaje sigue las reglas de los identificadores de C, exceptuando que las letras deben estar en mayúscula:
+
+code(text).
+_ID1    Ok
+0ID2    Wrong!!
+id3     Wrong!!
+ID3     Ok
+code.
+
+p(noindent).Los mensajes aceptan cualquier carácter Unicode. Podemos dividir los textos en tantos archivos <c>*.msg</c> como sea necesario y deben ser almacenados en <b>formato UTF8</b>.
+
+bq.Visual Studio no guarda por defecto los archivos en UTF8. Asegurate de hacerlo en cada <c>*.msg</c> que contenga caracteres no US-ASCII. <c>File->Save As->Save with encoding-> Unicode (UTF8 Without Signature) - Codepage 65001</c>.
+
+h2.Localización de recursos
+
+p.Hemos utilizado el Inglés como el idioma principal del programa. Ahora vamos a incluir una traducción al idioma Español. Para ello volvemos a la carpeta <c>die/res/all</c>, donde crearemos el subdirectorio <c>es_es</c> y copiamos el archivo <c>strings.msg</c> <r>resfolder_localized</r>. Pulsamos <c>[Generate]</c> y vemos que en Visual Studio ha aparecido una nueva subcarpeta con una nueva versión de <c>strings.msg</c>. Desde aquí ya podemos traducir los textos <r>edit_spanish</r>. Cuando esté listo, de nuevo, <c>[Generate]</c>.
+
+img(resfolder_localized.png, 0, .5).Subdirectorio de recursos localizados, <b><c>src/die/res/all/es_es</c></b>.
+Captura del explorador de Windows que muestra el subdirectorio de recursos traducidos al Español.
+
+img(edit_spanish.png,560,.8).Traducción de textos al Español. Los identificadores deben ser los mismos que en Inglés.
+Captura de Visual Studio que muestra el archivo de mensajes traducido al Español.
+
+p.Debemos tener en cuenta unas sencillas reglas a la hora de localizar recursos:
+
+li.Si no existe la versión local de un recurso, se utilizará la versión global del mismo. CMake avisará en el caso que haya <b>textos sin traducir</b> <lh>Avisos de nrc</lh>.
+
+li.Se ignorarán aquellos recursos solo presentes en carpetas locales. Es imperativo que exista la versión global.
+
+li.No se permiten "subpaquetes" de recursos. Solo se procesarán dos niveles: <c>/res/pack</c> para los globales y <c>/res/pack/local</c> para los localizados.
+
+li.Se ignorarán los recursos existentes en la carpeta raíz (<c>/res</c>). Todos los recursos deben estar vinculados a un paquete.
+
+li.Los textos localizados deben tener el mismo identificador que su correspondiente global. De lo contrario se consideran mensajes diferentes.
+
+li.Para crear la versión localizada de una imagen u otro archivo, incluirlo en su correspondiente carpeta local (p.e. <c>/res/all/es_es/cards.png</c>) utilizando <b>el mismo nombre de fichero</b> que la versión global.
+
+li.Para nombrar las carpetas localizadas, utilizar el código de idioma de dos letras <l>https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes''ISO 639-1</l> (en, es, fr, de, zh, ...) y, opcionalmente, el código de país de dos letras <l>https://en.wikipedia.org/wiki/ISO_3166-1''ISO-3166</l> (en_us, en_gb, ...).
+
+h2.Carga y traducción
+
+p.Para cada paquete de recursos, CMake ha creado un <c>*.h</c> del mismo nombre que la carpeta: <c>all.h</c> en este caso <r>reshead</r>. Este archivo contiene los identificadores de recursos, así como una función que nos permite acceder a los mismos <c>all_respack()</c>. En <r>autotras</r> vemos las acciones a realizar para utilizar dichos recursos en nuestro programa.
+
+code(cpp,reshead).Fichero de cabecera <c>all.h</c>.
+/* Automatic generated by NAppGUI Resource Compiler (nrc-r1490) */
+
+#include "core.hxx"
+
+__EXTERN_C
+
+/* Messages */
+extern ResId TEXT_FACE;
+extern ResId TEXT_PADDING;
+extern ResId TEXT_CORNER;
+extern ResId TEXT_RADIUS;
+extern ResId TEXT_ONE;
+extern ResId TEXT_TWO;
+extern ResId TEXT_THREE;
+extern ResId TEXT_FOUR;
+extern ResId TEXT_FIVE;
+extern ResId TEXT_SIX;
+extern ResId TEXT_TITLE;
+extern ResId TEXT_INFO;
+extern ResId TEXT_LANG;
+extern ResId TEXT_ENGLISH;
+extern ResId TEXT_SPANISH;
+
+/* Files */
+extern ResId CARDS_PNG;
+extern ResId SPAIN_PNG;
+extern ResId USA_PNG;
+
+ResPack *all_respack(const char_t *local);
+
+__END_C
+code.
+
+code(cpp,autotras).Carga y uso de recursos.
+#include "all.h"
+
+gui_respack(all_respack);
+gui_language("");
+...
+label_text(label1, TEXT_FACE);
+imageview_image(vimg, CARDS_PNG);
+...
+static void i_OnLang(App *app, Event *e)
+{
+    const EvButton *params = event_params(e, EvButton);
+    const char_t *lang = params->index == 0 ? "en_us" : "es_es";
+    gui_language(lang);
+    unref(app);
+}
+code.
+
+li.La línea 1 incluye la cabecera del paquete de recursos <r>reshead</r>, que ha sido generada automáticamente por CMake.
+
+li.La línea 3 registra el paquete en <lp>gui</lp>, la librería encargada de la interfaz gráfica. Si la aplicación tuviese más paquetes de recursos los añadiríamos de la misma forma.
+
+li.La línea 4 establece el lenguaje por defecto (Inglés).
+
+li.Las líneas 6 y 7 asignan un texto y una imagen a dos controles respectivamente. Los identificadores están definidos en <c>"all.h"</c>, como acabamos de ver.
+
+li.La línea 13 traduce toda la interfaz como respuesta a un cambio en el control <lp>popup</lp> <r>die_translated</r>.
+
+img(die_translated.gif,0,.65).Traducción de la aplicación Die, sin destruir la ventana ni reiniciar.
+Animación de la aplicación Die, traduciendo la interfaz en tiempo de ejecución.
+
+p.Básicamente, una llamada a <lf>gui_language</lf>, implica coordinar tres acciones:
+
+li.Cargar los recursos localizados y sustituirlos por los actuales.
+
+li.Asignar los nuevos textos e imágenes a todos los controles y menús del programa.
+
+li.Volver a dimensionar las ventanas y los menús, ya que el cambio de textos e imágenes influirá en el tamaño de los controles.
+
+h2.Edición de recursos
+
+p.Para añadir nuevos archivos de recursos o eliminar alguno de los existentes, tan solo debemos ir a la carpeta <c>res/all</c> mediante el explorador de archivos y hacerlo allí directamente. Los archivos de mensajes <c>*.msg</c> se pueden editar desde Visual Studio, ya que CMake los incluye dentro del IDE <r>edit_resources</r>. Tras realizar cualquier cambio en la carpeta de recursos o editar un archivo <c>*.msg</c>, debemos pulsar <c>[Generate]</c> en CMake para que estas modificaciones se vuelvan a integrar en el proyecto. Tras cada actualización, se crearán los identificadores de los nuevos recursos y se eliminarán aquellos cuyo recurso asociado haya desaparecido, lo que producirá errores de compilación que facilitarán la corrección del código.
+
+img(edit_resources.png,560,.8).Edición de recursos dentro de Visual Studio.
+Captura de Visual Studio editando un archivo de mensajes.
+
+h2.Gestión manual
+
+p.Aunque lo habitual será delegar la gestión de recursos en la librería <c>gui</c>, es posible acceder al contenido de los paquetes directamente, como vemos en <r>directres</r>.
+
+code(cpp,directres).Acceso directo a los recursos.
+#include "all.h"
+
+ResPack *pack = all_respack("es_es");
+...
+label_text(label1, respack_text(pack, TEXT_FACE));
+imageview_image(vimg, respack_image(pack, CARDS_PNG));
+...
+respack_destroy(&pack);
+code.
+
+li.La línea 1 incluye la cabecera del paquete de recursos.
+
+li.La línea 3 crea un objeto con el contenido del paquete en idioma Español. Cada paquete de recursos proporcionará su propio constructor, cuyo nombre comenzará por el de su carpeta <c>xxxx_</c>respack().
+
+li.Las líneas 5 y 6 obtienen un texto y una imagen respectivamente para asignarlos a los controles de interfaz.
+
+li.La línea 8 destruye el paquete de recursos, al finalizar su uso.
+
+p.Hay una gran diferencia entre asignar recursos mediante <c>ResId</c> o mediante funciones <c>respack_</c> <r>diffres</r>. En el primer caso, el control label será "sensible" a los cambios de idioma realizados por <lf>gui_language</lf>. Sin embargo, en los casos 2 y 3 se ha asignado un texto constante al control, que no se verá afectado por esta función. Seremos los responsables de cambiar el texto, llegado el caso.
+
+code(cpp,diffres).Diferentes modos de acceso a recursos.
+label_text(label1, TEXT_FACE);
+label_text(label1, respack_text(pack, TEXT_FACE));
+label_text(label1, "Face");
+code.
+
+p.La elección de uno u otro modo de acceso dependerá de los requisitos del programa. Recordamos que para poder llevar a cabo las traducciones automáticas, los recursos deben registrarse con <lf>gui_respack</lf>.
+
+h2.Procesamiento de recursos
+
+p.Vamos a ver con un poco más de detalle como NAppGUI genera los módulos de recursos. Al establecer <c>NRC_EMBEDDED</c> en el comando <c>desktopApp()</c>, le indicamos a CMake que debe procesar los recursos del proyecto Die. También podemos elegir la opción <c>NRC_PACKED</c> de la que hablaremos a continuación. Cuando pulsamos <c>[Generate]</c> CMake recorre las subcarpetas dentro del directorio <c>res</c> de cada proyecto, llamando a la utilidad <b>nrc</b> <i>(NAppGUI Resource Compiler)</i> <r>resources</r>. Este programa se encuentra en la carpeta <c>prj/scripts</c> de la distribución del SDK. Para cada paquete de recursos, <i>nrc</i> crea dos archivos fuente (un <c>.c</c> y un <c>.h</c>) y los vincula con el proyecto. El <c>.h</c> contiene los identificadores y el constructor que hemos visto en <r>reshead</r>. Por su parte, el <c>.c</c> realiza la implementación del paquete en función del contenido de cada carpeta y de la modalidad <c>nrcMode</c>.
+
+img(resources.svg,-1,.75).Procesamiento de recursos mediante CMake y nrc.
+Esquema que muestra como el compilador nrc procesa las carpetas de recursos.
+
+bq.Los archivos creados por <i>nrc</i> se consideran código generado y no se guardan en la carpeta <c>src</c> sino en la carpeta <c>build</c>. Se actualizarán cada vez que se pulse <c>[Generate]</c> en CMake, independientemente de la plataforma en la que estemos trabajando. Por el contrario, los archivos originales de recursos (ubicados en la carpeta <c>res</c>) sí se consideran parte del código fuente.
+
+h2.Distribución de recursos
+
+p.En el capítulo anterior, al crear la solución de Visual Studio, indicamos que había que utilizar la constante <c>NRC_EMBEDDED</c>  en la sentencia <c>desktopApp()</c> dentro del archivo <c>CMakeLists.txt</c>. Existen otras dos modalidades más relacionadas con la gestión de recursos y que pueden ser configuradas por separado dentro de cada comando <c>desktopApp()</c>:
+
+li.<c>NRC_NONE</c>: CMake ignorará el contenido de la carpeta <c>res</c>, a excepción del icono de la aplicación. No se generarán paquetes de recursos aunque exista contenido dentro de esta carpeta.
+
+li.<c>NRC_EMBEDDED</c>: Los recursos, con todas sus traducciones, se integran como parte del ejecutable <r>embedded_resources</r>. Es una opción muy interesante para aplicaciones de pequeño o medio tamaño, ya que en un único archivo <c>*.exe</c> suministraremos todo el programa. No hará falta un instalador y tendremos la certeza de que el software no fallará por la falta de algún fichero externo. El inconveniente es que, obviamente, el tamaño del ejecutable crecerá considerablemente por lo que no es aconsejable en programas con muchos recursos, muy pesados, o con multitud de traducciones.
+
+li.<c>NRC_PACKED</c>: Para cada paquete de recursos, se creará un archivo <c>*.res</c> externo al ejecutable que será cargado y liberado en tiempo de ejecución a medida que sea necesario <r>packed_resources</r>. Las ventajas de este método son las desventajas del anterior y viceversa: Ejecutables más pequeños, pero con dependencias externas (los propios <c>.res</c>) que deberán ser distribuidos conjuntamente. También se optimizará el uso de la memoria, al poder cargar los <c>*.res</c> bajo demanda.
+
+img(embedded_resources.png, 560, .85).Distribución de una aplicación macOS con recursos embebidos.
+Captura de la distribución macOS con recursos embebidos.
+
+img(packed_resources.png, 560, .85).Distribución de la misma aplicación macOS con recursos empaquetados.
+Captura de la distribución macOS con recursos empaquetados.
+
+p.CMake gestiona por nosotros la ubicación de los paquetes de recursos. En aplicaciones Windows y Linux copiará todos los <c>*.res</c> en el directorio del ejecutable. En macOS los situará en la carpeta <c>resources</c> del bundle. Un hecho muy importante es que <b>no tenemos que modificar el código fuente</b> al pasar de una modalidad a otra. <i>nrc</i> ya se encarga de gestionar la carga según el tipo de paquete. Algo lógico puede ser comenzar por <c>NRC_EMBEDDED</c>, y si el proyecto crece, cambiar a <c>NRC_PACKED</c>. Tan solo deberemos volver a pulsar <c>[Generate]</c> (como siempre hacemos) y recompilar el proyecto para que el cambio se haga efectivo.
+
+bq.En Windows y Linux los archivos <c>*.res</c> deben instalarse siempre en el mismo directorio que el ejecutable. En el caso de macOS, CMake genera un bundle listo para distribución e instala los paquetes de recursos en el directorio <c>/resources</c> de dicho bundle.
+
+h2.Avisos de nrc
+
+p.<i>nrc</i> es un script silencioso cuyo trabajo se integra en el <i>build process</i> de CMake, pasando desapercibido en la mayoría de ocasiones. Pero hay veces que detecta anomalías en los directorios de recursos y debe informarnos de alguna manera. En estos casos aparecerá una línea roja en la consola de CMake indicando el proyecto y paquete(s) afectado(s) <r>nrc_warnings</r>. Los detalles los vuelca en el archivo <c>NRCLog.txt</c> ubicado en la carpeta de recursos generados (CMake muestra la ruta completa).  
+
+img(nrc_warnings.png, 0, 1).<i>nrc</i> ha encontrado anomalías al procesar recursos.
+Captura de CMake mostrando anomalías detectadas en el procesamiento de recursos por parte de nrc.
+
+p.Si los fallos son críticos, <i>nrc</i> no podrá generar los <c>*.h</c> y <c>*.c</c> asociados al paquete, impidiendo que la aplicación se pueda compilar (en esencia no deja de ser un error de compilación). Otras veces son meros <i>warnings</i> que convendría arreglar, pero permiten seguir compilando. Concretamente, los <b>errores críticos</b> que afectan a <i>nrc</i> son los siguientes: (los mostramos en Inglés tal y como son escritos en <c>NRCLog.txt</c>).
+
+li.MsgError (%s:%d): Comment not closed (%s).
+
+li.MsgError (%s:%d): Invalid TEXT_ID (%s).
+
+li.MsgError (%s:%d): Unexpected end of file after string ID (%s).
+
+li.Duplicate resource id in '%s' (%s).
+
+li.Can't load resource file '%s'.
+
+li.Error reading '%s' resource directory.
+
+li.Error reading '%s' subdirectories.
+
+li.Error creating '%s' header file.
+
+li.Error creating '%s' source file.
+
+li.Error creating '%s' packed file.
+
+p(noindent).Por otro lado, los avisos no-críticos:
+
+li.Empty message file '%s'.
+
+li.Ignored localized text '%s' in '%s'. Global resource doesn't exists.
+
+li.Ignored localized file '%s' in '%s'. Global resource doesn't exists.
+
+li.There is no localized version of the text '%s' in '%s'.
+
+li.Localized directory '%s' is empty or has invalid resources.
+
+h2.Icono de aplicación
+
+p.Cuando creamos un nuevo proyecto, CMake establece un icono por defecto para la aplicación, que ubica en el directorio <c>/res</c>, con el nombre <c>logo*</c>. Esta imagen quedará "incrustada" en el ejecutable y el sistema operativo la utilizará para representar la aplicación en el escritorio <r>app_icons</r>. Windows y Linux también la utilizan en la barra de título de la ventana. Disponemos de tres versiones:
+
+li.<b>logo256.ico</b>: Versión para Windows Vista y posteriores. Deben incluir las resoluciones: 256x256, 48x48, 32x32 y 16x16.
+
+li.<b>logo48.ico</b>: Versión para Linux y VisualStudio 2008 y 2005, que no admiten resoluciones de 256x256. Esta versión solo incluye: 48x48, 32x32 y 16x16.
+
+li.<b>logo.icns</b>: Versión para macOS. Resoluciones 512x512, 256x256, 128x128, 32x32 y 16x16 tanto en resolución normal (@1x) como Retina Display (@2x).
+
+img(app_icons.png,0,.8).Iconos de aplicación en la barra de tareas de Windows.
+Captura de la barra de tareas de Windows con varios iconos de aplicación.
+
+p.CMake ya se encarga de utilizar la versión apropiada del icono según la plataforma en la estemos compilando. Para cambiar el icono por defecto, abrir los archivos <c>logo*</c> con algún editor gráfico <r>icon_editor</r>, realizar los cambios y volver a pulsar <c>[Generate]</c> en CMake. <b>Muy importante:</b> no cambiar los nombres de los archivo, siempre deben ser <c>logo256.ico</c>, <c>logo48.ico</c> y <c>logo.icns</c>.
+
+img(icon_editor.png, 500, .65).Editando <c>logo.ico</c>.
+Captura de un editor de imágenes, modificando el icono del programa.

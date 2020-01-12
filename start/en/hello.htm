@@ -1,0 +1,185 @@
+langrev.
+h1.Hello, World!
+
+desc.We created a cross-platform Hello World! step by step from scratch with graphical interface in C.
+
+ep.Once upon a time, there was a company called Taligent. Taligent was created by IBM and Apple to develop a set of tools and libraries like Cocoa. About the time Taligent reached the peak of its mindshare, Aaron met one of its engineers at a trade show and asked him to create a simple application: A window appears with a button. When the button is clicked, the words "Hello, World!" appear in a text field. The engineer created a project and started subclassing madly, subclassing the window and the button and the event handler. Then he started generating code: dozens of lines to get the button and the text field onto the window. After 45 minutes, he was still trying to get the app to work. A couple of years later, Taligent quietly closed its doors forever.
+<i>Hillegass, Preble & Chandler</i> - Cocoa Programming for OSX.
+
+p.We can say little about the meaning of the <i>Hello World!</i> every time we face a new technology or programming methodology. Therefore, let's get to the point.
+
+img2(hello_win10.png, hello_winxp.png).Windows 10 and WindowsXP.
+Hello World! running on Windows 10.
+Hello World! running on WindowsXP.
+
+img2(hello_macos_mojave.png, hello_macos_snow_leopard.png). macOS 10.14 Mojave and MacOSX 10.6 Snow Leopard.
+Hello World! running on MacOS Mojave.
+Hello World! running on MacOS Leopard.
+
+img2(hello_ambiance_ubuntu.png, hello_adwaita_dark_raspbian.png). GTK+3 Ambiance (Ubuntu) and Adwaita Dark (Raspbian).
+Hello World! running on Ubuntu.
+Hello World! running on Raspbian.
+
+h2.The complete program
+
+codefile(demo/hello/main.c).
+
+h2.Skeleton
+
+p.A NAppGUI application starts in <lf>osmain</lf>, a multiplatform macro that unifies the initiation of a desktop program under different systems. It is defined in <c>#include "osmain.h"</c> and will receive four parameters: constructor, destructor, arguments (<c>char_t</c>) and the object type. In this way, any basic skeleton looks like this:
+
+code.
+#include "nappgui.h"
+
+typedef struct _app_t App;
+struct _app_t
+{
+    Window *window;
+};
+
+static App *i_create(void)
+{
+    App *app = heap_new0(App);
+    return app;
+}
+
+static void i_destroy(App **app)
+{
+    heap_delete(app, App);
+}
+
+#include "osmain.h"
+osmain(i_create, i_destroy, "", App)
+code.
+
+p.Directive <c>#include "nappgui.h"</c>, includes a large part of NAppGUI with a single instruction. If you prefer, you can choose to include the headers separately as necessary. In this case, we should replace a single <c>#include</c> for eleven. The Library Reference, indicates which header to include according to the function module that we are going to use.
+
+code.
+#include "gui.h"
+#include "button.h"
+#include "heap.h"
+#include "label.h"
+#include "layout.h"
+#include "listener.h"
+#include "panel.h"
+#include "strings.h"
+#include "v2d.h"
+#include "vtext.h"
+#include "window.h"
+code.
+
+h2.Constructor
+
+p.The first <c>osmain</c> parameter is the application's constructor. As soon as the program starts, certain internal structures must be initialized, as well as start the message loop inherent in all desktop applications. When everything is ready, the constructor will be called to create the <b>application object</b>. This object can be of any type and does not need to be derived from any <c>class Application</c> or similar, we are in C ;-). Given the simplicity of this example, the application object only contains one window.
+
+code.
+static App *i_create(void)
+{
+    App *app = heap_new0(App);
+    Panel *panel = i_panel(app);
+    app->window = window_create(ekWINDOW_STD, &panel);
+    return app;
+}
+code.
+
+h2.The Main Panel
+
+p.To create the main window, we need the <b>main panel</b>, a container that integrates all the interface controls shown in the window. The space inside the panel is organized in an invisible grid called <lt>Layout</lt>. Each panel can have several layouts and alternate between them, but at least one is necessary. Within its cells we will locate the different interface controls.
+
+code.
+static Panel *i_panel(App *app)
+{
+    Panel *panel = panel_create();
+    Layout *layout = layout_create(1, 3);
+    Label *label = label_create();
+    Button *button = button_push();
+    Text *text = text_create();
+    label_text(label, "Hello!, I'm a label");
+    button_text(button, "Click Me!");
+    layout_label(layout, label, 0, 0);
+    layout_button(layout, button, 0, 1);
+    layout_text(layout, text, 0, 2);
+    panel_layout(panel, layout);
+    return panel;
+}
+code.
+
+h2.The destructor
+
+p.When the application ends, <c>osmain</c> will call the destructor (second parameter of the macro) to release the application object and everything that depends on it, in order to make a clean exit of the program. We will put a <b>lot of emphasis on this</b>, since the failure to properly free all memory will be considered a serious coding error. 
+
+code.
+static void i_destroy(App **app)
+{
+    window_destroy(&(*app)->window);
+    heap_delete(app, App);
+}
+code.
+
+h2.Launch the window
+
+p.By default, NAppGUI creates all windows in hidden mode, so it is necessary to show them explicitly. We establish a title, an initial position and launch it with <lf>window_show</lf>. We observe that in this first version our window is not very aesthetic <r>hello_world_without_format</r>. In a moment we will format it.
+
+code.
+static App *i_create(void)
+{
+   ...
+   window_title(app->main_window, "Hello World!");
+   window_origin(app->main_window, v2df(500, 200));
+   window_show(app->main_window);
+   ...
+}
+code.
+
+img(hello_world_without_format.png, 0, .15).First version of <i>Hello, World!</i> (without format).
+Window with highly compressed controls since no format has yet been applied.
+
+h2.Layout format
+
+p.To improve the appearance of our window, let's give the design a bit of format. Specifically, we are going to establish a column width and a height for the third row (text control). Then we will leave a margin on the edge and a separation between rows. <r>hello_world_formatted</r>.
+
+code.
+layout_hsize(layout, 0, 200);
+layout_vsize(layout, 2, 100);
+layout_margin(layout, 5);
+layout_vmargin(layout, 0, 5);
+layout_vmargin(layout, 1, 5);
+code.
+
+img(hello_world_formatted.svg,460).<i>Hello World!</i> after Layout formatting.
+Properly formatted interface window.
+
+h2.Closing the program
+
+p.When we press the button to close the main window, the program does not finish its execution. This is typical of the macOS applications, where they still run in the Dock although there is no window open. NAppGUI follows the same criteria of not closing the program, so we must make an explicit call to the function <lf>osapp_finish</lf>. To do this, we will capture the <b>button event</b>, through the macro <lf>listener</lf>.
+
+code.
+static void i_OnClose(App *app, Event *e)
+{
+    osapp_finish();
+}
+
+static App *i_create(void)
+{
+   window_OnClose(app->main_window, listener(app, i_OnClose, App));
+}
+code.
+
+h2.Button Events
+
+p.Finally, we will capture the <i>click</i> event of the button and print a message in the text box every time you press. We are going to implement the handler <c>i_OnButton</c>, responsible for composing and displaying the message and we will connect it to the Button control that we have created previously.
+
+code.
+static void i_OnButton(App *app, Event *e)
+{
+    String *msg = str_printf("Button click (%d)\n", app->clicks);
+    text_insert(app->vtext, tc(msg));
+    str_destroy(&msg);
+    app->clicks += 1;
+}
+...
+button_OnClick(button, listener(app, i_OnButton, App));
+code.
+
+bq.An event is an action that occurs during the program execution. The operating system captures it and sends it to us through its controller (defined in <c>listener()</c>). More in <lp>event</lp>.
+

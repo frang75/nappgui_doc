@@ -1,0 +1,42 @@
+langrev.
+h1.PopUp
+
+p.<b>PopUps</b> are buttons that have a drop-down menu associated with them <r>popups</r>. Apparently they look like <i>pushbuttons</i> that when pressed show a list of options. In <lh>Hello PopUp and Combo!</lh> you have an example of use.
+
+img(popups.png,0,.8).PopUps on Windows, macOS and Linux.
+Capture multiple PopUp controls in a window.
+
+func(popup_create).Create a new popup control <i>(PopUp button)</i>.
+fret(PopUp*).The newly popup.
+
+func(popup_OnSelect).Set an event handler for the selection of a new item.
+fpar(PopUp*,popup).The popup.
+fpar(Listener*,listener).<i>Callback</i> function to be called after selecting a new item from the list.
+fnote.See <lh>GUI Events</lh>.
+
+func(popup_tooltip).Assign a tooltip to the popup control.
+fpar(PopUp*,popup).The popup.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(popup_add_elem).Add a new item to the popup list.
+fpar(PopUp*,popup).The popup.
+fpar(const char_t*,text).The text of the element in UTF-8 or the resource identifier. <lp>resources</lp>.
+fpar(const Image*,image).Icon associated with the resource element or identifier. For space, it will scale to a maximum maximum of 16 pixels.
+
+func(popup_set_elem).Edit an item from the drop-down list.
+fpar(PopUp*,popup).The popup.
+fpar(const uint32_t,index).The index of the item to replace.
+fpar(const char_t*,text).The text of the element in UTF-8 or the resource identifier. <lp>resources</lp>.
+fpar(const Image*,image).Icon associated with the resource element or identifier. For space, it will scale to a maximum maximum of 16 pixels.
+
+func(popup_list_height).Set the size of the drop-down list.
+fpar(PopUp*,popup).The popup.
+fpar(const uint32_t,elems).Number of visible elements. If the control has more, a scroll bar will appear.
+
+func(popup_selected).Set the selected popup element.
+fpar(PopUp*,popup).The popup.
+fpar(const uint32_t,index).The item to select. If we pass <c>UINT32_MAX</c> the selection is removed. 
+
+func(popup_get_selected).Get the selected popup item.
+fret(uint32_t).The selected item.
+fpar(PopUp*,popup).The popup.

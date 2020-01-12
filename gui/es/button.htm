@@ -1,0 +1,136 @@
+
+h1.Button
+
+p.Los botones son otro elemento clásico en interfaces gráficas, donde distinguimos cuatro tipos: El botón de pulsación, casilla de verificación <i>(checkbox)</i>, botón de radio <i>radiobutton</i> y botón plano típico de las barras de herramientas <r>buttons</r>. En <lh>¡Hola Button!</lh> tienes un ejemplo de uso.
+
+li.Utiliza <lf>button_push</lf> para crear un botón de pulsación.
+
+li.Utiliza <lf>button_check</lf> para crear una casilla de verificación.
+
+li.Utiliza <lf>button_check3</lf> para crear una casilla con tres estados.
+
+li.Utiliza <lf>button_radio</lf> para crear un botón de radio.
+
+li.Utiliza <lf>button_flat</lf> para crear un botón plano.
+
+li.Utiliza <lf>button_flatgle</lf> para crear un botón plano con estado.
+
+img(buttons.png,0,.45).Botones en Windows, macOS y Linux.
+Ventana donde aparecen varios botones típicos: Pulsación, casilla de verificación y botones de radio.
+
+p.Además de capturar el evento y notificar a la aplicación, los <i>checkbox</i> y <i>flatgle</i> mantienen un estado (pulsado/check o liberado/uncheck).
+
+li.Utiliza <lf>button_state</lf> para establecer el estado del botón.
+
+li.Utiliza <lf>button_get_state</lf> para obtener el estado del botón.
+
+p.Mención especial requieren los botones de radio, que solo tienen sentido cuando aparecen en grupo ya que se utilizan para seleccionar una única opción dentro de un conjunto. Los grupos se forman a nivel de <lt>Layout</lt>, es decir, todos los <i>radiobutton</i> de un mismo layout se considerarán del mismo grupo, donde solo uno de ellos podrá estar seleccionado. Si necesitamos varios sub-grupos, deberemos crear varios sub-layout, como se muestra en <r>radiogroup</r> <r>laygroup</r>. A la hora de capturar el evento, el campo <c>index</c> de <lt>EvButton</lt> indicará el índice del botón que ha sido pulsado.
+
+img(radiogroup.svg,480,.65).Radio grupos vinculados a diferentes layouts.
+Ejemplos de radiogrupos. Un grupo de ocho opciones y dos grupos de cuatro. 
+
+code(cpp,laygroup).Grupos de botones de radio.
+Button *button1 = button_radio();
+Button *button2 = button_radio();
+Button *button3 = button_radio();
+Button *button4 = button_radio();
+Button *button5 = button_radio();
+Button *button6 = button_radio();
+Button *button7 = button_radio();
+Button *button8 = button_radio();
+button_text(button1, "One");
+button_text(button2, "Two");
+button_text(button3, "Three");
+button_text(button4, "Four");
+button_text(button5, "Five");
+button_text(button6, "Six");
+button_text(button7, "Seven");
+button_text(button8, "Eight");
+
+// One group - One layout
+Layout *layout = layout_create(2, 4);
+layout_button(layout, button1, 0, 0);
+layout_button(layout, button2, 0, 1);
+layout_button(layout, button3, 0, 2);
+layout_button(layout, button4, 0, 3);
+layout_button(layout, button5, 1, 0);
+layout_button(layout, button6, 1, 1);
+layout_button(layout, button7, 1, 2);
+layout_button(layout, button8, 1, 3);
+
+// Two groups - Two sub-layouts
+Layout *layout1 = layout_create(2, 1);
+Layout *layout2 = layout_create(1, 4);
+Layout *layout3 = layout_create(1, 4);
+layout_button(layout2, button1, 0, 0);
+layout_button(layout2, button2, 0, 1);
+layout_button(layout2, button3, 0, 2);
+layout_button(layout2, button4, 0, 3);
+layout_button(layout3, button5, 0, 0);
+layout_button(layout3, button6, 0, 1);
+layout_button(layout3, button7, 0, 2);
+layout_button(layout3, button8, 0, 3);
+layout_layout(layout, layout1, 0, 0);
+layout_layout(layout, layout2, 1, 0);
+code.
+
+func(button_push).Crea un botón de pulsación, el típico <c>[Aceptar]</c>, <c>[Cancelar]</c>, etc.
+fret(Button*).El botón.
+
+func(button_check).Crea una casilla de verificación (checkbox). 
+fret(Button*).El botón.
+
+func(button_check3).Crea una casilla de verificación (checkbox) con tres estados. 
+fret(Button*).El botón.
+
+func(button_radio).Crea un botón de radio.(radiobutton).
+fret(Button*).El botón.
+
+func(button_flat).Crea un botón plano, al que puede asignarse una imagen. Es el típico botón de las barras de herramientas.
+fret(Button*).El botón.
+
+func(button_flatgle).Crea un botón plano con estado. El botón alternará entre pulsado/liberado cada vez que se haga clic sobre él.
+fret(Button*).El botón.
+
+func(button_OnClick).Establece un manejador para la pulsación del botón.
+fpar(Button*,button).El botón.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará tras hacer clic.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(button_text).Establece el texto que mostrará el botón.
+fpar(Button*,button).El botón.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fnote.En botones planos, el texto se mostrará como <i>tooltip</i>.
+
+func(button_text_alt).Establece un texto alternativo.
+fpar(Button*,button).El botón.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fnote.Solo aplicable en botones planos con estado <lf>button_flatgle</lf>. Se mostrará cuando el botón esté en estado <lt>ekON</lt>.
+
+func(button_tooltip).Establece un tooltip para el botón. Es un pequeño texto explicativo que aparecerá cuando el ratón esté sobre el control.
+fpar(Button*,button).El botón.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(button_font).Establece la fuente del botón.
+fpar(Button*,button).El botón.
+fpar(const Font*,font).Fuente tipográfica.
+
+func(button_image).Establece el icono que mostrará el botón.
+fpar(Button*,button).El botón.
+fpar(const Image*,image).Imagen.
+fnote.No aplicable en checkbox ni radiobutton. En botones planos, el tamaño del control se ajustará a la imagen.
+
+func(button_image_alt).Establece una imagen alternativa para el botón.
+fpar(Button*,button).El botón.
+fpar(const Image*,image).Imagen.
+fnote.Solo aplicable en botones planos con estado <lf>button_flatgle</lf>. Se mostrará cuando el botón esté en estado <lt>ekON</lt>.
+
+func(button_state).Establece el estado del botón.
+fpar(Button*,button).El botón.
+fpar(const state_t,state).Estado.
+fnote.No aplicable en botones de pulsación <lf>button_push</lf>.
+
+func(button_get_state).Obtiene el estado del botón.
+fret(state_t).El estado.
+fpar(Button*,button).El botón.
+fnote.No aplicable en botones de pulsación <lf>button_push</lf>.

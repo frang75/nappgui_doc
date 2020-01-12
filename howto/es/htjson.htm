@@ -1,0 +1,176 @@
+
+h1.Servicios Web JSON en C/C++
+
+ep.El formato JSON es el más utilizado para el intercambio de datos en la Web. Vamos a ver como llamar a un servicio Web desde una aplicación C/C++ y "traducir" su respuesta JSON a los objetos que forman el modelo de datos.
+
+p.<b>JSON</b> <i>JavaScript Object Notation</i>, es un formato de datos en modo texto que permite representar de manera sencilla tipos básicos, objetos y arrays. Aunque su uso se ha popularizado en el ámbito Web puede utilizarse también para otros fines, como por ejemplo, archivos de configuración o intercambio local. Su sintaxis es fácil de entender para los humanos y sencilla de procesar para las máquinas. En <r>jsonexample</r> reproducimos un pequeño fragmento de la respuesta JSON de un <l>http://serv.nappgui.com/dproducts.php''servicio Web</l> de ejemplo:
+
+code(text,jsonexample).Fragmento JSON devuelto por un Web Service.
+{
+    "code":0,
+    "size":80,
+    "data":[
+    {"id":0,
+    "code":"i7-8700K",
+    "description":"Intel BX80684I78700K 8th Gen Core i7-8700K Processor",
+    type":0,
+    "price":374.8899999999999863575794734060764312744140625,
+    "image":"cpu_00.jpg",
+    "image64":"\/9j\/4AAQSkZJRgABAQ....
+    },
+    ...
+}
+code.
+
+p.En su estructura podemos encontrar estos tipos de datos:
+
+li.<b>Booleanos:</b> Representados por las constantes <c>true</c> o <c>false</c>.
+
+li.<b>Números:</b> Utiliza la notación exponencial de C para valores en coma flotante: <c>23</c>, <c>.76</c>, <c>-0.54</c> o <c>5.6e12</c> son ejemplos válidos de valores numéricos. JSON no distingue entre enteros, negativos o reales.
+
+li.<b>Cadenas:</b> Cualquier texto entre comillas se considera una cadena. Admite cualquier carácter Unicode en <lh>UTF-8</lh> o mediante la secuencia de escape <c>\uXXXX</c> para indicar el codepoint.
+
+li.<b>Objetos:</b> Están delimitados por llaves y compuestos por varios campos separados por comas. Cada campo lo forman un identificador (cadena) seguido del carácter dos puntos y un valor que puede ser cualquier tipo simple, objeto u array <r>jsonobj</r>.
+
+code(text,jsonobj).Objeto JSON
+{
+    "field1" : true,
+    "field2" : 24.67,
+    "field3" : "Hello Pibe",
+    "field4" : [1, 2, 4, 8.4],
+    "field5" : { "x" : 34.32, "y" : -6.19 }
+}
+code.
+
+li.<b>Arrays:</b> Listas de valores delimitados por cochetes <c>[ ... ]</c> y separados por comas. Los valores no tienen porqué ser del mismo tipo como suele ocurrir en algunos lenguajes de programación <r>jsonarray</r>.
+
+code(text,jsonarray).Array JSON
+[
+    18, "Hello Pibe", true, { "x" : 34.32, "y" : -6.19 }
+]
+code.
+
+li.<b>null:</b> Indica la ausencia de valor.
+
+li.<b>Binarios:</b> JSON no soporta datos binarios por lo que objetos opacos (imágenes, por ejemplo) deben ser codificados en texto y transmitidos como un valor de tipo cadena. El formato más extendido y soportado globalmente es el <lp>base64</lp> donde cada carácter representa 6 bits de información.
+
+h2.Llamar a un servicio Web
+
+p.Lo primero que debemos hacer es conectar con servicio Web mediante <lp>httpreq</lp> para realizar la consulta y obtener el JSON de respuesta. Tenemos dos formas de hacerlo. La más directa es utilizar el método <lf>http_dget</lf> <r>httpget</r>.
+
+code(cpp,httpget).Obtener un recurso Web mediante HTTP.
+Stream *stm = http_dget("serv.nappgui.com", 80, "/dproducts.php", NULL);
+code.
+
+p.Esta llamada es muy simple y útil para obtener recursos de forma directa, donde no es necesario indicar parámetros ni configurar la petición. Para otro tipo de peticiones, deberemos crear un objeto <lt>Http</lt> <r>httpconf</r>.
+
+code(cpp,httpconf).Llamada a un servicio Web con parámetros
+Http *http = http_create("serv.nappgui.com", 80, NULL);
+if (http != NULL)
+{
+    Stream *stm = stm_memory(4096);
+    http_param(http, "user", "brian");
+    http_param(http, "pass", "1234");
+    if (http_get(http, "/duser.php", stm, NULL) == TRUE)
+    {
+        ...
+    }
+
+    http_destroy(&http);
+}
+code.
+
+p.Si todo ha ido bien, tendremos en <c>Stream *stm</c> la respuesta del servidor en ambos casos. El siguiente paso será "parsearla" para convertir la secuencia de caracteres que forman el JSON a objetos binarios para su uso desde la aplicación <r>jsonread</r>. En <lh>Lectura JSON</lh> se detalla como vincular los campos del JSON mediante el registro <b>DBind</b>.
+
+code(cpp,jsonread).Traducir un JSON a un objeto C.
+PJson *json = json_read(stm, NULL, PJson);
+code.
+
+h2.Programa completo
+
+codefile(howto/htjson/htjson.c).
+
+code(text).Salida del programa.
+JSON readed. Code: 0
+Readed 80 products
+ 1 i7-8700K               374.89 Image:160x160px
+ 2 G3930                   51.95 Image:125x160px
+ 3 i7-7700K               329.99 Image:138x160px
+ 4 Ryzen-5-1600           194.99 Image:160x160px
+ 5 i5-8600K               256.89 Image:160x160px
+ 6 G4400                   58.95 Image:160x160px
+ 7 G3900                   46.00 Image:160x160px
+ 8 i5-8400                189.99 Image:148x160px
+ 9 PentiumG                71.95 Image:146x160px
+10 i5-7500                197.89 Image:160x160px
+11 Ryzen-7-1700           289.99 Image:160x160px
+12 i3-7100                114.99 Image:160x160px
+13 Ryzen-7-1800X          349.00 Image:160x160px
+14 i7-8700                312.00 Image:160x160px
+15 Ryzen-3-1300X          124.99 Image:160x160px
+16 i3-8100                119.00 Image:160x160px
+17 Ryzen-3-1200           104.99 Image:160x160px
+18 i5-7600K               229.00 Image:125x160px
+19 Ryzen-5-1500X          174.99 Image:160x160px
+20 Ryzen-5-1600X          224.99 Image:160x160px
+21 RX-580                 489.99 Image:160x160px
+22 HD-6450                 44.96 Image:160x160px
+23 GTX-1060               449.99 Image:160x160px
+24 GTX-1060-SC            419.98 Image:160x160px
+25 GTX-1080               439.99 Image:160x160px
+26 GTX-1090               482.99 Image:160x160px
+27 GT-710                  45.74 Image:160x160px
+28 GTX-1050               238.49 Image:160x160px
+29 GTX-1040               176.95 Image:160x160px
+30 GTX-1080-FTW           915.99 Image:160x160px
+31 GTX-1080-Ti           1149.97 Image:160x160px
+32 R7-240                  59.99 Image:160x160px
+33 GTX-1070-SC            739.99 Image:160x160px
+34 GT-1030                 95.00 Image:160x160px
+35 210                     37.74 Image:160x160px
+36 GT-710                  46.15 Image:160x160px
+37 GTX-1010               199.90 Image:160x160px
+38 GTX-1100               429.99 Image:160x160px
+39 GTX-1040               463.00 Image:160x160px
+40 GT-710-LP               34.99 Image:160x160px
+41 Blue-1TB                49.00 Image:160x160px
+42 2TB-BarraCuda           59.89 Image:160x160px
+43 2TB-FireCuda            94.99 Image:160x160px
+44 Red-4TB                132.99 Image:160x160px
+45 4TB-BarraCuda           96.99 Image:160x160px
+46 1TB-BarraCuda           49.65 Image:160x160px
+47 1TB-BarraCuda           44.99 Image:160x160px
+48 2TB-FireCuda            99.99 Image:160x160px
+49 Blue-2TB                65.99 Image:160x160px
+50 Purple-4TB             114.68 Image:133x160px
+51 2TB-BarraCuda           84.29 Image:160x160px
+52 3TB-BarraCuda           84.99 Image:160x160px
+53 Black-1TB               64.99 Image:160x160px
+54 Blue-4TB               107.99 Image:160x160px
+55 Black-1TB               72.99 Image:125x160px
+56 Blue-1TB                45.99 Image:116x160px
+57 Blue-1TB                52.99 Image:160x160px
+58 Red-2TB                 84.99 Image:160x160px
+59 1TB-Firecuda            59.99 Image:160x160px
+60 Red-8TB                246.99 Image:160x160px
+61 45-SB-we                37.95 Image:159x160px
+62 12-SB-we                39.98 Image:160x160px
+63 14-SB-z                 94.97 Image:160x160px
+64 77-AS-2                 29.99 Image:160x160px
+65 99-SB-rb                55.53 Image:160x160px
+66 54-AS-e                 39.99 Image:160x160px
+67 ST-45092                17.63 Image:160x160px
+68 55-SB-Zx               124.87 Image:153x160px
+69 GE-PCI-41               12.99 Image:160x160px
+70 00-SB-XF                33.45 Image:102x160px
+71 5-SB-AE                149.90 Image:160x160px
+72 99-PI-r                 22.90 Image:160x160px
+73 67-SB-xf                66.66 Image:160x160px
+74 88-AS-e                104.14 Image:160x160px
+75 37-AS-x                149.99 Image:160x160px
+76 54-SI-x1                35.99 Image:160x160px
+77 52-PI-0                 11.99 Image:160x160px
+78 82-AS-II               223.98 Image:160x160px
+79 22-SB-tg                99.99 Image:160x160px
+80 38-DI-xs                14.95 Image:160x160px
+code.

@@ -1,0 +1,30 @@
+
+
+h1.Exclusión mutua
+
+ep.Los mecanismos de exclusión mutua garantizan que solo una hebra de ejecución pueda acceder a un recurso en el mismo instante.
+
+p.En procesos con múltiples hilos, la exclusión mutua garantiza que solo uno de ellos pueda ejecutar una <b>sección crítica</b> en un instante concreto de tiempo. La sección crítica es un bloque de código que normalmente protege a un recurso compartido que no soporta el acceso concurrente. 
+
+h2.Cerrojos
+
+p.Los cerrojos, candados o <lt>Mutex</lt> son objetos de sincronización gestionados por el sistema operativo que marcan el inicio y final de una sección crítica <r>mutex</r>. Cuando una hebra va a acceder a un determinado recurso compartido, deberá llamar al método <lf>bmutex_lock</lf> para garantizar el acceso exclusivo. Si otro hilo está utilizando el recurso (ha llamado previamente a <c>bmutex_lock</c>), el hilo actual se detendrá hasta que el recurso se libere mediante <lf>bmutex_unlock</lf>. Del bloqueo y desbloqueo de hilos se encarga el propio sistema operativo. El programador, tan solo debe preocuparse por identificar y proteger las secciones críticas. <lh>Ejemplo multi-hilo</lh>.
+
+img(mutex.svg,380,.45).Un mutex protegiendo las secciones críticas de dos hebras, que no podrán ejecutarse concurrentemente. El resto del código puede correr en paralelo.
+Esquema de un mecanismo de exclusión mutua protegiendo dos secciones críticas.
+
+func(bmutex_create).Crea un objeto de exclusión mutua que permite que varios hilos de ejecución compartan un mismo recurso, como una zona de memoria o archivo en disco, impidiendo que accedan al mismo tiempo.
+fret(Mutex*).El manejador de la exclusión mutua.
+fnote.<lp>bthread</lp>, <lh>Ejemplo multi-hilo</lh>.
+
+func(bmutex_close).Cierra el objeto de exclusión mutua y libera memoria.
+fpar(Mutex**,mutex).El manejador de la exclusión mutua. Será puesto a <c>NULL</c> tras el cierre.
+fnote.<lp>bthread</lp>, <lh>Ejemplo multi-hilo</lh>.
+
+func(bmutex_lock).Marca el inicio de una sección crítica, bloqueando el acceso a un recurso compartido. Si otro hilo intenta bloquear, será detenido hasta que el hilo actual llame a <c>bmutex_unlock</c>.
+fpar(Mutex*,mutex).El manejador de la exclusión mutua.
+fnote.<lp>bthread</lp>, <lh>Ejemplo multi-hilo</lh>.
+
+func(bmutex_unlock).Marca el final de una sección crítica, desbloqueando el acceso a un recurso compartido. Si otro hilo está esperando, se permitirá el acceso a su sección crítica y, por tanto, al recurso compartido.
+fpar(Mutex*,mutex).El manejador de la exclusión mutua.
+fnote.Para evitar retrasos innecesarios, el tiempo entre <c>bmutex_lock</c> y <c>bmutex_unlock</c> debe ser lo más corto posible. Cualquier cálculo que la hebra pueda realizar en su espacio privado de memoria debe preceder a la llamada a <c>bmutex_lock</c>. <lp>bthread</lp>, <lh>Ejemplo multi-hilo</lh>.

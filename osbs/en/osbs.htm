@@ -1,0 +1,207 @@
+langrev.
+h1.Osbs
+
+ep.There is no neat distinction between operating system software and the software that runs on top of it.
+<i>Jim Allchin</i>
+
+p.<b>osbs</b> <i>(Operating System Basic Services)</i> is a portable wrapper that allows applications to communicate with the operating system core at the level of processes, memory, files, networks, clocks, etc. This communication is carried out through a series of <b>system calls</b> <r>system_calls</r> which vary according to the operating system for which we are programming. It is the non-graphic lowest level API to communicate with hardware devices and access the machine resources. Below are the device drivers managed directly by the kernel, to which applications have access denied. 
+
+img(system_calls.svg,600,.8).System calls are the gateway to the operating system kernel.
+Schema showing how the osbs library connects with the hardware through system calls.
+
+p.Darwin, the macOS kernel, and Linux are Unix-like systems, therefore, they share the same system calls (with subtle differences). But Windows presents a radically different architecture and function set. The NAppGUI <b>osbs</b> library is nothing more than a small wrapper that internally handles these differences and provides a common way to access the same resources on different platforms <r>osbs_depends</r>. It only depends on <lp>sewer</lp> and its functionalities have been divided into different modules:
+
+li.<lp>bproc</lp>, <lp>bthread</lp>, <lp>bmutex</lp>.
+li.<lp>bmem</lp>.
+li.<lp>bfile</lp>.
+li.<lp>bsocket</lp>.
+li.<lp>bstd</lp>.
+li.<lp>btime</lp>.
+li.<lp>bmath</lp>.
+li.<lp>log</lp>.
+
+img(osbs_depends.svg,400,.5).<i>osbs</i> dependencies. See <lp>sdk</lp>.
+Osbs library dependency tree.
+
+h2.Standard C library
+
+p.The C standard library <i>(cstdlib)</i> is not part of the C language, but implements functions of great utility for the developer that solve typical programming problems. Any C programmer has used it more or less and its study is usually linked to learning the language itself <r>cstd_book</r>.
+
+img(cstd_book.png,420,.3).A complete reference to the C library is found in the P.J.Plauger book.
+"The C Standard Library" book cover.
+
+p.This library is located halfway between the application and system calls and provides a portable API for file access, dynamic memory, I/O, time, etc <r>clib_depends</r>. It also implements mathematical functions, conversion, search, string management, etc. In one way or another, NAppGUI integrates its functionality into <i>osbs</i>, so it's not necessary (or advisable) to use <i>cstdlib</i> directly in the application layer. The reasons that have motivated this design decision can be summarized in:
+
+img(clib_depends.svg,320,.4).The functionality of the C library has been integrated in <i>osbs</i>, avoiding its direct use in applications.
+Schema showing the osbs library in relation to the standard C library.
+
+li.<b>Small differences:</b> Unix-like systems do not support the secure <i>cstdlib</i> versions implemented by Microsoft (<c>strcpy_s()</c> and others). The use of classical functions (without the suffix <c>_s</c>) is insecure and will trigger annoying <i>warnings</i> in Visual Studio.
+
+li.<b>Security:</b> Related to the previous one, <i>osbs</i> avoids <i>buffer overflow</i> vulnerabilities in the processing of memory blocks and strings.
+
+li.<b>Duplicity:</b> Much of the functionality of <i>cstdlib is</i> already implemented in <i>osbs</i> using direct system calls (files, dynamic memory, I/O, time, etc.)
+
+li.<b>Completeness:</b> The <i>cstdlib</i> functions related to files (<c>fopen()</c> and others) do not include support for directory management. <lp>bfile</lp> presents a complete API based on system calls.
+
+li.<b>Performance:</b> In certain cases, especially in mathematical functions and memory management, it may be interesting to change the implementation of <i>cstdlib</i> to an improved one. All applications will benefit from the change, without having to modify your code.
+
+li.<b>Clarity:</b> The behavior of some <i>cstdlib</i> functions is not entirely clear and can lead to confusion. For example, <c>strtoul</c> has a very particular functioning that we must remember every time we use it.
+code.
+char *s1 = "-56";
+char *s2 = "asCr";
+char *s3 = "467Xd";
+int v1, v2, v3;
+v1 = strtoul(s1, NULL, 10); // v1 = 4294967240, errno = OK
+v2 = strtoul(s2, NULL, 10); // v2 = 0, errno = OK
+v3 = strtoul(s3, NULL, 10); // v3 = 467, errno = OK
+code.
+
+li.<b>Style:</b> The use of <i>osbs</i> functions does not break the aesthetics of an application written with NAppGUI.
+code.
+real32_t a1 = 1.43f;
+real64_t a2 = .38;
+real32_t c = (real32_t)cosf((float)a1);
+real64_t t = (real64_t)tan((double)a2);
+...
+real32_t c = bmath_cosf(a1);
+real64_t t = bmath_tand(a2);
+code.
+
+li.<b>Independence:</b> NAppGUI internally uses a very small subset of <i>cstdlib</i> functions. It is possible that in the future we will make our own implementations and completely disconnect the support of the standard library.
+
+enum(platform_t).Operating systems supported by NAppGUI.
+enumv(ekWINDOWS).Microsoft Windows.
+enumv(ekMACOS).Apple macOS.
+enumv(ekIOS).Apple iOS.
+enumv(ekLINUX).GNU/Linux.
+
+enum(device_t).Device type.
+enumv(ekDESKTOP).Desktop or laptop computer.
+enumv(ekPHONE).Phone.
+enumv(ekTABLET).Tablet.
+
+enum(win_t).Microsoft Windows versions.
+enumv(ekWIN_9x).Windows 95, 98 or ME.
+enumv(ekWIN_NT4).Windows NT4.
+enumv(ekWIN_2K).Windows 2000.
+enumv(ekWIN_XP).Windows XP.
+enumv(ekWIN_XP1).Windows XP Service Pack 1.
+enumv(ekWIN_XP2).Windows XP Service Pack 2.
+enumv(ekWIN_XP3).Windows XP Service Pack 3.
+enumv(ekWIN_VI).Windows Vista.
+enumv(ekWIN_VI1).Windows Vista Service Pack 1.
+enumv(ekWIN_VI2).Windows Vista Service Pack 2.
+enumv(ekWIN_7).Windows 7.
+enumv(ekWIN_71).Windows 7 Service Pack 1.
+enumv(ekWIN_8).Windows 8.
+enumv(ekWIN_81).Windows 8 Service Pack 1.
+enumv(ekWIN_10).Windows 10.
+enumv(ekWIN_NO).The system is not Windows.
+
+enum(endian_t).Represents the <lh>Byte order</lh>, or how multi-byte data is stored in memory.
+enumv(ekLITEND).<i>Little endian</i>. The lowest byte first.
+enumv(ekBIGEND).<i>Big endian</i>. The highest byte first.
+
+enum(week_day_t).Weekday.
+enumv(ekSUNDAY).Sunday.
+enumv(ekMONDAY).Monday.
+enumv(ekTUESDAY).Tuesday.
+enumv(ekWEDNESDAY).Wednesday.
+enumv(ekTHURSDAY).Thursday.
+enumv(ekFRIDAY).Friday.
+enumv(ekSATURDAY).Saturday.
+
+enum(month_t).Month.
+enumv(ekJANUARY).January.
+enumv(ekFEBRUARY).February.
+enumv(ekMARCH).March.
+enumv(ekAPRIL).April.
+enumv(ekMAY).May.
+enumv(ekJUNE).June.
+enumv(ekJULY).July.
+enumv(ekAUGUST).August.
+enumv(ekSEPTEMBER).September.
+enumv(ekOCTOBER).October.
+enumv(ekNOVEMBER).November.
+enumv(ekDECEMBER).December.
+
+enum(file_type_t).File type.
+enumv(ekARCHIVE).Ordinary file.
+enumv(ekDIRECTORY).Directory.
+enumv(ekOTHERFILE).Another type of file reserved for the operating system (devices, pipes, etc.)
+
+enum(file_mode_t).Different ways to open a file.
+enumv(ekREAD).Read only.
+enumv(ekWRITE).Read and write.
+enumv(ekAPPEND).Writing at the end of the file.
+
+enum(ferror_t).Error codes manipulating files.
+enumv(ekFEXISTS).The file already exists.
+enumv(ekFNOPATH).The directory does not exist.
+enumv(ekFNOFILE).The file does not exists.
+enumv(ekFBIGNAME).The name of the file exceeds the capacity of the buffer to store it.
+enumv(ekFNOFILES).There are no more files when we travel through a directory. <lf>bfile_dir_get</lf>.
+enumv(ekFNOEMPTY).You are trying to delete a non-empty directory. <lf>hfile_dir_destroy</lf>.
+enumv(ekFNOACCESS).The file can not be accessed (possibly due to lack of permissions).
+enumv(ekFLOCK).The file is being used by another process.
+enumv(ekFBIG).The file is so big. It may appear in functions that can not handle files larger than 4Gb.
+enumv(ekFUNDEF).There is no more information about the error.
+enumv(ekFOK).There is no error.
+
+enum(perror_t).Error codes working with processes.
+enumv(ekPPIPE).Error in the standard I/O channel.
+enumv(ekPEXEC).Error when launching the process. Surely the command is invalid.
+enumv(ekPOK).There is no error.
+
+enum(serror_t).Error code in network communications.
+enumv(ekSNONET).There is no Internet connection on the device.
+enumv(ekSNOHOST).Unable to connect to the remote server.
+enumv(ekSTIMEOUT).The maximum wait time for the connection has been exceeded.
+enumv(ekSSTREAM).Error in the I/O channel when reading or writing.
+enumv(ekSUNDEF).There is no more information about the error.
+enumv(ekSOK).There is no error.
+
+struct(Date).Public structure that contains the fields of a time stamp (date + time) for direct access.
+smember(int16_t,year).Year.
+smember(uint8_t,month).The month (1-12). <lt>month_t</lt>.
+smember(uint8_t,wday).The day of the week (0-6). <lt>week_day_t</lt>.
+smember(uint8_t,mday).The day of the month (1-31).
+smember(uint8_t,hour).The hour (0-23).
+smember(uint8_t,minute).The minute (0-59).
+smember(uint8_t,second).The second (0-59).
+
+struct(Dir).Represents an open directory, by which you can browse. <lf>bfile_dir_open</lf>.
+
+struct(File).File handler on disk. <lf>bfile_open</lf>.
+
+struct(Mutex).Mutual exclusion mechanism ( <b>mutex</b>) used to control concurrent access to a resource. <lh>Locks</lh>.
+
+struct(Proc).Represents a running process, with which the main program can communicate using the standard I/O channels. <lf>bproc_exec</lf>.
+
+struct(ProcOpt).Process execution options.
+smember(uint32_t,unused).For future requirements.
+
+struct(Thread).Represents a thread of execution, launched from the main process. <lf>bthread_create</lf>.
+
+struct(Socket).Handler of network connection. <lf>bsocket_connect</lf>.
+
+struct(SockOpt).Options for creating a <i>socket</i>.
+smember(uint32_t,rcvtimeo_ms).Maximum waiting time for a connection <i>(timeout)</i>, on the receiver side. <c>0</c>=without timeout.
+smember(uint32_t,sndtimeo_ms).<i>timeout</i>, on the client side. <c>0</c>=without timeout.
+
+func(FPtr_thread_main,ptr).Prototype of a thread start function <i>(thread main)</i>. <lf>bthread_create</lf>.
+fret(uint32_t).The thread return value.
+fpar(type*,data).Data passed to the thread <i>main</i> function.
+
+func(osbs_start).Start <i>osbs</i> library, reserving space for global internal structures.
+
+func(osbs_finish).Ends <i>osbs</i> library, freeing space from global internal structures.
+
+func(osbs_platform).Get the operating system in which the application is running.
+fret(platform_t).The platform.
+
+func(osbs_windows).Get the Windows version.
+fret(win_t).The Microsoft Windows version.
+
+func(osbs_endian).Get the <lh>Byte order</lh> of the running platform.
+fret(endian_t).The byte order of multi-byte data types.

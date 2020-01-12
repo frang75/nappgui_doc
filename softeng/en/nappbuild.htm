@@ -1,0 +1,221 @@
+langrev.
+h1.NAppBuild
+
+p.<b>NAppBuild</b> is a <lp>contint</lp> utility that we use to generate NAppGUI on a daily basis <r>nbuild</r>. It is an application per command line, without a graphical interface, created in C and installed on a Raspberry-PI board. Every two hours, the administrator <c>cron</c> Unix launches <c>nbuild</c> which checks if there have been changes in the source code repository. If so, it will launch a new build on all <i>build grid</i> hosts.
+
+img(nbuild.svg,480,.45).Nbuild application installed on a Raspberry-Pi working continuously.
+Continuous integration server installed on a Raspberry-Pi.
+
+p.NBuild depends exclusively on the library <lp>core</lp>, except <lp>json</lp>, included in <lp>inet</lp>, as a format for data input/output <r>nbuild_depends</r>.
+
+img(nbuild_depends.svg,320,.4).Nbuild dependencies.
+Nbuild dependencies tree.
+
+h2.Execution
+
+code.
+nbuild -c [config.json] -p [profiles.json]
+code.
+
+li.<c>config.json</c>: Build network configuration file.
+
+li.<c>profiles.json</c>: Information on the projects to compile and on which platforms should be generated.
+
+h2.Configuration
+
+p.File format <c>config.json</c> is the following:
+
+code.
+"master" : {
+"name" : "RaspPi-Desk1",
+"build_path" : "/home/pi/builds/builds",
+"login" : {
+"ip" : "localhost",
+"user" : "XXXX",
+"pass" : "XXXXXXXX",
+"platform" : 3 } },
+    
+"hosts" : [ 
+
+{"name" : "PC-i7 4790K",
+"workpath" : "C:",
+"login" : {
+"ip" : "192.168.1.21", 
+"user" : "XXXX", 
+"pass" : "XXXXXXXX",
+"platform" : 1 },
+"archs": [ "x64", "x86" ],
+"vs2019" : "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\MSBuild\\Current\\Bin",
+"vs2017" : "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\MSBuild\\15.0\\Bin",
+"vs2015" : "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\MSBuild\\15.0\\Bin",
+"vs2013" : "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\MSBuild\\15.0\\Bin",
+"vs2012" : "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\MSBuild\\15.0\\Bin",
+"vs2010" : "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\MSBuild\\15.0\\Bin",
+"vs2008" : "D:\\VS\\Microsoft Visual Studio 9",
+"vs2005" : "D:\\VS\\Microsoft Visual Studio 8" }, 
+
+{"name" : "iMac21 2017",
+"workpath" : "/Users/fran", 
+"login" : {
+"ip" : "192.168.1.28", 
+"user" : "XXXX", 
+"pass" : "XXXXXXXX",
+"platform" : 2 },
+"archs" : ["x64", "x86"],
+"xcode10" : "/Applications",
+"xcode9" : "Volumes/High_Sierra/Applications",
+"xcode8" : "/Volumes/Sierra/Applications",
+"xcode7" : "/Volumes/Sierra/Xcode7",
+"xcode6" : "/Volumes/Sierra/Xcode6",
+"xcode5" : "/Volumes/Sierra/Xcode5" }, 
+
+{"name" : "PC-G645",
+"workpath" : "/home/fran", 
+"login" : {
+"ip" : "192.168.1.24", 
+"user" : "XXXX", 
+"pass" : "XXXXXXXX",
+"platform" : 3 },
+"archs" : ["x64"],
+"gcc7" : "/usr/bin/gcc-7",
+"gcc6" : "/usr/bin/gcc-6",
+"gcc5" : "/usr/bin/gcc-5"
+},
+
+...
+]
+}
+code.
+
+h2.Profile
+
+p.A compilation profile has this format:
+
+code.
+{ 
+"global" : {
+"project" :  "NAppGUI",
+"description" : "A Cross-Platform C SDK",
+"author" : "(CC) 2015-2019 Francisco García Collado",
+"repo_url" : "svn://192.168.1.2/svn/NAPPGUI/1_0",
+"repo_user" : "XXXX",
+"repo_pass" : "XXXXXXX",
+"workpath" : "nappgui",
+"license" : [
+"Creative Commons BY-NC-SA 4.0 license",
+"Attribution-NonCommercial-ShareAlike 4.0 International",
+"https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en"]
+},
+    
+"libs" : [
+"sewer",
+"osbs",
+"core",
+"geom2d",
+"osdraw",
+"osgui",
+"gui",
+"inet",
+"dbase" ],
+    
+"exes" : [
+{
+    "name":"Products",
+    "dest":"products"
+},
+{
+    "name":"Die",
+    "dest":"die"
+}
+],
+    
+"source" : [ {
+"name" : "HelloWorld",
+"path" : "demo/hello",
+"depends" : "",
+"nrcmode" : "NRC_NONE" 
+}, {
+
+"name" : "HelloCpp",
+"path" : "demo/hellocpp",
+"depends" : "",
+"nrcmode" : "NRC_NONE" 
+}, {
+
+"name" : "Die",
+"path" : "demo/die",
+"depends" : "",
+"nrcmode" : "NRC_NONE" 
+}, {
+
+"name" : "Products",
+"path" : "demo/products",
+"depends" : "inet",
+"nrcmode" : "NRC_EMBEDDED" } ],
+    
+"agents": [
+"v142_x64",
+"v141_xp_x86",
+"sdk10_14_x64",
+"gcc7_gtk3_x64",
+"gcc6_gtk3_arm" ],
+    
+"configs" : [
+"Debug",
+"Release",
+"ReleaseWithAssert" 
+] }
+code.
+
+h2.Front-End
+
+p.The result of each execution of <c>nbuild</c>it is saved in format <c>json</c>. At the moment, the <i>front end</i> of <c>nbuild</c> it is very simplistic, since it dips the content of the json in <c>stdout</c>. Although it perfectly fulfills its mission, we have planned a Web interface to organize the results in a more apparent way.
+
+code.Front-End nbuild
+[22:00:03] [OK] Readed '/home/pi/NAppGUI_1_0/src/nbuild_config.json' file.
+[22:00:03] [OK] Readed '/home/pi/NAppGUI_1_0/src/nbuild_profiles.json' file.
+[22:01:00] [OK] Build 'v142_x64-Debug' in host 'PC-i7 4790K'.
+[22:01:51] [OK] Build 'v142_x64-Release' in host 'PC-i7 4790K'.
+[22:02:41] [OK] Build 'v142_x64-ReleaseWithAssert' in host 'PC-i7 4790K'.
+[22:05:45] [FAIL] Host 'iMac21 2017' is offline 'sdk10_14_x64-Debug'
+[22:05:47] [FAIL] Host 'iMac21 2017' is offline 'sdk10_14_x64-Release'
+[22:05:50] [FAIL] Host 'iMac21 2017' is offline 'sdk10_14_x64-ReleaseWithAssert'
+[22:05:50]  
+[22:05:50] NAppGUI-r1675
+[22:05:50] [OK] Headers:sewer
+[22:05:50] [OK] Headers:osbs
+[22:05:50] [OK] Headers:core
+[22:05:50] [OK] Headers:geom2d
+[22:05:50] [OK] Headers:draw2d
+[22:05:50] [OK] Headers:osgui
+[22:05:50] [OK] Headers:gui
+[22:05:50] [OK] Headers:inet
+[22:05:50] [OK] Headers:dbase
+[22:05:50] [OK] v142_x64-Debug W:0 E:0 D:10/04/2019-22:01:07
+[22:05:50] [OK] v142_x64-Release W:1 E:0 D:10/04/2019-22:01:57
+[22:05:50] [OK] v142_x64-ReleaseWithAssert W:0 E:0 D:10/04/2019-22:02:47
+[22:05:50] [OK] v141_xp_x86-Debug W:12 E:0 D:10/04/2019-22:03:44
+[22:05:50] [OK] v141_xp_x86-Release W:12 E:0 D:10/04/2019-22:04:31
+[22:05:50] [OK] v141_xp_x86-ReleaseWithAssert W:12 E:0 D:10/04/2019-22:05:18
+[22:05:50] [FAIL] sdk10_14_x64-Debug W:0 E:0 D:
+[22:05:50] [FAIL] sdk10_14_x64-Release W:0 E:0 D:
+[22:05:50] [FAIL] sdk10_14_x64-ReleaseWithAssert W:0 E:0 D:
+[22:05:50] [OK] gcc7_gtk3_x64-Debug W:0 E:0 D:10/04/2019-10:01:16
+[22:05:50] [OK] gcc7_gtk3_x64-Release W:0 E:0 D:10/04/2019-10:01:53
+[22:05:50] [OK] gcc7_gtk3_x64-ReleaseWithAssert W:0 E:0 D:10/04/2019-10:02:32
+[22:05:50] [OK] gcc6_gtk3_arm-Debug W:0 E:0 D:10/04/2019-00:03:26
+[22:05:50] [OK] gcc6_gtk3_arm-Release W:0 E:0 D:10/04/2019-00:05:22
+[22:05:50] [OK] gcc6_gtk3_arm-ReleaseWithAssert W:0 E:0 D:10/04/2019-00:07:24
+[22:05:50]  
+[22:05:50] [FAIL] There are WARNINGS!
+[22:05:50]  
+[22:05:50] [OK] Heap Memory Staticstics
+[22:05:50] ============================
+[22:05:50] Total a/dellocations: 2770, 2770
+[22:05:50] Total bytes a/dellocated: 1952852, 1952852
+[22:05:50] Max bytes allocated: 226146
+[22:05:50] Effective reallocations: (0/38)
+[22:05:50] Real allocations: 14 pages of 65536 bytes
+[22:05:50]                   9 pages greater than 65536 bytes
+[22:05:50] ============================
+code.

@@ -1,0 +1,22 @@
+
+h1. Rectángulos 2D
+
+p.Ún rectángulo (o <i>frame</i>) <r>rectangle2d</r> sirve para ubicar elementos en interfaces de usuario u otros sistemas 2D mediante un punto de origen <lt>V2D</lt> y un tamaño <lt>S2D</lt>.
+
+img(rectangle2d.svg,520,.65).Posicionamiento de elementos mediante rectángulos.
+Dibujo de un plano se ubican varios elementos rectangulares, a modo de interfaz de usuario.
+
+func(R2D,).Crea un rectángulo a partir de sus componentes.
+fret(R2D).El rectángulo.
+fpar(const real, x).Coordenada x del origen.
+fpar(const real, y).Coordenada y del origen.
+fpar(const real, width).Ancho.
+fpar(const real, height).Alto.
+
+func(R2D,contains).Comprueba si un punto está dentro del rectángulo.
+fret(bool_t).<c>TRUE</c> si el punto está dentro.
+fpar(const R2D*, r2d).Rectángulo.
+fpar(const real, x).Coordenada x del punto.
+fpar(const real, y).Coordenada y del punto.
+
+const(R2D,ZERO).Valor <c>[0,0,0,0]</c>.

@@ -1,0 +1,29 @@
+
+
+h1.Log
+
+ep.Registro donde un programa en ejecución puede volcar información sobre su funcionamiento interno.
+
+p.Un <i>log</i> o diario es un registro de anomalías que ocurren en tiempo de ejecución y que ayudan a la posterior depuración del programa o a determinar la causa de un error <r>log</r>. Este informe está dirigido en mayor medida a los programadores o administradores del software y no al usuario final, por lo que es recomendable incluir información técnica específica sobre la causa del problema. Los mensajes dirigidos al usuario final deben estar escritos en un tono más amigable, lejos de tecnicismos y enviados a la salida estándar (<c>stdout</c> <c>stderr</c>) o al sistema de ventanas, si estamos ante una aplicación de escritorio.
+
+img(log.svg,420,.4).Mensajes relativos a anomalías internas del programa, pueden enviarse a un registro <i>log</i>.
+Esquema de un proceso enviando información a un registro log.
+
+func(log_printf).Escribe un mensaje en el <i>log</i>, con el formato del <c>printf</c>.
+fret(uint32_t).El número de bytes escritos.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+fcode.
+log_printf("Leaks of object '%s' (%d bytes)", object->name, object->size);
+[12:34:23] Leaks of object 'String' (96 bytes)
+fcode.
+
+func(log_output).Establece si el contenido del <i>log</i> será redirigido o no a la salida estándar.
+fpar(const bool_t,std).Si <c>TRUE</c> las líneas se enviarán a la salida estándar <c>stdout</c>. Por defecto, <c>TRUE</c>.
+fpar(const bool_t,err).Si <c>TRUE</c> las líneas se enviarán a la salida de error <c>stderr</c>. Por defecto, <c>FALSE</c>.
+
+func(log_file).Establece un archivo de destino, donde se escribirán las lineas del <i>log</i>.
+fpar(const char_t*,pathname).Nombre del archivo incluida su ruta absoluta o relativa. Si el archivo no existe será creado y si ya existe, las futuras líneas se añadirán el final del mismo. Si <c>NULL</c> se deshabilitará la escritura en archivo del <i>log</i>.
+
+func(log_get_file).Obtiene el archivo actual asociado al <i>log</i>.
+fret(const char_t*).El <i>pathname</i> absoluto del archivo.

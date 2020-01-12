@@ -1,0 +1,87 @@
+langrev.
+
+h1.Pointers
+
+ep.Safe pointers manipulation.
+
+p.The <i>sewer</i> library provides macros and functions for "safe" pointers manipulation. By "safe" we mean the fact that the SDK will detect improper pointer access just before a <i>segment violation</i> occurs. Does it make sense to detect a segment violation if the program is going to crash anyway? Pre-detection plays a very important role when running automated tests. Before the inevitable process closing, it will leave a note in the execution <i>log.txt</i>, indicating the reason for the crash.
+
+code.
+// v2 = NULL
+// Segmentation fault
+V2Df v1 = *v2;
+
+// "v2 is NULL in file::line" 
+// will be record in log.txt
+// and then, Segmentation fault
+V2Df v1 = ptr_get(v2, V2Df);  
+code.
+
+func(ptr_get).Access to the content of the pointer (dereference), verifying previously that it is not <c>NULL</c>.
+fpar(type*,ptr).Pointer.
+fpar(,type).Pointer type.
+fcode.
+void compute(const V2Df *v1, const V2Df *v2)
+{
+    /* Safer than t = *v1; */
+    V2Df t = ptr_get(v1, V2Df);
+    ...
+}
+fcode.
+
+func(ptr_dget).Access the content of a double pointer, invalidating it later.
+fpar(type**,ptr).Double pointer.
+fpar(,type).Pointer type.
+fcode.
+Ctrl *create(Model **model, View **view)
+{
+    Ctrl *ctrl = heap_new(Ctrl);
+    ctrl->model = ptr_dget(model, Model);
+    ctrl->view = ptr_dget(view, View);
+    // *model = NULL
+    // *view = NULL
+    return ctrl;
+}
+fcode.
+
+func(ptr_dget_no_null).Like <c>ptr_dget</c>, but the content of the double pointer (<c>*dptr</c>) can not be <c>NULL</c>.
+fpar(type**,ptr).Double pointer.
+fpar(,type).Pointer type.
+fcode.
+Ctrl *create(Model **model, View **view)
+{
+    // *model and *view can't be NULL
+    Ctrl *ctrl = heap_new(Ctrl);
+    ctrl->model = ptr_dget_no_null(model, Model);
+    ctrl->view = ptr_dget_no_null(view, View);
+    return ctrl;
+}
+fcode.
+
+func(ptr_assign).Assign content from one pointer to another, if the destination is not <c>NULL</c>.
+fpar(,dest).Destination pointer.
+fpar(,src).Source pointer.
+
+func(ptr_destopt).Destroy an object if not <c>NULL</c>.
+fpar(FPtr_destroy,func_destroy).Destructor.
+fpar(type,dptr).Double pointer to the object to destroy.
+fpar(,type).Object type.
+fcode.
+cassert_no_null(dptr);
+if (*dptr != NULL)
+{
+    func_destroy(*dptr);
+    *dptr = NULL;
+}
+fcode.
+
+func(ptr_copyopt).Copy the object if not <c>NULL</c>.
+fpar(FPtr_copy,func_copy).Copy constructor.
+fpar(type,ptr).Object to copy (source).
+fpar(,type).Object type.
+fcode.
+if (ptr != NULL)
+    return func_copy(ptr);
+else
+    return NULL;
+fcode.

@@ -1,0 +1,22 @@
+langrev.
+h1.INet
+
+p.The <b>INet</b> library implements general Internet protocols. While the <lp>bsocket</lp> allow us to open a communication channel between two remote machines, it is necessary to define a format for the messages that both partners will exchange, so that the communication is carried out satisfactorily. 
+
+img(inet_depends.svg,300,.4).<i>INet</i> dependencies. See <lp>sdk</lp> .
+Inet library dependency tree.
+
+enum(ierror_t).Error codes of network connections.
+enumv(ekINONET).There is no internet connection on the device.
+enumv(ekINOHOST).Unable to connect to the remote server.
+enumv(ekITIMEOUT).Maximum timeout for connection has been exceeded.
+enumv(ekISTREAM).Error in the I/O channel when reading or writing.
+enumv(ekISERVER).Error in server response format.
+enumv(ekINOIMPL).Functionality not implemented.
+enumv(ekIUNDEF).Undetermined error.
+enumv(ekIOK).No error.
+
+struct(Http).Manage an HTTP connection initiated from the client process.
+
+struct(JsonOpts).Options when processing a JSON script.
+

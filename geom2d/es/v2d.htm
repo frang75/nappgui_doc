@@ -1,0 +1,47 @@
+
+h1.Vectores 2D
+
+p.El vector es el elemento geométrico más elemental. Representa un punto, una dirección o un desplazamiento mediante sus dos componentes <b>x</b> e <b>y</b> <r>vector2d</r>.
+
+img(vector2d.svg,520,.65).Un vector 2D representa una posición o un desplazamiento en el plano.
+Dibujo de un plano con un punto y un vector.
+
+p.El Álbegra Vectorial define una serie de operaciones básicas: Suma, negación, multiplicación por un escalar, módulo y normalización <r>vecop</r>. La representación visual de dichas operaciones la tenemos en <r>vector2d_algebra</r>.
+
+math(vecop).Álbegra vectorial elemental.
+\begin{eqnarray*}
+\vec{v} & = & \vec{a} + \vec{b} \\
+ & = & (a.x + b.x, a.y + b.y) \\
+ \vec{v} & = & p2 - p1 \\
+ & = & (p2.x - p1.x, p2.y - p1.y) \\
+ -\vec{a} & = & (-a.x, -a.y) \\
+\vec{v} & = & s \cdot \vec{a} \\
+ & = & (s \cdot a.x, s \cdot a.y) \\
+|a| & = & \sqrt{a^2+b^2} \\
+ \hat{a} & = & \left(\frac{a.x}{|a|}, \frac{a.y}{|a|} \right)
+\end{eqnarray*}
+math.
+
+img(vector2d_algebra.svg,520,.65).Interpretación geométrica de las operaciones básicas con vectores.
+Dibujo de un plano con diferentes operaciones con vectores.
+
+const(V2D,ZERO).El vector (0,0).
+
+func(V2D,).Crea un vector 2d a partir de sus componentes.
+fret(V2D).El vector 2d.
+fpar(const real,x).Coordenada x.
+fpar(const real,y).Coordenada y.
+
+func(V2D,norm).Normaliza un vector, es decir, lo convierte en un vector de longitud = 1.
+fret(bool_t).<c>FALSE</c> si el vector no se puede normalizar (el vector 0). 
+fpar(V2D*,v2d).El vector que será normalizado.
+
+func(V2D,length).Calcula la longitud de un vector.
+fret(real).El módulo del vector. 
+fpar(const V2D*,v2d).El vector.
+
+func(V2D,dist).Calcula la distancia entre dos puntos.
+fret(real).La distancia. 
+fpar(const V2D*,v2d1).El primer punto.
+fpar(const V2D*,v2d2).El segundo punto.
+

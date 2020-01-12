@@ -1,0 +1,34 @@
+langrev.
+h1.Slider
+
+p.<b>Sliders</b> are normally used to edit continuous and bounded numerical values <r>sliders</r>. As the control moves, <i>OnMoved</i> events occur. In <lh>Hello Slider and Progress!</lh> you have an example of use.
+
+li.Use <lf>slider_create</lf> to create a horizontal slider.
+
+li.Use <lf>slider_vertical</lf> to create a vertical slider.
+
+img(sliders.png,0,.5).Sliders on Windows, macOS and Linux.
+Window where several Sliders, horizontal and vertical sliders appear.
+
+func(slider_create).Create a new slider control.
+fret(Slider*).Slider.
+
+func(slider_vertical).Create a new vertical slider.
+fret(Slider*).Slider.
+
+func(slider_OnMoved).Set an event handler for slider movement.
+fpar(Slider*,slider).Slider.
+fpar(Listener*,listener).<i>Callback</i> function that will be called continuously while the user moves a slider.
+fnote.See <lh>GUI Events</lh>.
+
+func(slider_tooltip).Set a tooltip for the slider. It is a small explanatory text that will appear when the mouse is over the control.
+fpar(Slider*,slider).Slider.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(slider_value).Set the slider position.
+fpar(Slider*,slider).Slider.
+fpar(const real32_t,value).The position between 0.0 and 1.0.
+
+func(slider_get_value).Get the slider position.
+fret(real32_t).The normalized position between 0.0 and 1.0.
+fpar(const Slider*,slider).Slider.

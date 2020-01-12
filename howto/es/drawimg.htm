@@ -1,0 +1,14 @@
+h1.Dibujando en una imagen
+
+p.En este ejemplo vemos como generar gráficos vectoriales en dos contextos diferentes utilizando la misma rutina de dibujo <r>drawimg_win</r>. En la parte izquierda volcamos directamente en la ventana a través de un control <lt>View</lt>. En la parte derecha generamos una imagen utilizando diferentes resoluciones. Para visualizarla utilizamos un control <lt>ImageView</lt> configurado para estirar la imagen en caso que sea de menor tamaño que el propio control, lo que deja patente la pérdida de calidad. El <b>código fuente</b> está en la caperta <c>/src/howto/drawimg</c> de la distribución del SDK.
+
+img(drawimg_win.png,0,1).Contextos 2D: Ventana (izquierda), Imagen (derecha).
+Aplicación donde se utilizan diferentes contextos de dibujo.
+
+img(drawimg_macos.png,0,1).Versión macOS.
+Versión macOS de la aplicación.
+
+img(drawimg_linux.png,0,1).Versión Linux.
+Versión Linux de la aplicación.
+
+codefile(howto/drawimg/drawimg.c).

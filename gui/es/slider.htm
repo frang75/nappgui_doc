@@ -1,0 +1,34 @@
+
+h1.Slider
+
+p.Los <b>Sliders</b> son controles deslizantes se que utilizan normalmente para editar valores numéricos continuos y acotados <r>sliders</r>. A medida que el control se desplaza, se van produciendo eventos <i>OnMoved</i>. En <lh>¡Hola Slider y Progress!</lh> tienes un ejemplo de uso.
+
+li.Utiliza <lf>slider_create</lf> para crear un slider horizontal.
+
+li.Utiliza <lf>slider_vertical</lf> para crear un slider vertical.
+
+img(sliders.png,0,.5).Sliders en Windows, macOS y Linux.
+Ventana donde aparecen varios controles deslizantes Sliders, horizontal y vertical.
+
+func(slider_create).Crea un nuevo control deslizador.
+fret(Slider*).El slider.
+
+func(slider_vertical).Crea un nuevo slider en vertical.
+fret(Slider*).El slider.
+
+func(slider_OnMoved).Establece un manejador para el movimiento del slider.
+fpar(Slider*,slider).El slider.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará continuamente mientras el usuario mueva un slider.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(slider_tooltip).Establece un tooltip para el slider. Es un pequeño texto explicativo que aparecerá cuando el ratón esté sobre el control.
+fpar(Slider*,slider).El slider.
+fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(slider_value).Establece la posición del slider.
+fpar(Slider*,slider).El slider.
+fpar(const real32_t,value).La posición entre 0.0 y 1.0.
+
+func(slider_get_value).Obtiene la posición del slider.
+fret(real32_t).La posición normalizada entre 0.0 y 1.0.
+fpar(const Slider*,slider).El slider.

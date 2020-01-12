@@ -1,0 +1,96 @@
+
+h1.Draw2D
+
+p.La librería <i>draw2d</i> integra toda la funcionalidad necesaria para crear gráficos vectoriales en dos dimensiones. Depende directamente de <i>geom2d</i> <r>draw2d_depends</r> y, como veremos más adelante, dibujar no implica disponer de interfaz gráfica en el programa. Es posible generar imágenes utilizando un búfer interno de memoria, sin necesidad de visualizar el resultado en una ventana.
+
+li.<lp>dctx</lp>.
+
+li.<lp>draw</lp>.
+
+li.<lp>color</lp>.
+
+li.<lp>image</lp>.
+
+li.<lp>font</lp>.
+
+img(draw2d_depends.svg,300,.4).Dependencias de <i>draw2d</i>. Ver <lp>sdk</lp>.
+Árbol de dependencias de la librería draw2d.
+
+p.Esta librería conecta directamente con las tecnologías nativas de cada sistema operativo <r>draw2d_tech</r>: <b>GDI+</b> en sistemas Windows, <b>Quartz2D</b> en macOS y <b>Cairo</b> en Linux. En esencia <i>draw2d</i> ofrece una interfaz común y ligera con el fin de que el código sea portable, delegando el trabajo final en cada una de ellas. Con esto garantizamos tres cosas:
+
+li.Eficiencia: Estas APIs han sido probadas durante años y son mantenidas por los fabricantes de los sistemas.
+
+li.Presencia: Están integradas de "serie" en todos los ordenadores, por lo que no se requiere instalar software adicional.
+
+li.Rendimiento: Los programas son más pequeños ya que no requieren enlazar con rutinas especiales para el manejo de gráficos, tipografías o imágenes. 
+
+img(draw2d_tech.svg,400,.5).<i>draw2d</i> conecta con las APIs de dibujo de cada sistema operativo.
+Dependencias de draw2d en función de cada sistema operativo.
+
+enum(pixformat_t).Formato de pixel en una imagen. Número de bits por pixel y modelo de color.
+enumv(ekGRAY8).8 bits por pixel en escala de grises. 256 tonos de gris.
+enumv(ekRGB24).24 bits por pixel RGB. 8 bits por canal (rojo, verde, azul). El byte de menor orden corresponde al rojo y el de mayor al azul.
+enumv(ekRGBA32).32 bits por pixel RGBA. 8 bits por canal (rojo, verde, azul, alpha). El byte de menor orden corresponde al rojo y el de mayor al alpha (transparencia).
+
+enum(codec_t).Formato de codificación y compresión de imágenes.
+enumv(ekJPG).<i>Joint Photographic Experts Group</i>.
+enumv(ekPNG).<i>Portable Network Graphics</i>.
+enumv(ekBMP).<i>BitMaP</i>.
+enumv(ekGIF).<i>Graphics Interchange Format</i>.
+
+enum(fstyle_t).Estilo en fuentes tipográficas. Pueden combinarse varios valores con el operator OR <c>('|')</c>.
+enumv(ekFNORMAL).Fuente normal, sin estilo. También llamada <i>Regular</i>.
+enumv(ekFBOLD).Fuente <b>en negrita</b>.
+enumv(ekFITALIC).Fuente <i>en itálica</i>.
+enumv(ekFSTRIKEOUT).Fuente <del>tachada</del>.
+enumv(ekFUNDERLINE).Fuente <u>subrayada</u>.
+enumv(ekFPIXELS).Los tamaños de fuente se indicarán en píxeles.
+enumv(ekFPOINTS).Los tamaños de fuente se indicarán en puntos. <lh>Tamaño en puntos</lh>.
+
+enum(linecap_t).Estilo en los extremos de línea.
+enumv(ekLCFLAT).Terminación plana en el último punto de la línea.
+enumv(ekLCSQUARE).Terminación en un cuadro, cuyo centro es el último punto de la línea.
+enumv(ekLCROUND).Terminación en círculo, cuyo centro es el último punto de la línea.
+
+enum(linejoin_t).Estilo en las uniones de línea.
+enumv(ekLJMITER).Unión en ángulo. En ángulos muy cerrados se recorta.
+enumv(ekLJROUND).Unión redondeada.
+enumv(ekLJBEVEL).Unión biselada.
+
+enum(fillwrap_t).Comportamiento del patrón de relleno en los límites.
+enumv(ekFCLAMP).Se utiliza el último valor del límite para rellenar el área exterior.
+enumv(ekFTILE).Se repite el patrón.
+enumv(ekFFLIP).Se repite el patrón, invirtiendo el orden.
+
+enum(drawop_t).Operación a realizar sobre primitivas gráficas.
+enumv(ekSTROKE).Dibuja el contorno de la figura con el estilo de línea predeterminado.
+enumv(ekFILL).Rellena el interior de la figura con el color o patrón predeterminado.
+enumv(ekSKFILL).Primero dibuja el contorno y después rellena.
+enumv(ekFILLSK).Primero rellena y después dibuja el contorno.
+
+enum(align_t).Valores de alineación.
+enumv(ekLEFT).Alineación al margen izquierdo.
+enumv(ekTOP).Alineación al margen superior.
+enumv(ekCENTER).Alineación centrada.
+enumv(ekRIGHT).Alineación al margen derecho.
+enumv(ekBOTTOM).Alineación al margen inferior.
+enumv(ekJUSTIFY).Justificación o expansión del contenido.
+
+enum(ellipsis_t).Posición de la elipsis (...) al cortar un texto.
+enumv(ekELLIPNONE).Sin elipsis.
+enumv(ekELLIPBEGIN).Elipsis al principio del texto.
+enumv(ekELLIPMIDDLE).Elipsis en el centro del texto.
+enumv(ekELLIPEND).Elipsis al final del texto.
+enumv(ekELLIPMLINE).Texto multilínea (sin elipsis).
+
+struct(color_t).Entero de 32 bits que representa un color RGBA. El byte de menor orden corresponde al canal rojo (Red) y el de mayor orden al canal Alpha (transparencia). <lp>color</lp>.
+
+struct(DCtx).Contexto de dibujo 2D, destinatario para los comandos de dibujo. También se conoce como lienzo <i>(canvas)</i> o superficie <i>(surface)</i>. <lp>dctx</lp>.
+
+struct(Image).Contiene una imagen de mapa de bits, compuesta por píxeles. <lp>image</lp>.
+
+struct(Font).Contiene la familia tipográfica, tamaño y estilo con el que se dibujarán los textos. <lp>font</lp>.
+
+func(draw2d_start).Inicia la librería <i>draw2d</i>, reservando espacio para las estructuras internas globales. Internamente llama a <lf>core_start</lf>. En aplicaciones de escritorio, <lf>osmain</lf> llama a esta función al iniciar el programa.
+
+func(draw2d_finish).Finaliza la librería <i>draw2d</i>, liberando el espacio de las estructuras internas globales. Internamente llama a <lf>core_finish</lf>. En aplicaciones de escritorio, <lf>osmain</lf> llama a esta función al salir del programa.

@@ -1,0 +1,128 @@
+langrev.
+h1.Error management
+
+desc.To guarantee certain levels of quality in our software is to define programming standards and control potential bugs in the source code.
+
+ep.There is always one more bug to fix.
+<i>Ellen Ullman</i>
+
+p.Developing software of a certain size and complexity can become a hellish task, if we do not adopt concrete measures for the prevention and rapid localization of programming <i>bugs</i>. We will talk below about some strategies that we have used in the development of NAppGUI and that you can apply in your own projects.
+
+h2.Exhaustive tests
+
+p.Ensuring that our software is free of errors is as "simple" as performing a test for each and every one of the cases that will face the program <r>exhaustive_testing</r>.
+
+img(exhaustive_testing.svg, 400, .6).In the <i>exhaustive tests</i> all possible combinations of the input data are used.
+Flow chart where the path a program follows is based on its entries.
+
+p.From trivial theoretical examples, we see that we are dealing with an exponential problem <r>exponential_problem</r>, which will overflow the resources of any system with relatively few input variables. Therefore, we can intuit that it will be <b>impossible to guarantee</b> that our software is free of errors since it will not be feasible to reproduce all of its use cases. However, we can define a strategy that helps us to minimize the impact that these will have on the final product, detecting them and correcting them as soon as possible.
+
+img(exponential_problem.svg, 400, .5).With only 9 input variables (in the 0..99 range) the computation resources will overflow.
+Graph that grows exponentially depending on the input variables.
+
+h2.Static analysis
+
+p.Static analysis is the one that is carried out <b>before executing the program</b> and consists of two parts: The use of <b>standards</b> where rules and quality controls are applied during the code's own writing. And <b>compiler warnings</b> that will help us locate potential errors at compile time.
+
+h3.Standards
+
+p.The use of standards, understood as rules that we follow when programming, is essential when it comes to maintaining minimum levels of quality in our projects <r>coding_standards</r>. If not applied, a program of a certain size will become anarchic, illegible, difficult to maintain and complicated to understand. In this scenario it will be easy to add new errors as we manipulate the source code.
+
+img(coding_standards.svg,400,.6).The use of standards will reduce the likelihood of <i>bugs</i>.
+Show bugs running towards a written code page without using standards.
+
+p.In reality, it is difficult to differentiate between good and bad standards, since they will depend on the type of project, programming languages, company philosophy and objectives to be prioritized. We can see them as a <i>Style Guide</i> that evolves over time from the hand of experience. What is really important is to become aware of its usefulness, define them and apply them. For example, if we decide to name variables with descriptive identifiers in English and underscore (<c>product_code</c>), all our code should comply with this rule without exception. Let's look at some of the standards we apply within NAppGUI. They are not the best nor do they have to adapt to all cases. They are just ours:
+
+li.Use a reduced subset of the language. For example, expressions of the type <c>*((int*)block + i++) = i+1</c>, we are totally forbidden. They are perfectly valid in C but not very readable and confusing. Some programmers think that cryptic and compact code is much more maintainable, but we think they are wrong. The following sentence sums up this decision perfectly: 
+
+bq.Many programming languages contain good and bad parts. I discovered that I can be a better programmer using only the good parts and discarding the bad ones. After all, how can you create something good with bad parts? - Douglas Crockford.
+
+li.Comments are forbidden, except on rare occasions and very justified. If something needs a comment, rewrite it. A comment that minimally contradicts the code that seeks to clarify produces the opposite effect of the expected when writing it. And it is very simple that they become obsolete.
+
+li.Reduced and clean public interfaces. The header files (<c>*.h</c>) they suppose a great level of abstraction since they reduce the connections between software components <r>interfaces</r>. They allow condensing, as an index, hundreds or thousands of lines of code in just fifteen or twenty public functions. It is completely forbidden to include type definitions (they will go in the <c>*.hxx</c>), comments (of course) and documentation blocks in <c>.h</c> files.
+
+img(interfaces.svg,-1,.8).The headers <c>*.h</c> they suppose a great level of abstraction hiding the complexity of the solution <b>(a)</b>. They facilitate a horizontal development, based on the problem, versus vertical learning based on APIs <b>(b)</b>. They help the linker to reduce the size of the executable <b>(c)</b>.
+It shows how a header file significantly simplifies the complexity of the software, reducing its connections.
+
+li.Opaque objects. Object definitions (<c>struct _object_t</c>) will be carried out within the implementation files (<c>*.c</c>) and never in the <c>*.h</c>. The objects will be manipulated with public functions that accept pointers to them, always hiding the fields that compose them. This point, together with the previous one of the interfaces, perfectly delimits the barriers between modules, marking clearly when a problem ends and another.
+
+p.The first two rules help reduce the internal complexity of a module by making it as readable and less cryptic as possible. We could enrich them with others about indentation, style, named variables, etc. We follow with more or less rigor the advice of the great book <i>The Practice of Programming</i> <r>practice_programming</r>.
+
+img(practice_programming.jpg,300,.35).<i>The Practice of Programming</i> by Brian W. Kernighan and Rob Pike is a good source of inspiration to define your own programming style.
+Book cover of The Practice of Programming by Brian W. Kernighan y Rob Pike
+
+h3.Compiler warnings
+
+p.The compiler is our great ally when it comes to examining the code in search of possible failures <r>compiler_warnings</r>. Activating the highest possible level of <i>warnings</i> is essential to reduce errors derived from the conversion of types, uninitialized variables, code not reachable, etc. All projects created with NAppGUI will activate the highest level of warnings possible, equivalent to <c>-Wall -Wpedantic</c> on all platforms <r>warnings_policy</r>. 
+
+img(compiler_warnings.png,0,.9).Correcting all compiler <i>warnings</i> should be a priority.
+Several warning of the Xcode compiler.
+
+img(warnings_policy.png,0,.5).NAppGUI activates the highest level of <i>warnings</i> possible.
+Policy of warnings in an Xcode project.
+
+h2.Dynamic analysis
+
+p.The dynamic analysis is performed once the program is running. Here our main weapon is the self-validations, implemented as sentences <lp>cassert</lp>. The asserts are checks distributed throughout the length of the source code, which are checked at run time each time the program passes through them. If a sentence is resolved as <c>FALSE</c>, the process will stop and an informative window will be displayed <r>assert_window</r>. 
+
+code.
+void layout_set_row_margin(Layout *layout, const uint32_t row, const real32_t margin)
+{
+    cassert_no_null(layout);
+    cassert_msg(row < layout->num_rows, "'row' out of range");
+    ...
+}
+code.
+
+img(assert_window.png,-1,.6).Window displayed after the activation of an assert.
+Window displayed after activating an assert.
+
+h3.Disable Asserts
+
+p.Within the code of the NAppGUI SDK, more than 5000 asserts have been distributed, located in strategic points, which constantly evaluate the coherence and integrity of the software. Obviously, this number will grow after each revision, as more functionality is integrated. This makes the SDK a real minefield, where any errors in the use of the API functions will be automatically notified to the programmer. Depending on the <i>build configuration</i> that we are using, the asserts will be activated or deactivated:
+
+li.<c>Debug</c>: The <i>assert</i> statements are activated.
+
+li.<c>Release</c>: The <i>assert</i> statements are deactivated.
+
+li.<c>ReleaseWithAssert</c>: As its name suggests, it activates all the Release optimizations, but it leaves the <i>assert</i> statements activated.
+
+h3.Debugging the program
+
+p.When an assert is activated, the program stops just at the point of the check, showing the confirmation window of the assert. If we press the button <c>[Debug]</c>, we will access the <i>call stack</i> <r>call_stack</r>, which is the current stack of function calls, from your own <c>main()</c> up to the current stop point <lh>Stack Segment</lh>. By browsing the stack we can check the values of variables and objects at any call level. This will help us identify the source of the error, since the cause may be some levels below detection.
+
+img(call_stack.png,0,.95).<i>Call stack</i> while debugging the assert of the previous example.
+Call stack capture, debugging in Visual Studio
+
+h3.Error log
+
+p.A <lp>log</lp> of execution is a file where the program is dumping information about its status or anomalies detected. It can be very useful to know the cause of a failure when the software has already been distributed and it is not possible to debug it. NAppGUI automatically creates a log file for each application located in the data directory of the application <c>APP_DATA\APP_NAME\log.txt </c>, for example <c>C:\Users\USER\AppData\Roaming\HelloWorld\log.txt</c>.
+
+code(text).
+[15:42:29] Starting log for 'HelloWorld'
+[15:42:29] TextView created: [0x6FFC7A30]
+[15:42:32] Assertion failed (c:\\nappgui_1_0\\src\\gui\\layout.c:638): "'row' out of range"
+[15:42:32] Assertion failed (c:\\nappgui_1_0\\src\\core\\array.c:512): "Array invalid index"
+[15:42:34] You have an execution log in: 'C:\\Users\\USUARIO\\AppData\\Roaming\\HelloWorld\\log.txt'
+code.
+
+p.As you can see, the asserts are automatically redirected to the <i>log</i> file. It is possible to disable this writing by unchecking the check <c>'Write assert info in log'</c> of the information window. You can also add your own messages using the method <lf>log_printf</lf>.
+
+code.
+log_printf("TextView created: [0x%X]", view);
+code.
+
+h3.Memory Auditor
+
+p.The memory manager of NAppGUI <lp>heap</lp>, has an associated auditor that verifies that there are no leaks of memory (<i>leaks</i>) after each execution of each application that uses the SDK. This is a great advantage with respect to the use of external utilities, since dynamic memory checks are <b>always</b> being carried out and not in isolated stages of development.
+
+code(text).
+NApp memory statistics
+======================
+Total a/dellocations: 61, 61
+Total rellocations (reals): 0, 0
+Total bytes a/dellocated: 6136, 6136
+Max bytes allocated: 6126
+Real allocations: 2 pages of 4096 bytes
+======================
+code.

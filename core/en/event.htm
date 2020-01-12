@@ -1,0 +1,83 @@
+langrev.
+h1.Events
+
+p.An event is an action that occurs during the program execution, usually asynchronously or unpredictably and on which a given object must be notified. In applications with a graphical interface, many events are constantly occurring when the user interacts with the different controls. However, they can also occur in console applications, for example, when finish the writing of a file to disk or when downloading a page from Internet. In a system of events two actors intervene: The sender, which has evidence when the action occurs and the receiver who is notified that such action has occurred. To connect both ends we must perform these simple steps <r>newlist</r> <r>event</r>:
+
+li.Create a <lf>listener</lf> indicating the receiving object and the <i>callback</i> function to which the sender should call.
+
+li.Said <i>listener</i> is assigned to the sender by the appropriate method. For example, the <lt>Button</lt> type provide the method <lf>button_OnClick</lf> to notify of a click.
+
+li.When the event occurs, the sender calls the <i>callback</i> function, indicating the receiving object (parameter of <c>listener</c>) and detailed information about the event collected in the object <lt>Event</lt>.
+
+code(cpp,newlist).<i>Callback</i> function and button click event.
+static void OnClick(AppCtrl *ctrl, Event *event)
+{
+    // TODO: Response to click
+}
+
+...
+
+void CreateButton(AppCtrl *ctrl)
+{
+    Button *button = button_push();
+    button_text(button, "Ok");
+    button_OnClick(button, listener(ctrl, OnClick, AppCtrl));
+}
+code.
+
+img(event.svg,480,.6).<c>OnClick</c> event.
+Scheme showing the different steps in event management.
+
+func(listener).Create a listener. This function will link an event sender with the receiver, usually the application controller. The sender object is responsible for destroying the listener.
+fret(Listener*).Listener object.
+fpar(type*,obj).Receiver object that will be passed as the first parameter to <c>func_event_handler</c>.
+fpar(FPtr_event_handler,func_event_handler).<i>Callback</i> function that will be called when the event occurs. Also known as <i>event handler</i>.
+fpar(,type).The type of receiver object.
+
+func(listen).Like <lf>listener</lf>, but used in C++ to define class <i>callbacks</i>. <lp>hellocpp</lp>.
+
+func(listener_destroy).Destroy a listener.
+fpar(Listener**,listener).Listener. Will be set to <c>NULL</c> after destruction.
+fnote.The sender is responsible for destroying the listener.
+
+func(listener_update).Update the receiver and event handler. It is equivalent to destroying it, and creating it again.
+fpar(Listener**,listener).The current listener.
+fpar(Listener*,new_listener).The new listener.
+fnote.This method must be used within the sender.
+
+func(listener_event).Launches an event from the sender to the receiver.
+fpar(Listener*,listener).List through which the event will be sent.
+fpar(const uint32_t,type).Event code.
+fpar(sender_type*,sender).Event sender.
+fpar(params_type*,params).Event parameters, or <c>NULL</c> if it doesn't have.
+fpar(result_type*,result).Event result, or <c>NULL</c> if not expected.
+fpar(,sender_type).Type of sender object.
+fpar(,params_type).Type of params object, or <c>void</c> if it does not have.
+fpar(,result_type).Type of result object, or <c>void</c> if it does not have.
+fnote.This method must be invoked within the event sender.
+
+func(listener_pass_event).Pass the received event to another object, changing only the sender. Useful for not generating a new <lt>Event</lt> object.
+fpar(Listener*,list).List through which the event will be resent.
+fpar(Event*,event).Incoming event.
+fpar(sender_type*,sender).The new event sender.
+fpar(,sender_type).Sender object type.
+fnote.This method must be invoked within the event sender.
+
+func(event_type).Get the event type.
+fret(uint32_t).The event type. Normally associated with a <c>enum</c>. Examples in <lt>core_event_t</lt>, <lt>event_t</lt>.
+fpar(const Event*,event).Event.
+
+func(event_sender).Get the event sender.
+fret(type*).<i>Sender</i>.
+fpar(Event*,event).Event.
+fpar(,type).Sender type.
+
+func(event_params).Get the event parameters, encapsulated in a structure, which will be different depending on the event type.
+fret(type*).Event parameters.
+fpar(Event*,event).Event.
+fpar(,type).Parameters type.
+
+func(event_result).Gets an object to write the results of the event. Some events require the return of data by the receiver. The type of result object will depend on the type of event.
+fret(type*).Event results.
+fpar(Event*,event).Event.
+fpar(,type).Result type.

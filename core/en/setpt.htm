@@ -1,0 +1,116 @@
+langrev.
+h1.Sets of pointers
+
+ep.Sets of pointers. For general information, see <lp>setst</lp>.
+
+func(setpt_create).Create an empty pointer set.
+fret(SetPt(type)*).The new set.
+fpar(FPtr_compare,func_compare).Function to compare two elements. <lh>Sort and search</lh>.
+fpar(,type).Object type.
+
+func(setpt_destroy).Destroy a set and all its elements.
+fpar(SetPt(type)**,set).The set. Will be set to <c>NULL</c> after destruction.
+fpar(FPtr_destroy,func_destroy).Function to destroy an element of the set <lh>Destructors</lh>. If it is <c>NULL</c> only the set will be destroyed, but not its elements.
+fpar(,type).Object type.
+
+func(setpt_size).Get the number of set elements.
+fret(uint32_t).Number of items.
+fpar(const SetPt(type)*,set).The set.
+fpar(,type).Object type.
+
+func(setpt_get).Search for an item in <c>O(logn)</c>. It is equivalent to <lf>arrpt_bsearch</lf>. The internal set iterator will be fixed in it.
+fret(type*).Pointer to the searched item if it exists, or <c>NULL</c> if not.
+fpar(SetPt(type)*,set).The set.
+fpar(type*,key).Search key. It is a pointer to an object where only the relevant fields of the search must be initialized.
+fpar(,type).Object type.
+fcode.
+Product key;
+Product *pr;
+key.id = 453;
+pr = setpt_get(setpt, &key, Product);
+fcode.
+fnote.<lh>Iterators</lh>.
+
+func(setpt_insert).Insert a new item in the set.
+fret(bool_t).<c>TRUE</c> if the item has been inserted. <c>FALSE</c> if another element with the same key already exists.
+fpar(SetPt(type)*,set).The set.
+fpar(type*,value).Pointer to the element to insert.
+fpar(,type).Object type.
+fnote.Inserting or deleting elements invalidates the internal set iterator <lh>Iterators</lh>. You must initialize it with <lf>setpt_first</lf>.
+fcode.
+Product *pr = product_create(...);
+if (setpt_insert(setpt, pr, Product) == FALSE)
+{
+    error("Already exists");
+    product_destroy(&pr);
+}
+fcode.
+
+func(setpt_delete).Remove an item from the set.
+fret(bool_t).<c>TRUE</c> if the item has been deleted, or <c>FALSE</c> if there is no item with that key.
+fpar(SetPt(type)*,set).The set.
+fpar(type*,key).Key to delete. It is a pointer to an object where only the relevant fields of the search must be initialized.
+fpar(FPtr_destroy,func_destroy).Element destructor. Can be <c>NULL</c>. See <lf>setpt_destroy</lf>.
+fpar(,type).Object type.
+fnote.Inserting or deleting elements invalidates the internal set iterator <lh>Iterators</lh>. You must initialize it with <lf>setpt_first</lf>.
+fcode.
+Product key;
+key.id = 345;
+if (setpt_delete(setpt, &key, product_destroy, Product) == FALSE)
+    error("Doesn't exists");
+fcode.
+
+func(setpt_first).Get the first element of the set and initialize the internal iterator.
+fret(type*).Pointer to the first element or <c>NULL</c> if the set is empty.
+fpar(SetPt(type)*,set).The set.
+fpar(,type).Object type.
+fnote.<lh>Iterators</lh>.
+
+func(setpt_last).Get the last element of the set and initialize the internal iterator.
+fret(type*).Pointer to the last item or <c>NULL</c> if the set is empty.
+fpar(SetPt(type)*,set).The set.
+fpar(,type).Object type.
+fnote.<lh>Iterators</lh>.
+
+func(setpt_next).Get the next set item, after increasing the internal iterator.
+fret(type*).Pointer to the next item or <c>NULL</c> if the iterator has reached the last.
+fpar(SetPt(type)*,set).The set.
+fpar(,type).Object type.
+fnote.Use <lf>setpt_first</lf> to initialize the internal iterator <lh>Iterators</lh>.
+
+func(setpt_prev).Gets the previous element of the set, after decrementing the internal iterator.
+fret(type*).Pointer to the previous item or <c>NULL</c> if the iterator has reached the first.
+fpar(SetPt(type)*,set).The set.
+fpar(,type).Object type.
+fnote.Use <lf>setpt_last</lf> to initialize the internal iterator on reversed loops <lh>Iterators</lh>.
+
+func(setpt_foreach).Loop over all the elements of the set. Use <lf>setpt_fornext</lf> to close the loop.
+fpar(type*,elem).Name of the variable 'element' within the loop. Adding the suffix <c>'_i'</c> we get the index.
+fpar(SetPt(type)*,set).The set.
+fpar(,type).Object type.
+fcode.
+setpt_foreach(product, set, Product)
+    bstd_printf("Position:%d, Id:%d\n", product_i, product->id);
+setpt_fornext(product, set, Product)
+fcode.
+
+func(setpt_fornext).Close the loop opened by <lf>setpt_foreach</lf>, increasing the internal iterator.
+fpar(type*,elem).Name of the variable 'element'. It must be the same as <c>setpt_foreach</c>.
+fpar(SetPt(type)*,set).The set.
+fpar(,type).Object type.
+
+func(setpt_foreach_rev).Loop over all the elements of the set in reverse order. Use <lf>setpt_forprev</lf> to close the loop.
+fpar(type*,elem).Name of the variable 'element' within the loop. Adding the suffix <c>'_i'</c> we get the index.
+fpar(SetPt(type)*,set).The set.
+fpar(,type).Object type.
+fcode.
+// Now in reverse order
+setpt_foreach_rev(product, set, Product)
+    bstd_printf("Position:%d, Id:%d\n", product_i, product->id);
+setpt_forprev(product, set, Product)
+fcode.
+
+func(setpt_forprev).Close the loop opened by <lf>setpt_foreach_rev</lf>, decreasing the internal iterator.
+fpar(type*,elem).Name of the variable 'element'. It must be the same as <c>setpt_foreach_rev</c>.
+fpar(SetPt(type)*,set).The set.
+fpar(,type).Object type.

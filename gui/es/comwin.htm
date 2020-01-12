@@ -1,0 +1,30 @@
+
+h1.Diálogos comunes
+
+p.Los diálogos comunes son ventanas predeterminadas proporcionadas por el sistema operativo para realizar tareas cotidianas como: Abrir archivos <r>file_explorer_windows</r>, seleccionar colores, tipografías, etc. Su uso es doblemente beneficioso. Por un lado evitamos programarlas como parte de la aplicación y, por otro, aprovechamos el conocimiento previo del usuario ya que seguramente las habrá utilizado en otros programas.
+
+img(file_explorer_windows.png).Explorador de archivos en Windows.
+Captura del explorador de archivos en Windows.
+
+img(file_explorer_macos.png).Explorador de archivos en macOS.
+Captura del explorador de archivos en macOS.
+
+img(file_explorer_linux.png).Explorador de archivos en Linux.
+Captura del explorador de archivos en Linux.
+
+func(comwin_open_file).Lanza el diálogo de abrir archivo.
+fret(const char_t*).El nombre del archivo seleccionado o <c>NULL</c> si el usuario ha abortado el diálogo.
+fpar(Window*,parent).Ventana padre.
+fpar(const char_t**,ftypes).Tipos de archivo para el filtro.
+fpar(const uint32_t,size).Número de tipos de archivo.
+fpar(const char_t*,start_dir).Directorio de inicio del diálogo. Pueder ser <c>NULL</c>.
+fnote.Se lanzará de forma <b>modal</b>. <c>parent</c> quedará bloqueada hasta que se acepte el diálogo.
+
+func(comwin_save_file).Lanza el diálogo de guardar archivo.
+fret(const char_t*).El nombre del archivo seleccionado o <c>NULL</c> si el usuario ha abortado el diálogo.
+fpar(Window*,parent).Ventana padre.
+fpar(const char_t**,ftypes).Tipos de archivo para el filtro.
+fpar(const uint32_t,size).Número de tipos de archivo.
+fpar(const char_t*,start_dir).Directorio de inicio del diálogo. Pueder ser <c>NULL</c>.
+fnote.Se lanzará de forma <b>modal</b>. <c>parent</c> quedará bloqueada hasta que se acepte el diálogo.
+

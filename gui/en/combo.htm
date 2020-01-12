@@ -1,0 +1,92 @@
+langrev.
+h1.Combo
+
+p.<b>ComboBox</b> are text editing boxes with drop-down list <r>combos</r>. Therefore, they will work in the same way as <lt>Edit</lt> controls on which methods for the management of the list are added. In <lh>Hello PopUp and Combo!</lh> you have an example of use.
+
+img(combos.png,0,.8).Combos on Windows, macOS and Linux.
+Capture multiple ComboBox controls in a window.
+
+func(combo_create).Create a combo control.
+fret(Combo*).The combo.
+
+func(combo_OnFilter).Set a function to filter the text while editing.
+fpar(Combo*,combo).The combo.
+fpar(Listener*,listener).<i>Callback</i> function to be called after each key press. In <lt>EvTextFilter</lt> from <lf>event_result</lf> filtered text will be returned.
+fnote.See <lh>Filter texts</lh> and <lh>GUI Events</lh>.
+
+func(combo_OnChange).Set a function to be called when the text has changed.
+fpar(Combo*,combo).The combo.
+fpar(Listener*,listener).<i>Callback</i> function to be called when the control loses focus on the keyboard, indicating the end of the edition.
+fnote.This event will also be launched when you select an item from the list, a sign that the text has changed in the edit box. See <lh>GUI Events</lh>.
+
+func(combo_text).Set the combo edit text.
+fpar(Combo*,combo).The combo.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(combo_align).Set text alignment.
+fpar(Combo*,combo).The combo.
+fpar(const align_t,align).Alignment.
+
+func(combo_tooltip).Assign a tooltip to the control combo.
+fpar(Combo*,combo).The combo.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(combo_color).Set the color of the combo text.
+fpar(Combo*,combo).The combo.
+fpar(const color_t,color).Text color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(combo_color_focus).Sets the color of the text, when the control has the keyboard focus.
+fpar(Combo*,combo).The combo.
+fpar(const color_t,color).Text color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(combo_bgcolor).Set the background color.
+fpar(Combo*,combo).The combo.
+fpar(const color_t,color).Background color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(combo_bgcolor_focus).Sets the background color when the control has keyboard focus.
+fpar(Combo*,combo).The combo.
+fpar(const color_t,color).Background color.
+
+func(combo_phtext).Set an explanatory text for when the control is blank.
+fpar(Combo*,combo).The combo.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(combo_phcolor).Set the color of the placeholder text.
+fpar(Combo*,combo).The combo.
+fpar(const color_t,color).Text color.
+
+func(combo_phstyle).Set the font style for the placeholder.
+fpar(Combo*,combo).The combo.
+fpar(const uint32_t,fstyle).Combination of values of <lt>fstyle_t</lt>.
+
+func(combo_get_text).Get control text.
+fret(const char_t*).UTF8 C-string terminated in null character <c>'\0'</c>.
+fpar(const Combo*,combo).The combo.
+
+func(combo_add_elem).Add a new item to the drop-down list.
+fpar(Combo*,combo).The combo.
+fpar(const char_t*,text).The text of the element in UTF-8 or the resource identifier. <lp>resources</lp>.
+fpar(const Image*,image).Icon associated with the resource element or identifier. For space, it will scale to a maximum maximum of 16 pixels.
+
+func(combo_set_elem).Edit an item from the drop-down list.
+fpar(Combo*,combo).The combo.
+fpar(const uint32_t,index).The index of the item to replace.
+fpar(const char_t*,text).The text of the element in UTF-8 or the resource identifier. <lp>resources</lp>.
+fpar(const Image*,image).Icon associated with the resource element or identifier. For space, it will scale to a maximum maximum of 16 pixels.
+
+func(combo_ins_elem).Insert an item in the drop-down list.
+fpar(Combo*,combo).The combo.
+fpar(const uint32_t,index).Insertion position.
+fpar(const char_t*,text).The text of the element in UTF-8 or the resource identifier. <lp>resources</lp>.
+fpar(const Image*,image).Icon associated with the resource element or identifier. For space, it will scale to a maximum maximum of 16 pixels.
+
+func(combo_del_elem).Remove an item from the drop-down list.
+fpar(Combo*,combo).The combo.
+fpar(const uint32_t,index).The index of the item to delete.
+
+func(combo_duplicates).Prevents duplicate texts from the drop-down list.
+fpar(Combo*,combo).The combo.
+fpar(const bool_t,duplicates).<c>TRUE</c>to allow duplicate texts.

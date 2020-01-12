@@ -1,0 +1,83 @@
+
+h1.Eventos
+
+p.Un evento es una acción que ocurre durante la ejecución del programa, normalmente de forma asíncrona o impredecible y sobre la que un determinado objeto debe ser notificado. En aplicaciones con interfaz gráfica multitud de eventos están ocurriendo constantemente cuando el usuario interactúa con los diferentes controles. No obstante, también pueden ocurrir en aplicaciones de consola, por ejemplo, al terminar de escribir un archivo en disco o al descargar una página de Internet. En un sistema de eventos intervienen dos actores: El emisor <i>(sender)</i>, que tiene constancia cuando ocurre la acción y el receptor <i>(receiver)</i> al que se notifica que dicha acción ha ocurrido. Para conectar ambos extremos debemos realizar estos sencillos pasos <r>newlist</r> <r>event</r>:
+
+li.Crear un <lf>listener</lf> indicando el objeto receptor y la función <i>callback</i> a la que debe llamar el emisor.
+
+li.Se asigna dicho <i>listener</i> al emisor mediante el método apropiado. Por ejemplo, el tipo <lt>Button</lt> provee el método <lf>button_OnClick</lf> para notificar de una pulsación.
+
+li.Cuando se produce el evento, el emisor llama a la función <i>callback</i>, indicando el objeto receptor (parámetro de <c>listener</c>) e información detallada sobre el evento recogida en el objeto <lt>Event</lt>.
+
+code(cpp,newlist).Función <i>callback</i> y evento de pulsación de un botón.
+static void OnClick(AppCtrl *ctrl, Event *event)
+{
+    // TODO: Response to click
+}
+
+...
+
+void CreateButton(AppCtrl *ctrl)
+{
+    Button *button = button_push();
+    button_text(button, "Ok");
+    button_OnClick(button, listener(ctrl, OnClick, AppCtrl));
+}
+code.
+
+img(event.svg,480,.6).Evento <c>OnClick</c>.
+Esquema que muestra los diferentes pasos en la gestión de eventos.
+
+func(listener).Crea un listener. Esta función vinculará un emisor de eventos con el receptor, normalmente el controlador de la aplicación. El objeto emisor <i>(sender)</i> es el responsable de destruir el listener.
+fret(Listener*).Objeto listener.
+fpar(type*,obj).Objeto receptor que será pasado como primer parámetro a <c>func_event_handler</c>.
+fpar(FPtr_event_handler,func_event_handler).Función <i>callback</i> que será llamada cuando se produzca el evento. También conocida como <i>event handler</i>.
+fpar(,type).El tipo de objeto receptor.
+
+func(listen).Igual que <lf>listener</lf>, pero utilizado en C++ para definir <i>callbacks</i> de clase. <lp>hellocpp</lp>.
+
+func(listener_destroy).Destruye un listener.
+fpar(Listener**,listener).Listener. Será puesto a <c>NULL</c> tras la destrucción.
+fnote.El emisor es el responsable de destruir el listener.
+
+func(listener_update).Actualiza el receptor y manejador del evento. Es equivalente a destruirlo crearlo de nuevo.
+fpar(Listener**,listener).El listener actual.
+fpar(Listener*,new_listener).El nuevo listener.
+fnote.Este método debe ser utilizado dentro del emisor.
+
+func(listener_event).Lanza un evento desde el emisor <i>(sender)</i> hacia el receptor.
+fpar(Listener*,listener).Listener a través del cual se enviará el evento.
+fpar(const uint32_t,type).Código del evento.
+fpar(sender_type*,sender).Generador del evento <i>(sender)</i>.
+fpar(params_type*,params).Parámetros del evento, o <c>NULL</c> si no tiene.
+fpar(result_type*,result).Resultado del evento, o <c>NULL</c> si no se espera.
+fpar(,sender_type).Tipo de objeto <i>sender</i>.
+fpar(,params_type).Tipo de objeto params, o <c>void</c> si no tiene.
+fpar(,result_type).Tipo de objeto result, o <c>void</c> si no tiene.
+fnote.Este método debe ser invocado dentro del emisor del evento.
+
+func(listener_pass_event).Pasa el evento recibido a otro objeto, cambiando solo el emisor <i>(sender)</i>. Útil para no generar un nuevo objeto <lt>Event</lt>.
+fpar(Listener*,list).Listener a través del cual se re-enviará el evento.
+fpar(Event*,event).Evento entrante.
+fpar(sender_type*,sender).El nuevo generador del evento.
+fpar(,sender_type).El tipo de objeto.
+fnote.Este método debe ser invocado dentro del emisor del evento.
+
+func(event_type).Obtiene el tipo de evento.
+fret(uint32_t).El tipo de evento. Normalmente asociado a un <c>enum</c>. Ejemplos en <lt>core_event_t</lt>, <lt>event_t</lt>.
+fpar(const Event*,event).Evento.
+
+func(event_sender).Obtiene el emisor del evento <i>(sender)</i>.
+fret(type*).<i>Sender</i>.
+fpar(Event*,event).Evento.
+fpar(,type).El tipo del emisor.
+
+func(event_params).Obtiene los parámetros del evento, encapsulados en una estructura, que será diferente en función del tipo de evento.
+fret(type*).Parámetros del evento.
+fpar(Event*,event).Evento.
+fpar(,type).El tipo de parámetros.
+
+func(event_result).Obtiene un objeto para escribir los resultados del evento. Algunos eventos requieren la devolución de datos por parte del receptor. El tipo de objeto resultado dependerá del tipo de evento.
+fret(type*).Resultados del evento.
+fpar(Event*,event).Evento.
+fpar(,type).El tipo de resultado.

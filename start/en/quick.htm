@@ -1,0 +1,103 @@
+langrev.
+h1.Quick start
+
+ep."...the number of UNIX installations has grown to 10, with more expected..."
+<i>Dennis Ritchie and Ken Thompson</i> - June 1972
+
+p.NAppGUI is an SDK to develop applications using the C programming language, that work on any desktop platform (Windows, macOS or Linux) <r>nappgui_stack</r>. C++ is allowed, but not indispensable. We can write a complete program using only ANSI-C.
+
+img(nappgui_stack.svg,0,.9).NAppGUI allows the easy port of applications written in ANSI C.
+Capture an application on Windows, macOS and Linux written in C with NAppGUI.
+
+h2.Prerequisites
+
+p.Before start you need to have installed these tools <r>basic_tools</r>:
+
+li.<l>https://visualstudio.microsoft.com/vs/''Visual Studio 2019</l> to compile under Windows. Microsoft offers the free <i>Community</i> version for independent developers or small companies.
+
+li.<l>https://cmake.org/download/''CMake</l>. Cross-platform tool to automatically create build projects from the source code.
+
+img(basic_tools.png,200,.25).Visual Studio 2019 and CMake.
+Visual Studio and CMake icons.
+
+h2.Download
+
+p.In <lp>download</lp> you can obtain the latest stable SDK version. Also available from our <l>https://github.com/frang75/nappgui''GitHub</l> repository, either by cloning it <r>gitclone</r> or in a <b>.ZIP</b> <r>github_download</r>. We will assume that the decompressed working copy <b>is located</b> at <c>C:\nappgui</c> <r>nappgui_repo</r>.
+
+code(text, gitclone).Cloning the NAppGUI repository.
+cd C:\
+git clone https://github.com/frang75/nappgui.git
+code.
+
+img(github_download.png,0,.6).Download the .ZIP from GitHub.
+Web capture of the NAppGUI GitHub repository.
+
+img(nappgui_repo.png,0,1).Working copy ready to use.
+Capture of the downloaded and decompressed working copy.
+
+li.<b>inc</b>: SDK header files.
+li.<b>lib</b>: Pre-compiled versions of the NAppGUI libraries. The free version only includes support for Visual Studio 2019 x64.
+li.<b>prj</b>: Scripts that CMake will use to generate the projects.
+li.<b>src</b>: Source code of the examples and future location of your own projects.
+
+h2.Compile the examples
+
+p.We will create a solution in Visual Studio and compile one of the sample applications.
+
+li.Open CMake <r>nappgui_cmake</r>.
+li.<i>Where is the source code:</i> <c>C:\nappgui\src</c>.
+li.<i>Where to build the binaries:</i> <c>C:\nappgui_build</c>. This new directory is generated automatically and must be out of version control.
+li.Press <c>[Configure]</c>. CMake will ask for the compiler version. We use Visual Studio 2019 <r>cmake_generator</r>.
+
+img(cmake_generator.png,0,.75).CMake compiler selection. This screen will only appear the first time.
+Capture the CMake dialog to set the generator.
+
+li.Press <c>[Generate]</c> <r>nappgui_cmake</r>. The solution <c>NAppGUI.sln</c> will be created in <c>C:\nappgui_build</c>.
+li.Press <c>[Open Project]</c> to open the solution in Visual Studio.
+
+img(nappgui_cmake.png,0,.8).Generation of <c>NAppGUI.sln</c> using CMake.
+Capture CMake generating the solution in Visual Studio.
+
+li.Already inside Visual Studio, <c>Build->Build Solution</c>.
+
+li.Right click on <c>demo/Products</c> in the <i>Solution Explorer</i> and <c>Set as StartUp Project</c>.
+
+li.<c>Debug->Start Debugging</c>.
+
+li.We can now debug the example application <c>Products</c> <r>rundemo_visualstudio</r>.
+
+img(rundemo_visualstudio.png,0,.8).Debugging examples in Visual Studio.
+Capture the Visual Studio debugger by running the sample application.
+
+bq.We recommend that you spend some time browsing, compiling and testing the examples.
+
+h2.Create a new project
+
+p.To create a new desktop application, open the file <c>src/CMakeLists.txt</c> of your working copy. Go to the end of the file and add this line:
+
+code(text).
+# Your projects here!
+desktopApp("MyApp" "myapps/myapp" "" NRC_EMBEDDED NO)
+code.
+
+p.Press again <c>[Generate]</c> in CMake, which will create the project in <c>/src/myapps/myapp</c> <r>cmake_proyect_created</r>. Visual Studio will detect the changes and import the new project. It is ready to compile and run <r>new_app</r>.
+
+img(cmake_proyect_created.png,0,.8).CMake has created and configured the new project.
+New project in CMake.
+
+img(new_app.png,0,.8).Running the new application.
+Capture of the newly created application.
+
+bq.You can locate the projects at any depth level within <c>/src</c>. Paths like <c>"myapps/games/mygame"</c> or just <c>"mygame"</c> are perfectly valid.
+
+h2.And now what?
+
+li.In <lp>start</lp> we continue with a detailed tutorial.
+
+li.In <lp>products</lp> you have more details about the sample application you have run.
+
+li.In <lp>newprj</lp> you will see how to add files and resources to projects.
+
+li.In <lp>win_mac_linux</lp> we will show how to compile and run on macOS and Linux.
+
+li.In <lp>sdk</lp> you have the complete documentation of the libraries and functions.

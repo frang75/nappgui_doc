@@ -1,0 +1,17 @@
+langrev.
+h1.Filters
+
+p.In addition to procedural image generation, direct pixel manipulation has another great utility: Image filters. To apply them, first, we will get a buffer with the original value of the pixels by <lf>image_pixels</lf>. A filter is nothing more than a function that changes the color of each point to achieve the desired effect. In this example we implement the <b>convolution algorithm</b> which needs to know the neighborhood environment of each point to process the effect <r>image_filter_win</r>. Depending on the values assigned to the convolution matrix, we will obtain different results. The <b>source code</b> is in folder <c>/src/demo/filters</c> of the SDK distribution.
+
+li.Use <lf>image_from_pixels</lf> to create a new image with the modified pixels.
+
+img(image_filter_win.png,0,1).<b>Filters</b> application, Windows version.
+Capture an application with image filters. Windows version.
+
+img(image_filter_macos.png,0,1).macOS version.
+Capture an application with image filters. macOS version.
+
+img(image_filter_linux.png,0,1).Linux version.
+Capture an application with image filters. Linux version.
+
+codefile(demo/filters/filters.c).

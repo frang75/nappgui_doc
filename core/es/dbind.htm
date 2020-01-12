@@ -1,0 +1,252 @@
+
+h1.Data binding
+
+desc.La vinculación de datos, o Data Binding, permitirá sincronizar las estructuras internas del programa con la interfaz de usuario o con canales de entrada/salida, ahorrando mucho código de programación intermedio.
+
+ep.El <i>Data Binding</i> es una técnica que nos permite registrar las estructuras o clases del programa con el fin de automatizar ciertas tareas, como la sincronización del modelo de datos con la interfaz de usuario.
+
+p.En una aplicación C/C++ el modelo de datos se representa mediante tipos <c>struct</c> o <c>class</c> que permiten crear objetos y acceder a su contenido en memoria <r>strdata</r>. 
+
+code(cpp,strdata).Sencillo modelo de datos basado en <c>struct</c>.
+typedef enum _type_t
+{
+    ekCPU,
+    ekGPU,
+    ekHDD,
+    ekSCD
+} type_t;
+
+typedef struct _product_t
+{
+    type_t type;
+    String *code;
+    String *description;
+    Image *image64;
+    real32_t price;
+} Product;
+code.
+
+p.Como paso previo, al arrancar la aplicación, podemos registrar los campos de las diferentes estructuras mediante el comando <lf>dbind</lf> <r>dbindreg</r>. Únicamente es necesario realizar este proceso una vez. De esta forma la aplicación creará unas tablas internas con la descripción de cada estructura del modelo de datos <r>dbind</r> y estará preparada para automatizar ciertas tareas al trabajar con objetos de dichas clases.
+
+li.Utiliza <lf>dbind</lf> para registrar los campos de una estructura.
+
+li.Utiliza <lf>dbind_enum</lf> para registrar los diferentes valores de tipos enumerados.
+
+code(cpp,dbindreg).Registrando el modelo de datos de <r>strdata</r>.
+dbind_enum(type_t, ekCPU);
+dbind_enum(type_t, ekGPU);
+dbind_enum(type_t, ekHDD);
+dbind_enum(type_t, ekSCD);
+dbind(Product, type_t, type);
+dbind(Product, String*, code);
+dbind(Product, String*, description);
+dbind(Product, Image*, image64);
+dbind(Product, real32_t, price);
+code. 
+
+img(dbind.svg,520,.7).Tablas internas creadas por <i>dbind</i> al registrar el modelo de datos.
+Esquema que muestra una estructura de datos y su tabla equivalente.
+
+h2.MVVM sincronización con GUI
+
+p.Uno de los usos habituales de las tablas <i>dbind</i> será la sincronización del modelo de datos con la interfaz de usuario. Normalmente esta tarea requiere capturar los eventos de los controles para actualizar los datos y viceversa, refrescar el contenido de los controles cada vez que cambien los datos. Esta tarea es tediosa y requiere de bastante código adicional. Para evitarlo, cuando creemos la vista, vincularemos los diferentes controles con los campos de la estructura mediante <lf>cell_dbind</lf> <r>mvvmcode</r>. Este paradigma es conocido como data binding o MVVM <i>(Model-View-ViewModel)</i> <r>mvvm</r> y mantendrá ambas partes sincronizadas de forma automática.
+
+code(cpp,mvvmcode).Vinculación de controles GUI con campos de datos.
+Cell *cell0 = i_code_cell(layout);
+Cell *cell1 = i_desc_cell(layout);
+Cell *cell2 = i_type_cell(layout);
+Cell *cell3 = i_img_cell(layout);
+Cell *cell4 = i_price_cell(layout);
+cell_dbind(cell0, Product, String*, code);
+cell_dbind(cell1, Product, String*, description);
+cell_dbind(cell2, Product, type_t, type);
+cell_dbind(cell3, Product, Image*, image64);
+cell_dbind(cell4, Product, real32_t, price);
+layout_dbind(layout, Product);
+code.
+
+img(mvvm.svg,520,.7).Sincronización automática de datos e interfaz.
+Conexiones entre una interfaz de usuario y los datos que manipula.
+
+h2.Lectura JSON
+
+p.El análisis sintáctico y traducción de scripts JSON también se puede automatizar gracias a <i>dbind</i>. Para ilustrar su funcionamiento disponemos del siguiente <l>http://serv.nappgui.com/dproducts.php''servicio web</l> que nos provee de una lista de objetos tipo <c>Product</c>. En <lp>htjson</lp> tienes la aplicación completa.
+
+code(text).
+{
+    "code":0,
+    "size":80,
+    "data":[
+    {"id":0,
+    "code":"i7-8700K",
+    "description":"Intel BX80684I78700K 8th Gen Core i7-8700K Processor",
+    type":0,
+    "price":374.8899999999999863575794734060764312744140625,
+    "image":"cpu_00.jpg",
+    "image64":"\/9j\/4AAQSkZJRgABAQ....
+    },
+    ...
+}
+code.
+
+p.Registramos con <lf>dbind</lf> una estructura adicional con los campos de control del script <r>alljson</r>.
+
+code(cpp,alljson).Campos de control del JSON.
+typedef struct _pjson_t
+{
+    int32_t code;
+    uint32_t size;
+    ArrPt(Product) *data;
+} PJson;
+
+dbind(PJson, int32_t, code);
+dbind(PJson, uint32_t, size);
+dbind(PJson, ArrPt(Product)*, data);
+code.
+
+p.De esta forma ya podemos acceder al servicio y leer los datos con muy pocas líneas de código <r>jsonget</r>. <lf>json_read</lf> accederá a las tablas internas de <i>dbind</i> para traducir el JSON y crear los objetos <r>jsonparse</r>.
+
+code(cpp,jsonget).Descarga de datos y procesamiento del JSON.
+Stream *stm = http_dget("serv.nappgui.com", 80, "/dproducts.php", &error);
+PJson *pjson = json_read(stm, PJson);
+stm_close(&stm);
+code.
+
+img(jsonparse.svg,520,.7).Data Binding en el análisis de scripts JSON.
+Conexiones entre los campos de un objeto y un script JSON.
+
+h2.Serialización con DBind
+
+p.Como ya vimos en <lh>Serialización</lh> y <lh>Unificar la serialización</lh> necesitamos definir funciones de lectura y escritura de objetos para enviarlos o recibirlos a través de streams. Afortunadamente, <i>dbind</i> conoce la composición detallada de cada objeto registrado, por lo que puede acceder a la E/S sin que sea necesario programar explícitamente dichas funciones <r>regser</r> <r>dbindserial</r>.
+
+code(cpp,regser).Serialización de objetos con <i>dbind</i>.
+ArrPt(Product) *products = dbind_read(stream, ArrPt(Product));
+...
+dbind_write(stream, products, ArrPt(Product)*);
+code.
+
+img(dbindserial.svg,640,.8).Lectura/Escritura de objetos mediante <i>dbind</i>.
+Acceso a las tablas de dbind para serializar objetos.
+
+h2.Constructor por defecto
+
+p.Gracias a <i>dbind</i> también podemos crear objetos inicializados con valores por defecto sin necesidad de crear constructores específicos <r>condes</r>. También se pueden destruir garantizando la correcta liberación recursiva de la memoria de todos sus campos.
+
+li.Utiliza <lf>dbind_create</lf> para crear un objeto registrado en dbind  <lh>Constructores</lh>.
+
+li.Utiliza <lf>dbind_init</lf> para inicializar un objeto.
+
+li.Utiliza <lf>dbind_destroy</lf> para destruir un objetos registrados <lh>Destructores</lh>.
+
+code(cpp,condes).Construcción y destrucción de objetos registrados.
+Product *pr1 = dbind_create(Product);
+Product *pr2 = arrst_append1(array, Product);
+dbind_init(pr2, Product);
+dbind_destroy(&pr1, Product);
+code.
+
+p.Los valores por defecto al inicializar los campos del objeto son <c>0</c> para números, <c>FALSE</c> para booleanos, <c>""</c> para Strings y contenedores vacíos en el caso de arrays o sets. Si el objeto contiene sub-objetos anidados, estos también serán creados/inicializados de forma recursiva. Estos valores por defecto se pueden cambiar si fuera necesario <r>defvalue</r>.
+
+li.Utiliza <lf>dbind_default</lf> para establecer el valor por defecto.
+
+code(cpp,defvalue).Cambiando los valores por defecto.
+dbind_default(Product, type_t, type, ekHDD);
+dbind_default(Product, String*, code, "Empty-code");
+dbind_default(Product, real32_t, price, 5.f);
+dbind_default(Product, Image*, image64, gui_respack_image(NOIMAGE_PNG));
+code.
+
+h2.Rangos numéricos
+
+p.Es posible configurar los campos numéricos <c>uint32_t, int8_t, real64_t, etc</c> para acotar los valores aceptados <r>range</r>. dbind se encargará de validar los datos cada vez que lea valores de cualquier origen de datos (GUI, JSON, Streams, etc).
+
+li.Utiliza <lf>dbind_range</lf> para establecer un máximo y mínimo en valores numéricos.
+
+li.Utiliza <lf>dbind_precision</lf> para establecer el salto entre dos valores numéricos consecutivos.
+
+li.Utiliza <lf>dbind_increment</lf> para establecer el incremento producido por controles <lp>updown</lp>.
+
+li.Utiliza <lf>dbind_suffix</lf> para establecer un sufijo que será añadido al convertir los números a texto.
+
+code(cpp,range).Rango y precisión del valor <c>price</c>.
+dbind_default(Product, real32_t, price, 1);
+dbind_range(Product, real32_t, price, .50f, 1e6f);
+dbind_precision(Product, real32_t, price, .05f);
+dbind_increment(Product, real32_t, price, 5.f);
+dbind_suffix(Product, real32_t, price, "€");
+code.
+
+func(dbind).Añade un campo de una estructura/clase a su tabla interna dentro de dbind.
+fpar(,type).Tipo de la estructura o clase.
+fpar(,mtype).Tipo del campo a registrar.
+fpar(,name).Nombre del campo dentro de la estructura.
+fnote.Se generarán errores en tiempo de compilación si el campo indicado no pertenece a la estructura. El método también sirve para clases en C++.
+
+func(dbind_enum).Registra un valor tipo <c>enum</c>.
+fpar(,type).Tipo del enum.
+fpar(,value).Valor.
+
+func(dbind_create).Crea un objeto de tipo registrado, inicializando sus campos con los valores por defecto.
+fret(type*).Objeto recién creado o <c>NULL</c> si <i>dbind</i> no reconoce el tipo de dato.
+fpar(,type).Tipo de objeto.
+
+func(dbind_init).Inicializa los campos de un objeto de tipo registrado con los valores por defecto.
+fpar(type*,obj).Objeto cuya memoria ha sido reservada, pero no inicializada.
+fpar(,type).Tipo de objeto.
+
+func(dbind_remove).Destruye la memoria reservada por los campos de un objeto de tipo registrado, pero no destruye el objeto en sí.
+fpar(type*,obj).Objeto.
+fpar(,type).Tipo de objeto.
+
+func(dbind_destroy).Destruye un objeto de tipo registrado. La memoria asignada a los campos y sub-objetos también será liberada de forma recursiva.
+fpar(type**,obj).Objeto. Será puesto a <c>NULL</c> tras la destrucción.
+fpar(,type).Tipo de objeto.
+
+func(dbind_destopt).Destructor opcional. Igual que <lf>dbind_destroy</lf>, pero aceptando que el objeto sea <c>NULL</c>.
+fpar(type**,obj).Objeto a destruir.
+fpar(,type).Tipo de objeto.
+
+func(dbind_read).Crea un objeto de tipo registrado a partir de los datos leídos desde un stream.
+fret(type*).Objeto recién creado o <c>NULL</c> si ha habido algún error.
+fpar(Stream*,stm).Stream de lectura.
+fpar(,type).Tipo del objeto a leer.
+
+func(dbind_write).Escribe el contenido de un objeto de tipo registrado en un stream de escritura.
+fpar(Stream*,stm).Stream de escritura.
+fpar(const type*,data).Objeto a escribir.
+fpar(,type).Tipo del objeto a escribir.
+
+func(dbind_default).Establece el valor por defecto de un campo.
+fpar(,type).Tipo de la estructura o clase.
+fpar(,mtype).Tipo del campo.
+fpar(,name).Nombre del campo dentro de la estructura.
+fpar(mtype,value).Valor por defecto a partir de ahora.
+
+func(dbind_range).Establece el valor máximo y mínimo en campos numéricos.
+fpar(,type).Tipo de la estructura o clase.
+fpar(,mtype).Tipo del campo.
+fpar(,name).Nombre del campo dentro de la estructura.
+fpar(mtype,min).Valor mínimo.
+fpar(mtype,max).Valor máximo.
+fnote.Dará error si se utiliza en campos no numéricos.
+
+func(dbind_precision).Establece el salto entre dos valores numéricos consecutivos.
+fpar(,type).Tipo de la estructura o clase.
+fpar(,mtype).Tipo del campo.
+fpar(,name).Nombre del campo dentro de la estructura.
+fpar(mtype,prec).Precisión (p.e. <c>.05f</c> en valores <c>real32_t</c>).
+fnote.Dará error si se utiliza en campos no numéricos.
+
+func(dbind_increment).Establece el incremento de un valor numérico al pulsar en un control <lp>updown</lp>.
+fpar(,type).Tipo de la estructura o clase.
+fpar(,mtype).Tipo del campo.
+fpar(,name).Nombre del campo dentro de la estructura.
+fpar(mtype,incr).Incremento.
+fnote.Dará error si se utiliza en campos no numéricos.
+
+func(dbind_suffix).Establece un sufijo que será añadido al valor numérico al convertirlo a texto.
+fpar(,type).Tipo de la estructura o clase.
+fpar(,mtype).Tipo del campo.
+fpar(,name).Nombre del campo dentro de la estructura.
+fpar(const char_t*,suffix).Sufijo.
+fnote.Dará error si se utiliza en campos no numéricos.

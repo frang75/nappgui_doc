@@ -1,0 +1,139 @@
+
+
+h1.Matemáticas
+
+ep.Funciones y constantes matemáticas elementales.
+
+const(BMath,E,2.718281828459045).El número de Euler.
+
+const(BMath,LN2,0.6931471805599453).El logaritmo natural de 2.
+
+const(BMath,LN10,2.302585092994046).El logaritmo natural de 10.
+
+const(BMath,PI,3.141592653589793).El número Pi.
+
+const(BMath,SQRT2,1.414213562373095).Raíz cuadrada de 2.
+
+const(BMath,SQRT3,1.732050807568878).Raíz cuadrada de 3.
+
+const(BMath,DEG2RAD,0.017453292519943).Conversión de un grado a radianes.
+
+const(BMath,RAD2DEG,57.2957795130823).Conversión de un radián a grados.
+
+func(BMath,cos).Obtiene el coseno de un ángulo.
+fret(real).El coseno del ángulo.
+fpar(const real,angle).Ángulo en radianes.
+
+func(BMath,sin).Obtiene el seno de un ángulo.
+fret(real).El seno del ángulo.
+fpar(const real,angle).Ángulo en radianes.
+
+func(BMath,tan).Obtiene la tangente de un ángulo.
+fret(real).La tangente del ángulo.
+fpar(const real,angle).Ángulo en radianes.
+
+func(BMath,acos).Obtiene el arco coseno, o coseno inverso, que es el ángulo cuyo coseno es el valor.
+fret(real).El ángulo (0, Pi).
+fpar(const real,cos).Coseno (-1, 1).
+
+func(BMath,asin).Obtiene el arco seno, o seno inverso, que es el ángulo cuyo seno es el valor.
+fret(real).El ángulo (0, Pi).
+fpar(const real,sin).Seno (-1, 1).
+
+func(BMath,atan2).Obtiene el arco tangente, o tangente inversa. Es es el ángulo medido desde el eje X hasta la línea que contiene el origen (0, 0) y el punto con las coordenadas (x,y).
+fret(real).El ángulo (-Pi, Pi).
+fpar(const real,y).Coordenada Y.
+fpar(const real,x).Coordenada X.
+
+func(BMath,sqrt).Obtiene la raíz cuadrada de un número.
+fret(real).La ráiz cuadrada.
+fpar(const real,value).El número.
+
+func(BMath,isqrt).Obtiene la raíz cuadrada inversa de un número (1/sqrt).
+fret(real).La raíz cuadrada inversa.
+fpar(const real,value).El número.
+
+func(BMath,log).Obtiene el logaritmo natural (base e) de un número.
+fret(real).El logaritmo.
+fpar(const real,value).El número.
+
+func(BMath,log10).Obtiene el logaritmo en base 10 de un número.
+fret(real).El logaritmo.
+fpar(const real,value).El número.
+
+func(BMath,exp).Obtiene el número de Euler e (2.7182818) elevado a una potencia.
+fret(real).La exponencial.
+fpar(const real,value).El exponente.
+
+func(BMath,pow).Calcula una potencia, <c>base</c> elevado a <c>exponent</c>.
+fret(real).El resultado de la potencia.
+fpar(const real,base).Base.
+fpar(const real,exponent).Exponente.
+
+func(BMath,abs).Obtiene el valor absoluto de un número.
+fret(real).El valor absoluto.
+fpar(const real,value).El número.
+
+func(BMath,max).Obtiene el máximo de dos valores.
+fret(real).El valor máximo.
+fpar(const real,value1).Primer número.
+fpar(const real,value2).Segundo número.
+
+func(BMath,min).Obtiene el mínimo de dos valores.
+fret(real).El valor mínimo.
+fpar(const real,value1).Primer número.
+fpar(const real,value2).Segundo número.
+
+func(BMath,clamp).Restringe un valor a un determinado rango.
+fret(real).El valor acotado.
+fpar(const real,value).El número.
+fpar(const real,min).Mínimo valor del rango.
+fpar(const real,max).Máximo valor del rango.
+
+func(BMath,mod).Obtiene el módulo de dividir <c>num/den</c>.
+fret(real).El módulo.
+fpar(const real,num).Numerador.
+fpar(const real,den).Denominador.
+
+func(BMath,modf).Obtiene la parte entera y fracción de un número real.
+fret(real).La parte fraccionaria <c>[0,1)</c>.
+fpar(const real,value).El número.
+fpar(real*,intpart).Obtiene la parte entera.
+
+func(BMath,prec).Obtiene el número de decimales (precisión) de un número real.
+fret(uint32_t).El número de posiciones decimales.
+fpar(const real,value).El número.
+
+func(BMath,round).Redondea un número al entero más cercano (por encima o por debajo).
+fret(real).El entero más cercano.
+fpar(const real,value).El número.
+
+func(BMath,round_step).Redondea un número a la fracción más cercana.
+fret(real).El número más cercano.
+fpar(const real,value).El número.
+fpar(const real,step).La fracción.
+
+func(BMath,floor).Redondea un número al entero por debajo.
+fret(real).El mayor número entero, menor o igual que el número.
+fpar(const real,value).El número.
+
+func(BMath,ceil).Redondea un número al entero por encima.
+fret(real).El menor número entero, mayor o igual que el número.
+fpar(const real,value).El número.
+
+func(bmath_time_seed).Obtiene una semilla para números aleatorios, basada en el reloj del sistema.
+fret(uint32_t).La semilla. Utilízala como parámetro de <lf>bmath_rand_seed</lf> para generar una secuencia diferente de números aleatorios.
+
+func(bmath_rand_seed).Establece una nueva semilla de números aleatorios.
+fpar(const uint32_t,seed).La nueva semilla.
+fnote.Cada vez que cambia la semilla, comienza una nueva secuencia de números aleatorios. Para la misma semilla, obtendremos la misma secuencia, por lo que son números pseudo-aleatorios. Semillas similares (pe. <c>4</c>, <c>5</c>) producen secuencias radicalmente diferentes.
+
+func(BMath,rand).Obtiene un número real aleatorio, dentro de un intervalo.
+fret(real).El número aleatorio.
+fpar(const real,from).El límite inferior del intervalo.
+fpar(const real,to).El límite superior del intervalo.
+
+func(bmath_randi).Obtiene un número entero aleatorio, dentro de un intervalo.
+fret(uint32_t).El número aleatorio.
+fpar(const uint32_t,from).El límite inferior del intervalo.
+fpar(const uint32_t,to).El límite superior del intervalo.

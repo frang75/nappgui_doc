@@ -1,0 +1,21 @@
+
+h1.Buffers
+
+ep.Bloques de memoria genéricos, reservados dinámicamente.
+
+p.Los objetos <i>Buffer</i> son, sencillamente, bloques de memoria reservados dinámicamente y almacenados en el <lh>Segmento Heap</lh>. Son útiles para compartir datos genéricos entre diferentes funciones o hebras. Para este último caso, deben estar protegidos por un <lt>Mutex</lt> si varios hilos pueden acceder a él de forma concurrente (no son <i>thread-safe</i>). Son de tamaño fijo. Una vez creados no se pueden re-dimensionar, aunque pueden ser re-escritos cuantas veces sea necesario.
+
+func(buffer_create).Crea un nuevo buffer.
+fret(Buffer*).El nuevo búfer.
+fpar(const uint32_t,size).Tamaño del búfer en bytes.
+
+func(buffer_destroy).Destruye el búfer.
+fpar(Buffer**,buffer).El búfer. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(buffer_size).Obtiene el tamaño del búfer.
+fret(uint32_t).El tamaño del búfer en bytes.
+fpar(const Buffer*,buffer).Búfer.
+
+func(buffer_data).Obtiene un puntero al contenido del búfer.
+fret(byte_t*).Puntero al contenido del búfer que puede ser utilizado para leer o escribir.
+fpar(Buffer*,buffer).Búfer.

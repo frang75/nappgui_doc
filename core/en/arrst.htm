@@ -1,0 +1,445 @@
+langrev.
+
+h1.Arrays
+
+ep.Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious. <b>Representation Is the Essence of Programming</b>.
+Frederick P. Brooks, Jr. - The Mythical Man Month.
+
+desc.The array is the most used type of data structure or container since it combines efficiency and ease of use.
+
+p.Being able to work with collections of records of the same type is essential when designing the data model. In addition to the basic types and <c>struct</c>, <c>Union</c> or <c>class</c> The C language offers us the <i>array</i> construction, which allows you to store several elements under the same variable <r>arrc</r>:
+
+code(cpp,arrc).C Arrays.
+typedef struct _product_t Product;
+struct _product_t
+{
+    type_t type;
+    String *code;
+    String *description;
+    Image *image64;
+    real32_t price;
+};
+
+uint32_t integers[100];
+real32_t reals[100];
+Product products[100];
+code.
+
+p(noindent).Or, dynamically <r>dynarr</r>:
+
+code(cpp,dynarr).Dynamic arrays.
+uint32_t n = get_n();
+uint32_t *integers = heap_new_n(n, uint32_t);
+real32_t *reals = heap_new_n(n, real32_t);
+Product *products = heap_new_n(n, Product);
+code.
+
+p.These constructions store elements in contiguous positions of memory and, although they are very quick to consult, they lack the functionality to insert, delete, search or sort. In many cases, the data is not available when the container is created, but they are entering or leaving dynamically during the program execution, so we cannot anticipate in advance a maximum number with which to make the memory reservation. The <c>Array</c> type implemented in NAppGUI is, in essence, a dynamic C array and a series of methods to manipulate it. By dynamic we understand that the structure adjusts its size to the actual amount of elements, keeping the main premise that <b>all remain in memory together</b>.
+
+p.When created, memory is reserved for a few records <r>array_grow_shrink</r>. Later, we can add new elements at the end of the array (typical) or insert them in any random position in case we already have data in the container. In the latter case, the rest of the elements will be shifted to the right. As soon as the number of reserved records is exceeded, the internal dynamic block will be doubled to accommodate the new positions. In the same way it is possible to eliminate any element of the collection, moving the rest to the left to maintain the spatial coherence of the structure. If the number of items decreases by half, the memory block will be reduced. In this way, during the life of the container, the memory will be adjusted by multiplying or dividing by 2 the number of reserved elements.
+
+img(array_grow_shrink.svg).The <c>Array</c> adapt their internal memory to the number of elements.
+Setting an array structure to the number of items it has stored.
+
+h2.Registers or pointers
+
+p.Depending on what is stored inside, we can use two kinds of array <r>arrcode</r>. The array of records will keep the entire object inside the container and the array of pointers only a reference to it, the actual object being located in another memory address <r>str_vs_ptr</r>. Although the internal logic of the structure is the same, access to the elements differs slightly.
+
+li.<lf>arrst_create</lf> will create an array of records.
+
+li.<lf>arrpt_create</lf> will create an array of pointers.
+
+code(cpp,arrcode).Array construction.
+ArrSt(Product) *arrst = arrst_create(Product);
+ArrPt(Product) *arrpt = arrpt_create(Product);
+code.
+
+img(str_vs_ptr.svg,640,.9).Arrays of records and pointers.
+Comparison of object arrays with object pointer arrays.
+
+p.Use <lt>ArrSt</lt> can slightly improve performance, thanks to spatial consistency, which reduces cache failures, and saving calls to the memory manager <lh>Arrays vs Sets comparative</lh>. But this will not always be possible, and we cannot use them in these cases:
+
+li.Opaque objects: If the type definition is not public, the container cannot calculate the space required for each element, so we can only work with pointers to them.
+
+li.Shared objects: If other structures of the model keep pointers to the elements of the container, we will have <i>Segmentation Fault</i> problems due to the change of memory addresses when relocating the internal container block <r>array_crash</r>.
+
+img(array_crash.svg,520,.7).Register arrays are dangerous with external references.
+Segmentation fault error when relocating the memory block that stores the array.
+
+h2.Constructors
+
+p.When memory is reserved for an object, either in the <lh>Stack Segment</lh>
+
+code.
+Product product;
+code.
+
+p(noindent).at <lh>Heap Segment</lh>
+
+code.
+Product *product = heap_new(Product);
+code.
+
+p(noindent).or in a container
+
+code.
+Product *product = arrst_append1(array, Product);
+code.
+
+p(noindent).its initial content is garbage, understood as undetermined bytes. Initializing an object is assigning valid and consistent values to each field of the object <r>arrinit</r>.
+
+code(cpp,arrinit).Initializing an object <c>Product</c>.
+static void i_init(Product *product)
+{
+    product->type = ekCPU;
+    product->code = str_c("");
+    product->description = str_c("");
+    product->image64 = image_copy(gui_respack_image(NOIMAGE_PNG));
+    product->price = 0.f;
+}
+code.
+
+p.For its part, a constructor is an initializer that previously reserves memory dynamically to store the object <r>arrconst</r>.
+
+code(cpp,arrconst).Constructor of object <c>Product</c>.
+static Product *i_create(void)
+{
+    Product *product = heap_new(Product);
+    i_init(product);
+    return product;
+}
+code.
+
+p.When we use register arrays, we will only need to initialize the object, since the space to store it has been reserved by the container itself <r>arrinsert</r>. However, in pointer arrays, the memory for the object must be explicitly reserved, since the container will only save a reference.
+
+code(cpp,arrinsert).Insert correctly initialized objects.
+Product product;
+i_init(&product);
+arrst_append(array, product, Product);
+
+Product *product = arrst_append1(array, Product);
+i_init(product);
+
+Product *product = i_create();
+arrpt_append(array, product, Product);
+code.
+
+bq.Use <lf>arrst_append1</lf>, <lf>arrst_insert1</lf> or <lf>arrst_prepend1</lf> whenever possible to insert into record arrays, as they avoid having to copy the object.
+
+h2.Serialization
+
+p.A special case of the constructor are the <b>readers</b> (de-serializers). When we create an array from the content of a <lp>stream</lp> <r>arread</r>, we need a method capable of creating or initializing an element from the stream itself. Depending on the type of container it will be necessary to reserve memory for each item or not.
+
+code(cpp,arread).Reading an array from a stream.
+static void i_init_read(Stream *stm, Product *product)
+{
+    product->type = stm_read_enum(stm, type_t);
+    product->code = str_read(stm);
+    product->description = str_read(stm);
+    product->image64 = image_read(stm);
+    product->price = stm_read_r32(stm);
+}
+
+static Product *i_read(Stream *stream)
+{
+    Product *product = heap_new(Product);
+    i_init_read(stream, product);
+    return product;
+}
+
+ArrSt(Product) *arrst = arrst_read(i_init_read, Product);
+ArrPt(Product) *arrpt = arrpt_read(i_read, Product);
+code.
+
+p.In the same way we can write (serialize) the contents of an array in a write stream <r>arrwrite</r>. In this case, a single write function is sufficient for both types of containers, since each one knows how to access its elements.
+
+code(cpp,arrwrite).Writing an array in a stream.
+static void i_write(Stream *stm, const Product *product)
+{
+    stm_write_enum(stm, product->type, type_t);
+    str_write(stm, product->code);
+    str_write(stm, product->description);
+    image_write(stm, product->image64);
+    stm_write_r32(stm, product->price);
+}
+
+arrst_write(stm, arrst, i_write, Product);
+arrpt_write(stm, arrpt, i_write, Product);
+code.
+
+h2.Destructors
+
+p.In programming many times we are confused by the verbs: <i>'delete', 'destroy', 'free', 'erase', 'remove', 'clear'</i> since they essentially mean the same thing but with subtle differences. In NAppGUI we will use one verb or another depending on concrete actions:
+
+li.<b>Free:</b> Only free dynamic memory allocated to an object <r>free</r>. You need a double pointer, since the object will be invalidated (<c>=NULL</c>) after freeing it, avoiding references to free memory areas.
+
+code(cpp,free).Freeing the memory of an object.
+Product *product = heap_new(Product);
+...
+heap_free(&product, Product);
+// product = NULL
+code.
+
+li.<b>Remove:</b> It destroys the fields of an object, but does not free the memory of the object itself. It is the opposite of the <i>initializer</i> <r>remove</r>.
+
+code(cpp,remove).Freeing memory from object fields.
+static void i_remove(Product *product)
+{
+    str_destroy(&product->code);
+    str_destroy(&product->description);
+    image_destroy(&product->image64);
+}
+
+arrst_destroy(&arrst, i_remove, Product);
+code.
+
+li.<b>Destroy:</b> The combination of the previous two. Destroy the fields of the object and free its memory <r>destroy</r>. It is the opposite of the constructor. Obviously, it requires a double pointer to invalidate the reference.
+
+code(cpp,destroy).Free the object's memory and all its contents.
+static void i_destroy(Product **product)
+{
+    i_remove(*product);
+    heap_free(product, Product);
+}
+
+arrpt_destroy(&arrpt, i_destroy, Product);
+code.
+
+li.<b>Delete:</b> Delete an element from an array or other type of container <r>delete</r>. It may have associated a destructor or remover, although it is not mandatory.
+
+code(cpp,delete).Delete an item from a container.
+// Just delete.
+arrst_delete(arrst, 4, NULL, Product);
+
+// Delete and remove (arrst).
+arrst_delete(arrst, 4, i_remove, Product);
+
+// Delete and destroy (arrpt).
+arrpt_delete(arrpt, 4, i_destroy, Product);
+code.
+
+li.<b>Clear:</b> Delete all the elements of a container, but do not destroy it, just leave it to zero <r>clear</r>. Like <lf>arrst_delete</lf>, optionally can free objects memory.
+
+code(cpp,clear).Clear a container, deleting all its items.
+arrst_clear(arrst, NULL, Product);
+arrst_clear(arrst, i_remove, Product);
+arrpt_clear(arrpt, i_destroy, Product);
+code.
+
+h2.Sort and search
+
+p.The usual way to use arrays will be to add elements at the end by <lf>arrst_append1</lf> then iterate over all. This "natural" order will be enough in most cases, but we may need to organize the elements following another criterion for:
+
+li.Present the information ordered by one or several fields of the structure.
+
+li.Optimize searches. To locate a certain element, there is no choice but to travel the entire array, with linear cost <c>O(n)</c>. But we can solve the search in logarithmic time <c>O(logn)</c> if the array is sorted, dramatically increasing performance especially in large sets <r>sorted_search</r>.
+
+img(sorted_search.svg,250,.35).In a maximum of 10 steps we will find an element among a thousand (20 steps for a million).
+Illustration of a dichotomous search in a set of 1000 elements.
+
+li.Use the function <lf>arrst_sort</lf>, to sort an array. We will have to pass a comparison function, which will determine the order relationship <r>arrsort</r>.
+
+code(cpp,arrsort).Sort arrays by product code.
+static int i_compare(const Product *p1, const Product *p2)
+{
+    return str_scmp(p1->code, p2->code);
+}
+
+arrst_sort(arrst, i_compare, Product);
+arrpt_sort(arrpt, i_compare, Product);
+code.
+
+p.To search for an element within an array, we must also provide a function that compares the object with a key. This key contains the search criteria and is usually smaller than the element itself. Many times it is just a simple number or a text string <r>arrcmp</r>.
+
+li.<lf>arrst_search</lf> Slow method. It will search for elements in a linear way, one by one <c>O(n)</c>.
+
+li.<lf>arrst_bsearch</lf> Fast method. It will search elements in logarithmic way, <c>O(logn)</c>. The array must be sorted according to the same criteria as the search.
+
+code(cpp,arrcmp).Search for an item by its code.
+static int i_compare_key(const Product *p1, const char_t *key)
+{
+    return str_cmp(p1->code, key);
+}
+
+uint32_t pos;
+Product *pr1, *pr2;
+// Slow O(n)
+pr1 = arrst_search(arrst, i_compare_key, "G3900", &pos, Product, char_t);
+
+// Fast O(logn)
+pr2 = arrst_bsearch(arrst, i_compare_key, "G3900", &pos, Product, char_t);
+code.
+
+h2.Arrays of basic types
+
+p.The basic types are a particular case of single-field structure, so we will use it <lt>ArrSt</lt>. In the specific case of <c>enum</c> we must create an alias by <c>typedef</c>, as <c>ArrSt(type)</c> does not support the keyword <c>enum</c>, just as does not support <c>struct</c> keyword. In C++ this alias is not necessary. When destroying the array we will pass <c>NULL</c> to the destructor parameter, since the basic types do not generate dynamic memory.
+
+code.
+typedef enum _type_t type_t;
+ArrSt(uint32_t) *integers = arrst_create(uint32_t);
+ArrSt(type_t) *types = arrst_create(type_t);
+arrst_destroy(&integers, NULL, uint32_t);
+arrst_destroy(&types, NULL, type_t);
+code.
+
+func(arrst_create).Create an empty array.
+fret(ArrSt(type)*).The new array.
+fpar(,type).Object type.
+
+func(arrst_destroy).Destroy an array and all its elements.
+fpar(ArrSt(type)**).The array. It will be set to <c>NULL</c> after destruction.
+fpar(FPtr_remove,func_remove).Function that must free the memory associated with the object's fields, but not the object itself <lh>Destructors</lh>. If <c>NULL</c> only the array will be destroyed and not the internal content of the elements.
+fpar(,type).Object type.
+
+func(arrst_clear).Delete the contents of the array, without destroying the container that will be left with zero elements.
+fpar(ArrSt(type)*,array).The array.
+fpar(FPtr_remove,func_remove).Remove function. See <lf>arrst_destroy</lf>.
+fpar(,type).Object type.
+
+func(arrst_read).Create an array by reading its contents from a <lp>stream</lp> (de-serialization).
+fret(ArrSt(type)*).The array readed.
+fpar(Stream*,stream).A read <i>stream</i>.
+fpar(FPtr_read_init,func_read).Function to initialize an object from the data obtained from a stream. This function should not reserve memory for the object itself (the container already does). <lh>Serialization</lh>.
+fpar(,type).Object type.
+
+func(arrst_write).Write an array in a <lp>stream</lp> (serialization).
+fpar(Stream*,stream).A write <i>stream</i>.
+fpar(const ArrSt(type)*,array).The array.
+fpar(FPtr_write,func_write).Function that writes the content of an element in a stream <lh>Serialization</lh>.
+fpar(,type).Object type.
+
+func(arrst_size).Get the number of elements in an array.
+fret(uint32_t).Number of elements.
+fpar(const ArrSt(type)*,array).The array.
+fpar(,type).Object type.
+
+func(arrst_get).Get a pointer to the item in <c>pos</c> position.
+fret(type*).Item Pointer.
+fpar(const ArrSt(type)*,array).The array.
+fpar(const uint32_t,pos).Item position or index.
+fpar(,type).Object type.
+
+func(arrst_last).Get a pointer to the last element of the array.
+fret(type*).Item Pointer.
+fpar(const ArrSt(type)*,array).The array.
+fpar(,type).Object type.
+
+func(arrst_all).Get a pointer to the internal memory of the array, which gives direct access to all the elements.
+fret(type*).Base pointer. Increasing it one by one we will iterate over the elements.
+fpar(const ArrSt(type)*,array).The array.
+fpar(,type).Object type.
+fnote.Use <lf>arrst_foreach</lf> to iterate over all elements in a more secure and elegant way.
+
+func(arrst_grow).Append <c>n</c> elements, not initialized, at the end of the array.
+fret(type*).Pointer to the first item added.
+fpar(ArrSt(type)*,array).The array.
+fpar(const uint32_t,n).Number of items to add.
+fpar(,type).Object type.
+
+func(arrst_append).Append an element to the end of the array.
+fpar(ArrSt(type)*,array).The array.
+fpar(type,value).Item to add.
+fpar(,type).Object type.
+
+func(arrst_append1).Reserve space for an element at the end of the array.
+fret(type*).Pointer to the added element, which can be used to initialize it.
+fpar(ArrSt(type)*,array).The array.
+fpar(,type).Object type.
+fcode.
+// arrst_append copies 'product'
+Product product;
+i_init_product(&product, ...);
+arrst_append(array, product, Product);
+
+// arrst_append1 avoids the copy
+Product *product = arrst_append1(array, Product);
+i_init_product(product, ...);
+fcode.
+fnote.It is slightly faster than <c>arrst_append</c>, especially in big structures, since it avoids copying the object content.
+
+func(arrst_prepend).Insert an element at the beginning of the array. The rest of the elements will be shifted to the right.
+fpar(ArrSt(type)*,array).The array.
+fpar(type,value).Item to insert.
+fpar(,type).Object type.
+
+func(arrst_prepend1).Reserve space for an element at the beginning of the array. The rest of the elements will be shifted to the right..
+fret(type*).Pointer to the inserted element, which must be used to initialize it.
+fpar(ArrSt(type)*,array).The array.
+fpar(,type).Object type.
+fnote.See discussion in <lf>arrst_append1</lf>.
+
+func(arrst_insert).Insert an element in an arbitrary array position.
+fpar(ArrSt(type)*,array).The array.
+fpar(const uint32_t,pos).Position where it will be inserted. The current item in <c>pos</c> and following will be shifted to the right.
+fpar(type,value).Item to insert.
+fpar(,type).Object type.
+
+func(arrst_insert1).Reserve space for an element in an arbitrary array position.
+fret(type*).Pointer to the inserted element, which must be used to initialize it.
+fpar(ArrSt(type)*,array).The array.
+fpar(const uint32_t,pos).Position where it will be inserted. The current item in <c>pos</c> and following will be shifted to the right.
+fpar(,type).Object type.
+fnote.See discussion in <lf>arrst_append1</lf>.
+
+func(arrst_delete).Remove an element from the array.
+fpar(ArrSt(type)*,array).The array.
+fpar(const uint32_t,pos).Position of the item to be deleted. The current item in <c>pos+1</c> and following will be shifted to the left.
+fpar(FPtr_remove,func_remove).'Remove' function. See <lf>arrst_destroy</lf>.
+fpar(,type).Object type.
+
+func(arrst_pop).Remove the last element from the array.
+fpar(ArrSt(type)*,array).The array.
+fpar(FPtr_remove,func_remove).'Remove' function. See <lf>arrst_destroy</lf>.
+fpar(,type).Object type.
+
+func(arrst_sort).Sort array elements using Quicksort.
+fpar(ArrSt(type)*,array).The array.
+fpar(FPtr_compare,func_compare).Function to compare two elements. <lh>Sort and search</lh>.
+fpar(,type).Object type.
+
+func(arrst_search).Search for an element in the array linearly <c>O(n)</c>.
+fret(type*).Pointer to the first element that matches the search criteria or <c>NULL</c> if none exists.
+fpar(ArrSt(type)*,array).The array.
+fpar(FPtr_compare,func_compare).Comparison function. The first parameter is the element, the second the search key. <lh>Sort and search</lh>.
+fpar(ktype,key).Search key. Pointer to a data type that may be different from the type of array element.
+fpar(uint32_t*,pos).Position of the element in the array (if it exists), or <c>UINT32_MAX</c> if it does not exist. Can be <c>NULL</c>.
+fpar(,type).Object type.
+fpar(,ktype).Key type.
+fcode.
+uint32_t pos;
+uint32_t key = 345;
+Product *product = arrst_search(arrst, i_compare_key, &key, &pos, Product, uint32_t);
+fcode.
+
+func(arrst_bsearch).Search for an element in the array logarithmically <c>O(logn)</c>.
+fret(type*).Pointer to the first element that matches the search criteria or <c>NULL</c> if none exists.
+fpar(ArrSt(type)*,array).The array.
+fpar(FPtr_compare,func_compare).Comparison function. The first parameter is the element, the second the search key. <lh>Sort and search</lh>.
+fpar(ktype,key).Search key. Pointer to a data type that may be different from the type of array element.
+fpar(uint32_t*,pos).Position of the element in the array (if it exists), or <c>UINT32_MAX</c> if it does not exist. Can be <c>NULL</c>.
+fpar(,type).Object type.
+fpar(,ktype).Key type.
+fnote.The array must be sorted according to the same criteria as the search. If not, the result is unpredictable.
+
+func(arrst_foreach).Iterate on all array elements. Uses <c>arrst_end</c> to close the loop.
+fpar(type*,elem).Name of the 'element' variable within the loop. Adding the suffix <c>'_i'</c> we get the index.
+fpar(ArrSt(type)*,array).The array.
+fpar(,type).Object type.
+fcode.
+arrst_foreach(product, array, Product)
+    bstd_printf("Index:%d, Id:%d\n", product_i, product->id);
+arrst_end()
+fcode.
+
+func(arrst_foreach_rev).Iterate on all array elements backward, from the last to the first. Uses <c>arrst_end</c> to close the loop.
+fpar(type*,elem).Name of the 'element' variable within the loop. Adding the suffix <c>'_i'</c> we get the index.
+fpar(ArrSt(type)*,array).The array.
+fpar(,type).Object type.
+fcode.
+// Now in reverse order
+arrst_foreach_rev(product, array, Product)
+    bstd_printf("Index:%d, Id:%d\n", product_i, product->id);
+arrst_end()
+fcode.
+
+func(arrst_end).Close the loop opened by <lf>arrst_foreach</lf> or <lf>arrst_foreach_rev</lf>.

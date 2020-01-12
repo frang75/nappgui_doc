@@ -1,0 +1,309 @@
+langrev.
+
+h1.Unicode
+
+p.Unicode is a standard in the computer industry, essentially a table, which assigns a unique number to each symbol of each language in the world <r>unicode_example</r>. These values are usually called <i>codepoints</i> and are represented by typing <b>U+</b> followed by their number in hexadecimal.
+
+img(unicode_example.svg,480,.6).Several Unicode <i>codepoints</i>.
+Table showing several Unicode symbols, along with their codepoint.
+
+p.Related to its structure, it has 17 planes of 65536 <i>codepoints</i> each (256 blocks of 256 elements) <r>unicode_planes</r>. This gives Unicode a theoretical limit of 1114112 characters, of which 136755 have already been occupied (version 10.0 of June 2017). For real-world applications, the most important one is Plane 0 called <i>Basic Multilingual Plane</i> (BMP), which includes the symbols of all the modern languages of the world. The upper planes contain historical characters and additional unconventional symbols.
+
+img(unicode_planes.svg,-1,.85).Unicode has 17 planes of 256x256 <i>codepoints</i> each.
+Simplified representation of a Unicode plane.
+
+p.The first computers used ASCII <i>American Standard Code for Information Interchange</i>, a 7-bit code that defines all the characters of the English language: 26 lowercase letters (without diacritics), 26 uppercase letters, 10 digits, 32 punctuation symbols, 33 codes control and a blank space, for a total of 128 positions. Taking the additional bit within a byte, we will have space for another 128 symbols, but still insufficient for all in the world. This results in numerous pages of extended ASCII codes, which is a big problem to share texts, since the same numeric code can represent different symbols according to the ASCII page used <r>code_pages</r>.
+
+img(code_pages.svg,600,.85).On each Extended ASCII page, the top 128 codes represent different characters.
+Comparison of ASCII tables 1252 and 1253 in Windows.
+
+p.Already in the early 90s, with the advent of the Internet, this problem worsened, as the exchange of information between machines of different nature and country became something everyday. The Unicode Consortium <r>unicode_consortium</r> was constituted in California in January of 1991 and, in October of the same year, the first volume of the Unicode standard was published.
+
+img(unicode_consortium.png,600,.85).Full members of the Unicode Consortium.
+Logos of the main companies of the computer sector.
+
+h2.UTF encodings
+
+p.Each <i>codepoint</i> needs 21 bits to be represented (5 for the plane and 16 for the displacement). This match very badly with the basic types in computers (8, 16 or 32 bits). For this reason, three <i>Unicode Translation Format - UTF</i> encodings have been defined, depending on the type of data used in the representation <r>unicode_encodings</r>.
+
+img(unicode_encodings.svg,-1,.55).Encodings to store 21-bit <i>codepoints</i> by elements of 8, 16, or 32.
+Bit Array that represents a Unicode value.
+
+h3.UTF-32
+
+p.Without any problem, using 32 bits we can store any <i>codepoint</i>. We can also randomly access the elements of an array using an index, in the same way as the classic ASCII C (char) strings. The bad news is the memory requirements. A UTF32 string needs four times more space than an ASCII.
+
+code.
+const char32_t code1[] = U"Hello";
+const char32_t code2[] = U"áéíóú";
+uint32_t s1 = sizeof(code1); /* s1 == 24 */
+uint32_t s2 = sizeof(code2); /* s2 == 24 */
+for (i = 0; i < 5; ++i)
+{    /* Accessing by index */
+     if (code1[i] == 'H')
+         return i;
+}
+code.
+
+h3.UTF-16
+
+p.UTF16 halves the space required by UTF32. It is possible to store a <i>codepoint</i> per element as long as we do not leave the 0 plane (BMP). For higher planes, two UTF16 elements (32bits) will be necessary. This mechanism, which encapsulates the higher planes within the BMP, is known as <b>surrogate pairs</b>.
+
+code.
+const char16_t code1[] = u"Hello";
+const char16_t code2[] = u"áéíóú";
+uint32_t s1 = sizeof(code1); /* s1 == 12 */
+uint32_t s2 = sizeof(code2); /* s2 == 12 */
+for (i = 0; i < 5; ++i)
+{    /* DANGER! Only BMP */
+     if (code1[i] == 'H')
+         return i;
+}
+code.
+
+bq.To iterate over a UTF16 string that contains characters from any plane, it must be used <lf>unicode_next</lf>.
+
+h3.UTF-8
+
+p.UTF8 is a variable length code where each <i>codepoint</i> uses 1, 2, 3 or 4 bytes.
+
+li.1 byte <b>(0-7F)</b>: the 128 symbols of the original ASCII. This is a great advantage, since US-ASCII strings are valid UTF8 strings, without the need for conversion.
+
+li.2 bytes <b>(80-7FF)</b>: Diacritical and Romance language characters, Greek, Cyrillic, Coptic, Armenian, Hebrew, Arabic, Syriac and Thaana, among others. A total of 1920 <i>codepoints</i>.
+
+li.3 bytes <b>(800-FFFF)</b>: Rest of the plane 0 (BMP).
+
+li.4 bytes <b>(10000-10FFFF)</b>: Higher planes (1-16).
+
+img(utf8_multibyte.svg).Each character in UTF8 uses 1, 2, 3 or 4 bytes.
+Table with the ranges of UTF8.
+
+p.More than 90% of websites use UTF8 (<l>https://w3techs.com/technologies/overview/character_encoding/all''august of 2018</l>), because it is the most optimal in terms of memory and network transmission speed. As a disadvantage, it has associated a small computational cost to encode/decode, since it is necessary to perform bit-level operations to obtain the <i>codepoints</i>. It is also not possible to randomly access a specific character by index, we have to process the entire string.
+
+code.
+const char_t code1[] = "Hello";
+const char_t code2[] = "áéíóú";
+const char_t *iter = code1;
+uint32_t s1 = sizeof(code1); /* s1 == 6 */
+uint32_t s2 = sizeof(code2); /* s2 == 11 */
+for (i = 0; i < 5; ++i)
+{
+    if (unicode_to_u32(iter, ekUTF8) == 'H')
+         return i;
+    iter = unicode_next(iter, ekUTF8);
+}
+code.
+
+h3.Using UTF-8 in the SDK
+
+p.<b>UTF8 is the encoding required by all the NAppGUI SDK functions</b>. The reasons why we have chosen UTF-8 over other encodings have been:
+
+li.It is the natural evolution of the US-ASCII.
+
+li.The applications will be directly compatible with the vast majority of Internet services (JSON/XML).
+
+li.In multi-lingual environments the texts will occupy less space. Statistically, the 128 ASCII characters are the most used on average and only need one byte in UTF8.
+
+li.As a disadvantage, in applications aimed exclusively at the Asian market (China, Japan, Korea - CJK), UTF8 is less efficient than UTF16.
+
+p.Within NAppGUI applications they can cohexist different representations (<c>char16_t</c>, <c>char32_t</c>, <c>wchar_t</c>). However, we <b>strongly recommend the use of UTF8</b> in favor of portability and to avoid constant conversions within the API. To convert any string to UTF8 the <lf>unicode_convers</lf> function is used.
+
+code.
+wchar_t text[] = L"My label text.";
+char_t ctext[128];
+unicode_convers((const char_t*)text, ctext, ekUTF16, ekUTF8, 128);
+code.
+
+bq.NAppGUI does not offer support for converting pages from Extended ASCII to Unicode.
+
+p.The <c>Stream</c> object provides automatic UTF conversions when reading or writing to I/O channels using the methods <lf>stm_set_write_utf</lf> and <lf>stm_set_read_utf</lf>. It is also possible to work with the <c>String</c> type  (dynamic strings), which incorporates a multitude of functions optimized for the UTF8 treatment. We can include constant text strings directly in the source code <r>utf8_editor</r>, although the usual thing will be to write them in resource files (<lp>resources</lp>). Obviously, we must save both the source and resource files in UTF8. All current development environments support the option:
+
+li.By default, Visual Studio saves the source files in ASCII format (Windows 1252). To change to UTF8, go to <c>File->Save As->Save with encoding->Unicode (UTF8 Without Signature) - Codepage 65001</c>. There is no way to set this configuration for the entire project :-(.
+
+li.In Xcode it is possible to establish a global configuration. <c>Preferences->Text editing->Default Text Encoding->Unicode (UTF-8)</c>.
+
+li.In Eclipse it also allows a global configuration. <c>Window->Preferences->General->Workspace->Text file encoding</c>.
+
+img(utf8_editor.png,350,.5).UTF8 constants in a C source file.
+Capture a text editor with strings in UTF8.
+
+func(unicode_convers).Converts a Unicode string from one encoding to another.
+fret(uint32_t).Number of bytes written in <c>to_str</c> (including the null character).
+fpar(const char_t*,from_str).Source string (terminated in null character '\0').
+fpar(char_t*,to_str).Destination buffer.
+fpar(const unicode_t,from).Source string encoding.
+fpar(const unicode_t,to).Coding required in <c>to_str</c>.
+fpar(const uint32_t,osize).Size of the output buffer. Maximum number of bytes that will be written in <c>to_str</c>, including the null character (<c>'\0'</c>). If the original string can not be copied entirety, it will be cutted and the null character added.
+fcode.
+const char32_t str[] = U"Hello World";
+char_t utf8_str[256];
+unicode_convers((const char_t*)str, utf8_str, ekUTF32, ekUTF8, 256);
+fcode.
+
+func(unicode_convers_n).Like <lf>unicode_convers</lf>, but indicating a maximum size for the input string.
+fret(uint32_t).Number of bytes written in <c>to_str</c> (including the null character).
+fpar(const char_t*,from_str).Source string.
+fpar(char_t*,to_str).Destination buffer.
+fpar(const unicode_t,from).Source string encoding.
+fpar(const unicode_t,to).Coding required in <c>to_str</c>.
+fpar(const uint32_t,isize).Size of the input string (in bytes).
+fpar(const uint32_t,osize).Size of the output buffer.
+
+func(unicode_convers_nbytes).Gets the number of bytes needed to convert a Unicode string from one encoding to another. It will be useful to calculate the space needed in dynamic memory allocation.
+fret(uint32_t).Number of bytes required (including the null character).
+fpar(const char_t*,str).Origin string (null-terminated).
+fpar(const unicode_t,from).Encoding of <c>str</c>.
+fpar(const unicode_t,to).Required encoding.
+fcode.
+const char32_t str[] = U"Hello World";
+uint32_t size = unicode_convers_nbytes((char_t*)str, ekUTF32, ekUTF8);
+/ * size == 12 * /
+fcode.
+
+func(unicode_nbytes).Gets the size (in bytes) of a Unicode string.
+fret(uint32_t).The size in bytes (including the null character).
+fpar(const char_t*,str).Unicode string (null-terminated '\0').
+fpar(const unicode_t,format).Encoding of <c>str</c>.
+
+func(unicode_nchars).Gets the length (in characters) of a Unicode string.
+fret(uint32_t).The number of characters ('\0' <b>not included</b>).
+fpar(const char_t*,str).Unicode string (null-terminated '\0').
+fpar(const unicode_t,format).Encoding of <c>str</c>.
+fnote.In ASCII strings, the number of bytes is equal to the number of characters. In Unicode it depends on the coding and the string.
+
+func(unicode_to_u32).Gets the value of the first <i>codepoint</i> of the Unicode string.
+fret(uint32_t).The code of the first <c>str</c> character.
+fpar(const char_t*,str).Unicode string (null-terminated '\0').
+fpar(const unicode_t,format).Encoding of <c>str</c>.
+fcode.
+char_t str[] = "áéíóúÄÑ£";
+uint32_t cp = unicode_to_u32(str, ekUTF8);
+/* cp == 'á' == 225 == U+E1 */
+fcode.
+
+func(unicode_to_u32b).Like <lf>unicode_to_u32</lf> but with an additional field to store the number of bytes occupied by the codepoint.
+fret(uint32_t).The code of the first <c>str</c> character.
+fpar(const char_t*,str).Unicode string (null-terminated '\0').
+fpar(const unicode_t,format).Encoding of <c>str</c>.
+fpar(uint32_t*,bytes).Saves the number of bytes needed to represent the codepoint by <c>format</c>.
+
+func(unicode_to_char).Write the <c>codepoint</c> at the beginning of <c>str</c>, using the <c>format</c> encoding.
+fret(uint32_t).The number of bytes written (1, 2, 3 or 4).
+fpar(const uint32_t,codepoint).Character code.
+fpar(char_t*,str).Destination string.
+fpar(const unicode_t,format).Encoding for <c>codepoint</c>.
+fnote.To write several <i>codepoints</i>, combine <c>unicode_to_char</c> with <c>unicode_next</c>.
+fcode.
+char_t str[64] = \"\";
+uint32_t n = unicode_to_char(0xE1, str, ekUTF8);
+unicode_to_char(0, str + n, ekUTF8);
+/* str == "á" */
+/* n = 2 */
+fcode.
+
+func(unicode_valid_str).Check if a string is a valid Unicode.
+fret(bool_t).<c>TRUE</c> if it is valid.
+fpar(const char_t*,str).String to be checked (ending in '\0').
+fpar(const unicode_t,format).Expected Unicode encoding.
+
+func(unicode_valid_str_n).Like <lf>unicode_valid_str</lf>, but indicating a maximum size for the input string.
+fret(bool_t).<c>TRUE</c> if it is valid.
+fpar(const char_t*,str).String to be checked (ending in '\0').
+fpar(const uint32_t,size).Maximum size of the string (in bytes).
+fpar(const unicode_t,format).Expected Unicode encoding.
+
+func(unicode_valid).Check if a <i>codepoint</i> is valid.
+fret(bool_t).<c>TRUE</c> if the parameter is a valid <i>codepoint</i>. <c>FALSE</c> otherwise.
+fpar(const uint32_t,codepoint).The Unicode code of the character.
+
+func(unicode_next).Advance to the next character in a Unicode string. In general, random access is not possible as we do in ANSI-C (<c>str[i ++]</c>). We must iterate a string from the beginning. More in <lh>UTF encodings</lh>.
+fret(const char_t*).Pointer to the next character in the string.
+fpar(const char_t*,str).Unicode string.
+fpar(const unicode_t,format).<c>str</c> encoding.
+fnote.It does not verify the end of the string. We must stop the iteration when <c>codepoint == 0</c>.
+fcode.
+char_t str[] = "áéíóúÄ";
+char_t *iter = str;                 /* iter == "áéíóúÄ" */
+iter = unicode_next(iter, ekUTF8);  /* iter == "éíóúÄ" */
+iter = unicode_next(iter, ekUTF8);  /* iter == "íóúÄ" */
+iter = unicode_next(iter, ekUTF8);  /* iter == "óúÄ" */
+iter = unicode_next(iter, ekUTF8);  /* iter == "úÄ" */
+iter = unicode_next(iter, ekUTF8);  /* iter == "Ä" */
+iter = unicode_next(iter, ekUTF8);  /* iter == "" */
+iter = unicode_next(iter, ekUTF8);  /* Segmentation fault!! */
+fcode.
+
+func(unicode_back).Go back to the previous character of a Unicode string.
+fret(const char_t*).Pointer to the previous character of the string.
+fpar(const char_t*,str).Unicode string.
+fpar(const unicode_t,format).<c>str</c> encoding.
+fnote.It does not verify the beginning of the string.
+
+func(unicode_isascii).Check if <c>codepoint</c> is a US-ASCII 7 character.
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+
+func(unicode_isalnum).Check if <c>codepoint</c> is an alphanumeric character.
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_isalpha).Check if <c>codepoint</c> is an alphabetic character.
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_iscntrl).Check if <c>codepoint</c> is a control character.
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_isdigit).Check if <c>codepoint</c> is digit (0-9).
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_isgraph).Check if <c>codepoint</c> is a printable character (except white space ' ').
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_isprint).Check if <c>codepoint</c> is a printable character (including white space ' ').
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_ispunct).Check if <c>codepoint</c> is a printable character (expect white space ' ' and alphanumeric).
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_isspace).Check if <c>codepoint</c> is a spacing character, new line, carriage return, horizontal or vertical tab.
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_isxdigit).Check if <c>codepoint</c> is a hexadecimal digit <b>0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F</b>.
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_islower).Check if <c>codepoint</c> is a lowercase letter.
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_isupper).Check if <c>codepoint</c> is a capital letter.
+fret(bool_t).Test result.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_tolower).Convert a letter to lowercase.
+fret(uint32_t).The conversion to lowercase if the entry is a capital letter. Otherwise, the same <c>codepoint</c>.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.
+
+func(unicode_toupper).Convert a letter to uppercase.
+fret(uint32_t).The conversion to upper case if the entry is a lowercase letter. Otherwise, the same <c>codepoint</c>.
+fpar(const uint32_t,codepoint).The Unicode character code.
+fnote.Only consider US-ASCII characters.

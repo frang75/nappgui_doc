@@ -1,0 +1,187 @@
+
+h1.Hebras
+
+ep.Las <i>hebras</i> o <i>hilos</i> son partes del mismo programa que pueden correr en paralelo.
+
+p.Los <b>hilos</b> o <b>hebras</b> son diferentes caminos de ejecución dentro del mismo proceso <r>threads</r>. También son conocidos como <b>procesos ligeros</b>, ya que son más ágiles de crear y gestionar que los procesos propiamente dichos. Comparten código y espacio de memoria con el programa principal, por lo que es muy fácil intercambiar información entre ellos a través de variables de memoria. Una hebra comienza su ejecución en un método conocido como <i>thread_main</i> y, en el momento que se lanza, se ejecuta en paralelo con el hilo principal. Al igual que los procesos, son objetos controlados por el núcleo del sistema que dictaminará, en última instancia, si la hebras se ejecutarán en otro CPU-core <i>(true multitasking)</i> o lo compartirán <i>(context switch)</i>. 
+
+img(threads.svg,320,.45).Un proceso con múltiples hilos de ejecución.
+Esquema de un proceso con múltiples hilos de ejecución.
+
+h2.Lanzando hebras
+
+p.Cada llamada a <lf>bthread_create</lf> creará un nuevo hilo en paralelo comenzando en la función pasada como parámetro <i>(thread_main)</i>. La forma "natural" de finalizarlo es retornando de <i>thread_main</i>, aunque es posible abortarlo desde el hilo principal.
+
+code.Código básico para lanzar un hilo de ejecución paralelo.
+static uint32_t i_thread(ThData *data)
+{
+    // Do something
+    ...
+    // Thread execution ends
+    return 0;
+}
+
+Thread *thread = bthread_create(i_thread, data, ThData);
+// Main thread will continue here
+// Second thread will run 'i_thread'
+code.
+
+h2.Variables compartidas
+
+p.Cada nuevo hilo tiene su propio <lh>Segmento Stack</lh> por tanto, todas las variables automáticas, llamadas a función y reservas dinámicas serán privadas a dicho hilo. Pero también puede recibir datos globales del proceso a través del parámetro <c>data</c> de <i>thread_main</i>. Debemos tener cuidado al acceder a datos globales a través de múltiples hilos concurrentes, ya que modificaciones realizadas por otros hilos pueden alterar la ejecución lógica del código produciendo errores muy difíciles de depurar. El programa <r>badcode</r> es correcto para programas de un solo hilo, pero si la variable <c>vector</c> es accedida por dos hebras simultáneas, puede derivar en un error <i>Segmentatin Fault</i> si la hebra-1 libera la memoria mientras la hebra-2 está ejecutando el bucle.
+
+code(cpp,badcode).Acceso peligroso a variables compartidas.
+if (shared->vector != NULL)
+{
+    shared->total = 0;
+    for(i = 0; i < shared->n; i++)
+        shared->total += shared->vector[i];
+    bmem_free(shared->vector);
+    shared->vector = NULL;
+}
+code.
+
+p.Para evitar este problema, deberemos proteger los accesos a variables compartidas a través de un <lt>Mutex</lt> <r>okcode</r>. Este mecanismo de <lp>bmutex</lp> garantiza que solo un hilo puede acceder al recurso en un instante de tiempo. Un hilo será detenido si pretende ejecutar el código situado entre <lf>bmutex_lock</lf> y <lf>bmutex_unlock</lf> si otro hilo se encuentra dentro de esta <i>sección crítica</i>.
+
+code(cpp,okcode).Acceso seguro a variables compartidas.
+bmutex_lock(shared->mutex);
+if (shared->vector != NULL)
+{
+    shared->total = 0;
+    for(i = 0; i < shared->n; i++)
+        shared->total += shared->vector[i];
+    bmem_free(shared->vector);
+    shared->vector = NULL;
+}
+bmutex_unlock(shared->mutex);
+code.
+
+h2.Ejemplo multi-hilo
+
+p.Lo complicado de la programación multi-hilo es descomponer una solución en partes que puedan correr en paralelo y organizar las estructuras de datos para que esto se pueda llevar a cabo de la forma más equilibrada posible. En <r>threadlist</r> el programa correrá cuatro veces más rápido (x4) ya que se ha hecho una división perfecta del problema <r>multi_vector</r>. Esto no es más que un ejemplo teórico y este resultado será muy difícil de conseguir en situaciones reales. También deberemos reducir al mínimo la cantidad de variables compartidas y el tiempo de las secciones críticas, de lo contrario los posibles inter-bloqueos reducirán la ganancia.
+
+img(multi_vector.svg,380,.55).Colaboración de cuatro hebras en el cálculo de un vector.
+Esquema de varias hebras colaborando en el cálculo de un vector.
+
+code(cpp,threadlist).Procesamiento multi-hilo de un vector muy grande.
+typedef struct _app_t App;
+typedef struct _thdata_t ThData;
+
+struct _app_t
+{
+    uint32_t total;
+    uint32_t n;
+    uint32_t *elems;
+    Mutex *mutex;
+};
+
+struct _thdata_t
+{
+    uint32_t thread_id;
+    uint32_t start;
+    uint32_t end;
+    uint64_t time;
+    App *app;
+};
+
+static uint32_t i_thead(ThData *data)
+{
+    uint32_t i, total = 0;
+    uint64_t t1 = btime_now();
+    for (i = data->start; i < data->end; ++i)
+    {
+        // Simulates processing
+        uint32_t time = bmath_randi(0, 100);
+        bthread_sleep(time);
+        total += data->app->elems[i];
+    }
+
+    // Mutual exclusion access to shared variable 'total'
+    bmutex_lock(data->app->mutex);
+    data->app->total += total;
+    bmutex_unlock(data->app->mutex);
+    data->time = (btime_now() - t1) / 1000;
+    return data->thread_id;
+}
+
+// Threads creating function
+uint32_t i, m;
+uint64_t t;
+App app;
+ThData thdata[4];
+Thread *thread[4];
+
+// App data vector
+i_init_data(&app);
+app.mutex = bmutex_create();
+m = app.n / 4;
+
+// Thread data
+for (i = 0; i < 4; ++i)
+{
+    thdata[i].thread_id = i;
+    thdata[i].app = &app;
+    thdata[i].start = i * m;
+    thdata[i].end = (i + 1) * m;
+}
+
+// Launching threads
+t = btime_now();
+for (i = 0; i < 4; ++i)
+    thread[i] = bthread_create(i_thead, &thdata[i], ThData);
+
+// Wait for threads end
+for (i = 0; i < 4; ++i)
+{
+    uint32_t thid = bthread_wait(thread[i]);
+    bstd_printf("Thread %d finished in %d ms.\n", thid, thdata[thid].time);
+    bthread_close(&thread[i]);
+}
+
+// Process total time
+t = (btime_now() - t) / 1000;
+bstd_printf("Proccessing result = %d in %d ms.\n", app.total, t);
+
+bmutex_close(&app.mutex);
+code.
+
+code(text,thresult).Resultado.
+Thread 0 finished in 13339 ms.
+Thread 1 finished in 12506 ms.
+Thread 2 finished in 12521 ms.
+Thread 3 finished in 12999 ms.
+Proccessing result = 499500 in 13344 ms.
+code.
+
+func(bthread_create).Crea un nuevo hilo de ejecución, que arranca en <c>thmain</c>.
+fret(Thread*).Manejador de la hebra. Si la función falla, retorna <c>NULL</c>.
+fpar(FPtr_thread_main,thmain).La función de inicio de la hebra <i>thread_main</i>. Se pueden pasar datos compartidos mediante el puntero <i>data</i>.
+fpar(type*,data).Datos pasados como parámetro a <c>thmain</c>.
+fpar(,type).Tipo de <c>data</c>.
+fnote.El hilo se ejecutará en paralelo hasta que <c>thmain</c> retorne o se llame a <lf>bthread_cancel</lf>. <lh>Lanzando hebras</lh>.
+
+func(bthread_current).Retorna el manejador de la hebra actual, es decir, la que está corriendo cuando se llama a esta función.
+fret(Thread*).Manejador de la hebra.
+
+func(bthread_close).Cierra el manejador de la hebra y libera recursos.
+fpar(Thread**,thread).Manejador de la hebra. Será puesto a <c>NULL</c> tras el cierre.
+fnote.Si el hilo todavía se está ejecutando, esta función no lo finaliza. Como cualquier otro objeto, un hilo siempre debe cerrarse, incluso si ya ha terminado su ejecución. <lh>Lanzando hebras</lh>.
+
+func(bthread_cancel).Fuerza la terminación del hilo especificado.
+fpar(Thread*,thread).Manejador de la hebra.
+fnote.<b>No es recomendable llamar a esta función</b>. No se realizará una salida "limpia" del hilo. Si se encuentra dentro de una sección crítica, esta no será liberada. Tampoco de liberará la memoria dinámica reservada de forma privada por el hilo. La forma correcta de finalizar un hilo de ejecución es retornando de <c>thmain</c>. Pueden utilizarse variables compartidas (<lp>bmutex</lp>) para indicarle a un hilo que debe terminar de forma limpia.
+
+func(bthread_wait).Detiene al hilo que llama a esta función hasta que <c>thread</c> termina su ejecución.
+fret(uint32_t).El valor de retorno del hilo. Si ocurre algún error, retorna <lt>UINT32_MAX</lt>.
+fpar(Thread*,thread).Manejador de la hebra a la que debemos esperar.
+
+func(bthread_finish).Comprueba si la hebra sigue en ejecución.
+fret(bool_t).<c>TRUE</c> si el hilo ha terminado, <c>FALSE</c> si no.
+fpar(Thread*,thread).Manejador de la hebra.
+fpar(uint32_t*,code).El valor de retorno de la función <i>thmain</i> (si ha terminado). Puede ser <c>NULL</c>.
+fnote.Esta función retorna inmediatamente.
+
+func(bthread_sleep).Suspende la ejecución de la hebra actual (la que llama a esta función) durante un número determinado de milisegundos.
+fpar(const uint32_t,milliseconds).Intervalo de tiempo (en milisegundos) que durará la suspensión.
+fnote.Realiza una suspensión "pasiva", donde ningún "bucle vacío" será ejecutado. El hilo es decartado por el <i>scheduler</i> y reactivado posteriormente.
+

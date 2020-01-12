@@ -1,0 +1,17 @@
+
+h1.Filters
+
+p.Además de la generación procedimental de imágenes, la manipulación directa de píxeles tiene otra gran utilidad: La aplicación de filtros. Para ello, en primer lugar, obtendremos un búfer con el valor original de los píxeles mediante <lf>image_pixels</lf>. Un filtro no es más que una función que cambia el color de cada punto para lograr el efecto deseado. En este ejemplo implementamos el <b>algoritmo de convolución</b> el cual necesita conocer el entorno de vecindad de cada punto para procesar el efecto <r>image_filter_win</r>. En función de los valores asignados a la matriz de convolución obtendremos diferentes resultados. El <b>código fuente</b> está en la caperta <c>/src/demo/filters</c> de la distribución del SDK.
+
+li.Utiliza <lf>image_from_pixels</lf> para crear una nueva imagen con los píxeles modificados.
+
+img(image_filter_win.png,0,1).Aplicación <b>Filters</b>, versión Windows.
+Captura de una aplicación con filtros de imagen. Versión Windows.
+
+img(image_filter_macos.png,0,1).Versión macOS.
+Captura de una aplicación con filtros de imagen. Versión macOS.
+
+img(image_filter_linux.png,0,1).Versión Linux.
+Captura de una aplicación con filtros de imagen. Versión Linux.
+
+codefile(demo/filters/filters.c).

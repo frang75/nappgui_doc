@@ -1,0 +1,29 @@
+langrev.
+
+h1.Log
+
+ep.Registry where a running program can dump information about its internal running.
+
+p.A <i>log</i> or diary is a record of anomalies that occur at runtime and that help to further debug the program or determine the cause of an error <r>log</r>. This report is aimed more at programmers or software administrators and not at the end user, so it is advisable to include specific technical information on the cause of the problem. The messages addressed to the end user must be written in a more friendly tone, far from technicalities and sent to the standard output (<c>stdout</c> <c>stderr</c>) or to the window system, if we are facing a desktop application.
+
+img(log.svg,420,.4).Messages related to internal anomalies of the program, can be sent to a <i>log</i>.
+Schema of a process sending information to a log.
+
+func(log_printf).Write a message in the <i>log</i>, with the <c>printf</c> format.
+fret(uint32_t).The number of bytes written.
+fpar(const char_t*,format).String with the printf-like format with a variable number of parameters.
+fpar(,...).Arguments or variables of printf.
+fcode.
+log_printf("Leaks of object '%s' (%d bytes)", object->name, object->size);
+[12:34:23] Leaks of object 'String' (96 bytes)
+fcode.
+
+func(log_output).It establishes whether the content of the <i>log</i> will be redirected or not to the standard output.
+fpar(const bool_t,std).If <c>TRUE</c> the lines will be sent to the standard output <c>stdout</c>. Default, <c>TRUE</c>.
+fpar(const bool_t,err).If <c>TRUE</c> the lines will be sent to the error output <c>stderr</c>. Default, <c>FALSE</c>.
+
+func(log_file).Set a destination file, where the <i>log</i> lines will be written.
+fpar(const char_t*,pathname).File name including its absolute or relative path. If the file does not exist it will be created and if it already exists, future lines will be added at the end of it. If <c>NULL</c> writing to <i>log</i> file will be disabled.
+
+func(log_get_file).Gets the current file associated with the <i>log</i>.
+fret(const char_t*).The absolute <i>pathname</i> of the file.

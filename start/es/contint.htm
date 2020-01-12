@@ -1,0 +1,121 @@
+
+h1.Integración continua
+
+ep.Un sistema de Integración Continua compilará proyectos continuamente de forma automática y en todas las plataformas, a medida que vayamos introduciendo cambios en el repositorio.
+
+p.Ya vimos en <lp>win_mac_linux</lp> como mover nuestras aplicaciones entre diferentes plataformas y entornos de desarrollo. Esto supone una gran ventaja con respecto a la programación nativa tradicional, ya que podemos generar ejecutables optimizados para cada CPU y sistema operativo sin tener que modificar ni una línea del código fuente. Ahora vamos a ir un paso más allá automatizando las fases de compilación y test.
+
+p.Un equipo de trabajo medio puede llegar a modificar el código de un proyecto varias veces al día. En entornos multiplataforma, dichos cambios deben ser compilados y probados en varias máquinas lo antes posible con el fin de subsanar errores o anomalías. Para ello el sistema de Integración Continua (IC) trabajará ininterrumpidamente, en segundo plano y de forma autónoma cada vez que se modifique el contenido del repositorio <r>contint</r>.
+
+img(contint.svg,640,.75).Sistema de Integración Continua trabajará de forma autónoma en segundo plano.
+Esquema básico de un sistema de integración contínua.
+
+h2.Build grid
+
+p.Lo primero que tenemos que hacer es configurar una red de computadores heterogénea donde coexistan diferentes máquinas con los compiladores apropiados <r>buildgrid</r> y que puedan comunicarse entre ellas <lp>ssh</lp>. Los actores principales de esta red son:
+
+li.<b>Build Grid:</b> Red formada por todas las máquinas que van a cooperar en tareas de compilación. Pueden estar distribuidas por Internet.
+
+li.<b>Build Master:</b> Ordenador dentro de la red que ejecuta la utilidad de Integración Continua, coordina al resto de máquinas, almacena los resultados y notifica errores.
+
+li.<b>Build Host/Slave:</b> Máquina destinada a tareas de compilación y test, que será manejada remotamente por el <i>Build Master</i>.
+
+li.<b>Build Agent:</b> Configuración que identifica una versión de compilador y CPU. Por ejemplo, el agente <c>v142_x64</c> representa a Visual Studio 2019 (VC++) de 64bits. Un agente puede ser ejecutado por cualquier Host que tenga instalado el compilador apropiado. El <i>Build Master</i> se encargará de balancear la carga.
+
+li.<b>Build Profile:</b> Perfil que indica todos los <i>targets</i> (librerías y/o ejecutables) a generar dentro de una solución y que agentes deben intervenir. El <i>Build Master</i> puede manejar varios perfiles al mismo tiempo.
+
+li.<b>Build Config:</b> Indica el nivel de optimización y opciones de depuración de la compilación: <c>Debug</c>, <c>Release</c>, <c>ReleaseWithAssert</c>. <lh>Configuraciones</lh>.
+
+img(buildgrid.svg,640,.75).Ejemplo de <i>Build Grid</i>.
+Esquema de una red de compiladores, gobernados por un Build Master.
+
+h2.Línea de comandos
+
+p.Por muy complejos que puedan llegar a ser los <i>Build Profile</i> el proceso de compilación remota se puede dividir en cuatro pasos:
+
+li.<b>Actualizar:</b> La copia de trabajo del host, si está desactualizada.
+
+li.<b>CMake:</b> Para generar las soluciones de compilación <c>.sln</c>, <c>.xcodeproj</c> ó <c>Makefile</c>.
+
+li.<b>Build:</b> Compilar mediante <c>msbuild</c>, <c>xcodebuild</c> o <c>make</c> en función de la plataforma.
+
+li.<b>Copiar:</b> Resultados de compilación, errores, warnings, librerías o ejecutables. El Master empaquetará todos los productos y presentará informes.
+
+p.El <i>Build Master</i> deberá utilizar la versión por línea de comandos de todas las herramientas implicadas y lanzarlas en el host remoto mediante SSH. Repasaremos su sintaxis a continuación.
+
+h3.SVN desde línea de comandos
+
+code(txt).Número de versión de un repositorio SVN.
+svn info --show-item revision svn://192.168.1.2/svn/myrepo -r HEAD
+1642
+code.
+
+code(txt).Actualiza la copia de trabajo de un Host.
+svn checkout --username USER --password PASS svn://192.168.1.2/svn/NAPPGUI/1_0 C:\src -r 1642
+code.
+
+code(txt).Contenido de un directorio del repositorio a la salida estándar <c>stdout</c>.
+svn list svn://192.168.1.2/svn/NAPPGUI/1_0/src/osbs -r 1642
+code.
+
+code(txt).Contenido de un archivo a <c>stdout</c>.
+svn cat svn://192.168.1.2/svn/NAPPGUI/1_0/src/osbs/bmem.h -r 1642
+code.
+
+h3.CMake desde línea de comandos
+
+code(text).Creación de una solución Visual Studio.
+cd C:\build
+cmake -G"Visual Studio 15 2017 Win64" -Tv141 C:\src
+code.
+
+code(text).Creación de una solución Xcode.
+cd /Users/fran/build
+cmake -G"Xcode" -DCMAKE_ARCHITECTURE:STRING=x86_64 /Users/fran/src
+code.
+
+code(text).Creación de <c>Makefile</c>, para compilar con GCC.
+cd /home/fran/build
+cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_ARCHITECTURE:STRING=x64 -DCMAKE_TOOLKIT=GTK3 /home/fran/src
+code.
+
+p.En macOS y Linux podemos alternar entre diferentes versiones del compilador, como ya vimos en <lh>xcode-select</lh> y <lh>update-alternatives</lh>. Esto debe hacerse <b>antes de lanzar cmake</b>.
+
+h3.Visual Studio desde línea de comandos
+
+p.Para compilar una solución de Visual Studio desde línea de comandos tendremos que utilizar el comando <c>MSBuild.exe</c>, incluido en la distribución del entorno de Microsoft.
+
+code(text).Ejecutar Visual Studio desde línea de comandos.
+cd C:\build
+MSBuild.exe Project.sln /flp1:warningsonly;logfile=warnings.txt /flp2:errorsonly;logfile=errors.txt /p:Configuration=Debug /p:Platform=x64 /maxcpucount:1
+code.
+
+p.Este comando redirige a <c>stdout</c> los mensajes del compilador. Los avisos y errores encontrados en el código los guardará en los archivos <c>warnings.txt</c> y <c>errors.txt</c> respectivamente.
+
+h3.Xcode desde línea de comandos
+
+p.De igual forma que Visual Studio, Xcode se puede ejecutar desde línea de comandos. La sintaxis es la siguiente:
+
+code(text).Ejecutar Xcode desde línea de comandos.
+cd /Users/fran/build
+xcodebuild -project Project.xcodeproj -alltargets -configuration Debug
+code.
+
+p.También redirige a <c>stdout</c> el resultado de la compilación. A diferencia de <c>MSBuild</c> los avisos y errores los escribe en <c>stderr</c>, precedidos de las etiquetas <c>warning:</c> y <c>error:</c> respectivamente.
+
+h3.GCC/Make desde línea de comandos
+
+p.En Linux el proyecto se genera mediante archivos <c>Makefile</c>, que contienen guiones de compilación basados en GCC. CMake se ha encargado de crear estos <c>Makefile</c>, así que lo único que hay que hacer es ejecutar el comando <c>make</c>.
+
+code(text).Ejecutar <c>make</c> desde línea de comandos.
+cd /home/fran/build
+make
+code.
+
+h3.Copias remotas
+
+p.De nuevo haremos uso del protocolo SSH, concretamente del comando <c>scp</c> para realizar la copia remota desde el Host hasta el Master.
+
+code(text).Copiar una librería compilada desde una máquina remota a un directorio local.
+scp fran@192.168.1.24:/build/Debug/core/libcore.a C:/pkg
+code. 

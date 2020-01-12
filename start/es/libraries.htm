@@ -1,0 +1,132 @@
+
+
+h1.Librerías
+
+p.En los dos últimos capítulos hemos visto los fundamentos para crear aplicaciones multiplataforma utilizando funciones del SDK. Algo habitual en Ingeniería del Software es la posibilidad de reutilizar porciones de código entre diferentes proyectos. El propio <lp>sdk</lp> está compuesto por un conjunto de bloques independientes que forman una jerarquía de dependencias. En este capítulo veremos como aislar funcionalidad común dentro de una librería, asi como vincular aplicaciones con ella.
+
+h2.Librerías estáticas
+
+p.Siguiendo la línea abierta en los dos capítulos anteriores con la aplicación <i>Die</i>, vamos a crear una nueva aplicación denominada <i>Dice</i>, también muy sencilla, cuyo cometido es dibujar aleatoriamente 6 dados <r>dice</r>. Al mover el slider cambiarán los valores.
+
+img(dice.png,480,.65).Aplicación <i>Dice</i>.
+Captura de la aplicación Dice, que dibuja seis dados de forma aleatoria.
+
+bq.El código fuente de Dice lo tienes en la carpeta <c>src/demo/Dice</c> de la distribución.
+
+p.No es muy complicado intuir que podríamos reutilizar la rutina de dibujo paramétrico de nuestra aplicación anterior. Una forma de hacerlo sería copiando dicha rutina desde <i>Die</i> a <i>Dice</i>, pero esto no es lo más aconsejable ya que tendríamos dos versiones del mismo código que mantener. Otra opción, la más sensata, es mover la función de dibujo a una librería y vincularla en ambas aplicaciones. Esto es muy sencillo de realizar gracias, de nuevo, a CMake. Abrimos el <c>src/CMakeLists.txt</c> y añadimos las siguientes líneas:
+
+code(text).
+staticLib("casino" "draw2d" NRC_EMBEDDED)
+desktopApp("Die" "die" "casino" NRC_EMBEDDED NO)
+desktopApp("Dice" "dice" "casino" NRC_EMBEDDED NO)
+code.
+
+p(noindent).Donde hemos utilizado el comando <c>staticLib()</c>, que es el análogo de <c>desktopApp()</c>.
+
+code(text).
+staticLib(libPath depends nrcMode)
+code.
+
+li.<c>libPath</c>: Directorio de la librería dentro de la solución: <c>"casino"</c> creará el proyecto en la carpeta <c>C:\nappgui\src\casino</c> y <c>"games/casino"</c> en <c>C:\nappgui\src\games\casino</c>. El nombre del proyecto lo determina el último tramo del <i>pathname</i>: <c>"casino"</c> en ambos casos.
+
+li.<c>depends</c>: Dependencias de la librería. Al igual que en aplicaciones de escritorio, solo es necesario indicar las de más alto nivel (<i>draw2d</i> en este caso). Cada librería se encarga de enlazar con las que tiene por debajo. <i>draw2d</i> incluirá <i>geom2d</i> y así sucesivamente. En <lp>sdk</lp> tienes el grafo completo de dependencias de NAppGUI.
+
+li.<c>nrcMode</c>: Admite los tres valores: <c>NRC_NONE</c>, <c>NRC_EMBEDDED</c> y <c>NRC_PACKED</c>, como ya vimos en <lh>Distribución de recursos</lh>.
+
+li.Tanto <i>Die</i> como <i>Dice</i> han añadido una dependencia con <i>casino</i> <r>libdepend</r> por medio del parámetro <c>depends</c> del comando <c>desktopApp()</c>. De esta forma CMake sabe que debe enlazar, además de las librerías propias de NAppGUI, la librería <i>casino</i> que es donde se encuentra código común de ambos proyectos.
+
+img(libdepend.svg,480,.64).Árbol de dependencias de las aplicaciones, centrado en la librería <i>casino</i>.
+Esquema que muestra las dependencias de Die y Dice.
+
+p.Al pulsar de nuevo <c>[Generate]</c> en CMake, añade la librería <i>casino</i> a nuestra solución, así como un vínculo a ella en ambas aplicaciones <r>lib_ide</r>. Al igual que ocurría al crear una nueva aplicación, aparecen varios archivos por defecto, que son:
+
+img(lib_ide.png,0,.35).Librería estática <i>casino</i>, integrada en la solución.
+Captura de Visual Studio que muestra un nuevo proyecto con la librería casino.
+
+li.<c>casino.hxx</c>: Fichero de tipos. Aquí pondremos las definiciones de tipos públicos. En este ejemplo no será necesario.
+
+codefile(demo/casino/casino.hxx).
+
+li.<c>casino.h</c>: Fichero de cabecera. Aquí escribiremos la declaración de funciones generales. Por defecto, CMake crea dos: <c>casino_start()</c> y <c>casino_finish()</c>, donde implementaríamos código global de inicio y finalización de la librería, si fuera necesario.
+
+codefile(demo/casino/casino.h).
+
+li.<c>casino.c</c>: Implementación de las funciones generales.
+
+codefile(demo/casino/casino.c).
+
+p.Ahora vamos a crear dos nuevos archivos dentro de <c>src/casino</c>, <c>ddraw.c</c> y <c>ddraw.h</c> donde portaremos la función de dibujo. Ya vimos como <lh>Añadir archivos</lh> en capítulos anteriores.
+
+codefile(demo/casino/ddraw.h).
+
+codefile(demo/casino/ddraw.c).
+
+p.¿Que significa realmente que <i>Die</i> y <i>Dice</i> tengan una dependencia con <i>casino</i>? Que a partir de ahora ninguna de ellas se podrá compilar si hay algún error en el código de <i>casino</i>, ya que es un bloque fundamental para ambas. Dentro de la solución de Visual Studio han ocurrido varias cosas:
+
+li.Las dos aplicaciones saben donde está ubicada <i>casino</i>, por lo que pueden hacer <c>#include "casino.h"</c> sin preocuparse por añadir la ruta al <c>Additional Include Directives</c> del proyecto.
+
+li.El código binario de las funciones de <i>casino</i> se incluirá en cada ejecutable en el proceso de enlazado. Tampoco debemos configurar las <c>*.lib</c> en el <c>Additional Dependencies</c> del Linker de Visual Studio. CMake ya se encargó de hacerlo.
+
+li.Cualquier cambio realizado en <i>casino</i> obligará a recompilar las aplicaciones debido al punto anterior. De nuevo, Visual Studio sabrá hacerlo de la forma más eficiente posible. No hace falta ir una a una, con seleccionar <c>Build->Build Solution</c> se compilará y actualizará todo lo necesario.
+
+p.Como ya indicamos antes, <i>casino</i> también tiene una dependencia con <lp>draw2d</lp>, la librería de dibujo vectorial de NAppGUI. A su vez <i>draw2d</i> depende de <i>geom2d</i> y así sucesivamente, hasta llegar a <i>sewer</i>, el paquete más bajo del <lp>sdk</lp>. Cuando desarrolles una nueva librería deberías vincularla con el menor número posible de dependencias o, dicho de otra forma, con las librerías de menor nivel dentro de la jerarquía que incluyan la funcionalidad necesaria. Esto mejorará la compilación y distribución, además de constituir una muy buena práctica de trabajo.
+
+h2.Librerías dinámicas
+
+p.Las librerías dinámicas son, al código ejecutable, lo que <c>NRC_PACKED</c> a los recursos. Es decir, el código de la librería se enlaza y carga en tiempo de ejecución y no en tiempo de compilación. Utilizando librerías estáticas, como acabamos de hacer en el apartado anterior, tanto en <c>Die.exe</c> como en <c>Dice.exe</c> existirá una copia del código binario de la función <c>die_draw()</c> que fue añadida durante el proceso de enlazado. Si creásemos <i>casino</i> como librería dinámica, se generaría el archivo <c>casino.dll</c> <i>(Dynamic-Link Library)</i> que deberíamos distribuir junto con <c>Die.exe</c> y <c>Dice.exe</c>. El resultado serían ejecutables más pequeños ya que el código común de la DLL sería enlazado en tiempo de ejecución por ambas aplicaciones <r>code_dll</r>.
+
+code(text,code_dll).Hipotética distribución de las aplicaciones, junto con la .dll.
+casino.dll        102,127
+Die.exe            84,100
+Dice.exe           73,430
+code.
+
+bq.Por el momento, la versión actual de NAppGUI <b>no soporta</b> la creación DLLs. Este tipo de proyecto será incluido en futuras revisiones del SDK.
+
+h3.Ventajas de las DLLs
+
+p.Como hemos podido intuir en el ejemplo anterior, utilizando DLLs reduciremos el tamaño de los ejecutables, agrupando el código binario común. Esto es precisamente lo que hacen los sistemas operativos. Por ejemplo, <c>Die.exe</c> necesitará acceder, en última instancia, a las funciones del API de Windows. Si todas las aplicaciones tuviesen que enlazar de forma estática los binarios de Windows, su tamaño crecería desmesuradamente y se desperdiciaría mucho espacio dentro del sistema de archivos. El sistema implementa sus funciones mediante DLLs (ubicadas en <c>C:\Windows\System32</c>) y las aplicaciones acceden a ellas en tiempo de ejecución.
+
+p.Otra gran ventaja de las DLLs es la posibilidad de añadir código ejecutable después de haber compilado la aplicación. Este es el mecanismo de funcionamiento de los <i>plug-ins</i> que muchas aplicaciones comerciales utilizan. Por ejemplo, el programa <i>Rhinoceros 3D</i> enriquece su funcionalidad gracias a nuevos comandos implementados por terceros y añadidos en cualquier momento mediante un sistema de plugins (.DLLs) <r>rhino_plugins</r>. El problema de las librerías estáticas es que se enlazan tras la fase de compilación, por lo que es necesario disponer del código fuente original, recompilarlo y hacerlo llegar de nuevo al usuario final. Esto imposibilita la creación de ampliaciones una vez que el programa ha sido distribuido. Gracias a las DLLs esto puede llevarse a cabo.
+
+img(rhino_plugins.png,480,.7).Sistema de plug-ins de Rhinoceros 3D, implementado mediante DLLs.
+Captura del listado de plug-ins del programa Rhinoceros 3D.
+
+h3.Desventajas de las DLLs
+
+p.El principal inconveniente del uso de DLLs es la incompatibilidad que puede presentarse entre las diferentes versiones de una librería. Volviendo a nuestros dos juegos, supongamos que lanzamos una nueva versión de la aplicación <c>Dice.exe</c> que implica cambios en <c>casino.dll</c>. En ese caso, la distribución de nuestra <i>suite</i> quedaría así:
+
+code(text).
+casino.dll        106,386  (v2)*
+Die.exe            84,100  (v1)?
+Dice.exe           78,491  (v2)*
+code.
+
+p.Si no hemos sido muy cuidadosos, es muy probable que <c>Die.exe</c> ya no funcione al no ser compatible con la nueva versión de la DLL. Este problema trae de cabeza a muchos desarrolladores y ha sido bautizado como <i><l>https://en.wikipedia.org/wiki/DLL_Hell''DLL Hell</l></i>. Dado que en este ejemplo trabajamos sobre un entorno "controlado" podríamos solucionarlo sin demasiados problemas, creando una nueva versión de todas la aplicaciones funcionando bajo <c>casino.dll.v2</c>, pero esto no siempre es posible.
+
+code(text).
+casino.dll        106,386  (v2)
+Die.exe            84,258  (v2)
+Dice.exe           78,491  (v2)
+code.
+
+p.Supongamos ahora que nuestra compañía desarrolla tan solo <c>casino.dll</c> y son terceras empresas las que trabajan en los productos finales. Ahora cada producto tendrá sus ciclos de producción y distribución (entorno no controlado) por lo que, para evitar problemas, cada compañía incluirá una copia de la versión concreta de la DLL con la que funciona su producto. Esto podría dar lugar al siguiente escenario:
+
+code(text).
+/Apps/Die
+casino.dll        114,295  (v5)
+Die.exe            86.100  (v8)
+
+/Apps/Dice
+casino.dll        106,386  (v2)
+Dice.exe           72,105  (v1)
+code.
+
+p.Viendo esto intuimos de que las bondades del uso de DLLs ya no lo son tanto, sobre todo en lo relativo a la optimización del espacio y tiempos de carga. El caso es que se puede agravar aún más. Normalmente, las librerías se escriben para que sean lo más genéricas posible y puedan dar servicio a muchas aplicaciones. En muchas ocasiones, una aplicación concreta utiliza sólo unas pocas funciones cada librería con las que enlaza. Utilizando librerías estáticas, se puede reducir considerablemente el tamaño del ejecutable <r>static_link</r>, ya que el enlazador sabe perfectamente que funciones concretas utiliza la aplicación y añade el código estrictamente necesario. Sin embargo, utilizando DLLs, debemos distribuir la librería completa por muy pocas funciones que utilice el ejecutable <r>dynamic_link</r>. En este caso, se está desperdiciando espacio y aumentando innecesariamente los tiempos de carga de la aplicación.
+
+img(static_link.svg,480,.6).Con librerías estáticas se optimiza el espacio y tiempos de carga de esta aplicación.
+Esquema que muestra en enlace estático de código.
+
+img(dynamic_link.svg,480,.6).Con librerías dinámicas esta aplicación ocupa más de lo que debería y aumentan sus tiempos de carga.
+Esquema que muestra en enlace dinámico de código.
+

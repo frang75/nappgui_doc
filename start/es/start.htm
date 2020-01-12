@@ -1,0 +1,150 @@
+
+h1.Bienvenidos a NAppGUI
+
+ep.Mientras que otros estaban contentos con escribir programas que solo resolvieran problemas, los primeros hackers estaban obsesionados con escribir programas que resolvieran problemas bien. Un nuevo programa que alcanzara el mismo resultado que otro existente pero que usase menos tarjetas perforadas se consideraba mejor, aunque hiciera lo mismo. La diferencia fundamental era cómo el programa lograba su resultado. - <b>elegancia</b>.
+<i>Jon Erickson</i> - Hacking: The Art of Exploitation
+
+p.NAppGUI es un SDK para crear aplicaciones nativas multiplataforma en C/C++. Por <b>software nativo</b> entendemos aquel que se compila/ensambla utilizando las instrucciones específicas de la CPU (no está interpretado ni utiliza bytecode) y por <b>multiplataforma</b> la capacidad de generar versiones para Windows, macOS y Linux utilizando la misma base de código fuente <r>cross_platform</r>. Desde sus primeras funciones escritas en agosto de 2010, el principal objetivo de NAppGUI ha sido simplificar al máximo la ardua tarea de crear aplicaciones con interfaz gráfica en C. Aunque ya existen diferentes soluciones, nosotros hemos optado por la simplicidad creando una ligera capa de abstracción que encapsula las tecnologías nativas, las unifica bajo un mismo API y añade cierta lógica para la gestión y automatización de tareas. Siendo algo más específicos, la filosofía en la que se basa el proyecto y algunas de sus características son:
+
+img(cross_platform.svg).Desarrollo multiplataforma nativo con NAppGUI.
+Esquema que muestra como el mismo código fuente puede funcionar en todas las versiones de Windows, macOS y Linux.
+
+li.Rápido prototipado, evolución y mantenimiento en aplicaciones <b>de verdad</b>, al margen de los simples ejemplos que encontramos en la literatura e Internet.
+
+li.La interfaz de usuario se describe mediante funciones ANSI-C, eliminando completamente el diseño visual. Este hecho facilita la creación de interfaces dinámicas, garantiza la portabilidad y posibilita el acceso al API desde cualquier lenguaje de programación.
+
+li.Las ventanas se componen y dimensionan automáticamente, sin que el programador tenga que indicar explícitamente las coordenadas y el tamaño de los controles.
+
+li.Es posible tener una aplicación completa en un solo archivo <c>.c</c>, eliminando los habituales archivos de recursos (<c>*.rc</c>, <c>*.xvid</c>, etc) y sus controladores asociados. El programador tiene total libertad a la hora de definir su propia estructura de archivos.
+
+li.Sincronización automática de las estructuras de datos internas con la interfaz o con canales de E/S. <lp>dbind</lp>.
+
+li.Gestión unificada de recursos lo que facilita la internacionalización. <lp>resources</lp>.
+
+li.Traducciones entre idiomas en tiempo de ejecución sin necesidad de reiniciar la aplicación. <lh>Carga y traducción</lh>.
+
+li.La versión compilada de NAppGUI ocupa menos de 1Mb, y se distribuye en varias librerías estáticas que generan ejecutables de tamaño muy reducido. Esta es una gran ventaja con respecto a otras soluciones que requieren la distribución de pesadas <i>.DLLs</i>, en ocasiones más grandes que la aplicación en sí.
+
+li.Apariencia nativa: Las aplicaciones se integrarán en cada sistema respetando su estética original <r>native_appearance</r>.
+
+img(native_appearance.png,-1,.75).Apariencia nativa de la demo <i>Hello, World!</i>.
+Varias capturas de pantalla que muestran la apariencia de la misma aplicación en diferentes sistemas operativos.
+
+li.<i>Back-ends</i>. El núcleo de NAppGUI proporciona estructuras y objetos para la creación de aplicaciones en línea de comandos, muy eficientes en servidores Windows o Linux.
+
+h2.APIs originales
+
+p.Microsoft, Apple y GNU/Linux proponen diferentes APIs para interactuar con sus sistemas. Esto significa que la misma aplicación debe ser reescrita para que funcione correctamente en cada plataforma. NAppGUI proporciona un conjunto unificado de funciones para crear interfaces gráficas de usuario y permitir el acceso directo a los recursos de la máquina (memoria, disco, red, etc.) <r>native_buttons</r>. Cada implementación tiene en cuenta las condiciones particulares de la plataforma de destino y utiliza los comandos nativos apropiados para realizar la tarea de la manera más óptima posible.
+
+img(native_buttons.svg).Llamadas a las APIs nativas, desde el mismo código fuente.
+Esquema que muestra las llamadas a los APIs nativos para crear un botón.
+
+h2.Basado en C
+
+p.A pesar de que hoy en día disponemos de una gran cantidad de lenguajes de programación, el lenguaje C sigue siendo el más potente y portable del mundo. El núcleo de Windows, macOS, Linux, Android, iOS y otros grandes programas están escritos en gran parte en C. En el mundo de las aplicaciones, su uso se ha visto disminuido un poco a favor de otros con más <i>glamour</i>. Tal vez esta sea una de las razones por las que <l>https://en.wikipedia.org/wiki/Wirth%27s_law''la ley de Wirth</l> sea cada vez día más cierta.
+
+bq."El software se ralentiza más deprisa de lo que se acelera el hardware."
+
+p.NAppGUI está escrito, prácticamente en su totalidad, en lenguaje C con pequeñas partes en C++ y Objective-C. Este lenguaje es ampliamente soportado y compatible entre plataformas. En su desarrollo hemos prescindido de lenguajes minoritarios, propietarios o vinculados a una marca como: C#, Swift, Java u Objective-C. También de los interpretados (como Python o JavaScript) y de aquellos basados en máquinas virtuales (Java y C#) por la penalización en el rendimiento <r>language_optimization</r>. Finalmente, no hemos utilizado C++, ya que no presentamos NAppGUI como una jerarquía de clases sino como una biblioteca de funciones. Nuestros objetivos han sido minimizar el impacto del SDK, simplificar la programación, aumentar la legibilidad y producir binarios de alto rendimiento.
+
+img(language_optimization.svg,480,.5).Intérprete, máquina virtual y código binario. Cuanto más nos acercamos al lenguaje máquina, mayor rendimiento obtendremos del software.
+Diferentes lenguajes de programación. Desde los más lentos (interpretados) a los más rápidos (compilados).
+
+h2.Sin editores visuales
+
+p.La creación de interfaces gráficas puede convertirse en un proceso tedioso, ya que es difícil saber de antemano el tamaño final de elementos que contienen texto o imágenes, como es el caso de los botones. Por otro lado, las ventanas son entidades dinámicas sujetas a cambios en tiempo de ejecución (tamaño, traducción, cambio de subpaneles, áreas ocultas, etc.). Cuando usamos un editor visual, tenemos que ubicar los elementos en la posición y tamaño exactos <r>resource_editor</r>. Esta es una tarea que requiere un uso intensivo del ratón, lo que ralentiza la conexión entre los objetos GUI y los controladores de eventos. En el ciclo de desarrollo, si los textos u otros elementos cambian (y por supuesto, cambiarán), tendremos que reubicar de nuevo los componentes a mano. Este problema crece en soluciones multilingües. Mantener a los desarrolladores moviendo píxeles y llenando formularios de propiedades es costoso para las empresas y muy aburrido para ellos. Todo esto sin mencionar que todos estos diseños visuales no serán compatibles entre plataformas (.rc Windows, .xib macOS, .glade GTK/Gnome, etc.).
+
+img(resource_editor.png,0,.85).Los editores de recursos no son buenos aliados para crear complejas interfaces dinámicas.
+Captura del editor de interfaces incluido en Xcode.
+
+bq.Muchos programadores prefieren no mover las manos del teclado, ya que lo consideran mucho más productivo.
+
+p.NAppGUI utiliza una estrategia declarativa, donde solo es necesario indicar la celda donde se ubicará el elemento dentro de una rejilla rectangular (<c>Layout</c>). El tamaño y posición final se calcularán en tiempo de ejecución, realizando una composición recursiva de los <i>layouts</i> y <i>sublayouts</i> en función de su contenido <r>code_layout</r> <r>declarative_composition_win</r>. 
+
+code(cpp,code_layout).Creación de una ventana.
+Panel *panel = panel_create();
+Layout *layout = layout_create(1, 3);
+Label *label = label_create();
+Button *button = button_push();
+TextView *view = textview_create();
+Window *window;
+label_text(label, "Hello!, I'm a label");
+button_text(button, "Click Me!");
+layout_label(layout, label, 0, 0);
+layout_button(layout, button, 0, 1);
+layout_textview(layout, view, 0, 2);
+layout_hsize(layout, 0, 250);
+layout_vsize(layout, 2, 100);
+layout_margin(layout, 5);
+layout_vmargin(layout, 0, 5);
+layout_vmargin(layout, 1, 5);
+panel_layout(panel, layout);
+window = window_create(ekWNSTD, &panel);
+window_title(window, "Hello, World!");
+code.
+
+img2(declarative_composition_win.png,declarative_composition_macos.png).La composición declarativa es rápida, adaptable y portátil.
+Interfaz de usuario sencilla en Windows.
+Interfaz de usuario sencilla en macOS a partir del mismo código fuente que Windows.
+
+h2.Dependencias
+
+p.NAppGUI no utiliza librerías de terceros, tan solo conecta con las APIs nativas de cada sistema operativo. Este hecho, junto con el uso de C y el enlace estático, posibilita que:
+
+li.Las aplicaciones no necesitan entornos de ejecución adicionales, como ocurre con Python, Java o C#. Van directamente a la CPU a través del <i>scheduler</i> del sistema.
+
+li.Toda la aplicación puede estar contenida en un solo archivo <c>.exe</c>. Se enlaza el mínimo código posible y no es necesario distribuir ninguna <c>.dll</c> adicional.
+
+li.Las aplicaciones ocupan muy poco espacio en disco, ya que todas sus dependencias se encuentran presentes de forma natural en los sistemas donde se ejecutan.
+
+li.El rendimiento es máximo, ya que están compiladas en código máquina nativo, utilizando el mayor nivel de optimización que soporta cada CPU.
+
+li.Se pueden editar, compilar y ejecutar en plataformas obsoletas a día de hoy como un Pentium III con Visual Studio 2005 y WindowsXP.
+
+bq.En NAppGUI probamos nuestras aplicaciones y librerías en procesadores Pentium III. No con propósitos comerciales, sino técnicos. Es toda una garantía que un software se ejecute de forma fluida en una máquinas de hace 20 años.
+
+li.Con NAppGUI podemos moverlas de Windows a macOS o Linux, sin tocar una sola línea de código fuente. Ver <lp>win_mac_linux</lp>.
+
+img(c_thug_life.svg,260,.4).
+El lenguaje C es el puto amo.
+
+p.Tres paquetes dentro del SDK actuarán como <i>wrappers</i> tecnológicos <r>technologies</r>, ocultando los detalles específicos de cada plataforma bajo una interfaz común, sin que esto suponga una sobrecarga para el programa.
+
+img(technologies.svg,480,.60).Diferentes tecnologías en la base de NAppGUI. En <lp>sdk</lp> tienes el esquema completo.
+Tecnologías de base con las que enlaza el SDK en cada sistema operativo.
+
+li.<lp>osbs</lp>: <i>Operating System Basic Services</i>. API sobre archivos y directorios, procesos, hebras, memoria, etc.
+
+li.<lp>draw2d</lp>: API sobre dibujo vectorial 2d, imágenes y fuentes tipográficas.
+
+li.<lp>gui</lp>: API sobre interfaces gráficas: Ventanas, controles y menús.
+
+li.<b>Llamadas al sistema Unix</b>: En sistemas tipo Unix (Linux, macOS) es la forma en que un programa se comunica con el núcleo para realizar alguna tarea relacionada con archivos, procesos, memoria, red o hardware en general.
+
+li.<b>API de Windows</b>: Es el API de más bajo nivel proporcionado por Microsoft para la programación bajo Windows. Es muy amplio e integra diferentes aspectos del desarrollo:
+
+lili.kernel32.dll: El equivalente a las llamadas Unix (archivos, procesos, memoria, etc).
+
+lili.ws2_32.dll: Proporciona funciones de red TCP/IP (Las llamadas Unix incluyen el soporte TCP/IP).
+
+lili.user32.dll, comctl32.dll, comdlg32.dll, uxtheme.dll: Implementa controles estándar para interfaces gráficas de usuario (etiquetas, cajas de edición, combos, barras de progreso, diálogos comunes, etc.).
+
+li.<b>Cocoa</b>: API de programación orientado a objetos de los sistemas Mac OSX (ahora macOS). Está escrito en Objective-C, por lo tanto, no es accesible directamente desde C "puro". Cocoa se basa en OpenStep, el API de NeXTSTEP, el sistema operativo creado por Steve Jobs cuando fue despedido de Apple. En 1996, Apple compra NeXT y recupera a Jobs, que utiliza su tecnología como base para el nuevo Macintosh. Muchas clases en Cocoa aún conservan el prefijo NS como herencia NeXTSTEP. Aunque hay un API basado en C de nivel inferior llamado Carbon, este se encuentra discontinuado desde Mac OSX 10.4 Tiger. No tiene acceso a todas las funcionalidades del sistema ni es compatible con las aplicaciones de 64 bits. Por tanto, Cocoa es el API actual de más bajo nivel para los sistemas de Apple.
+
+li.<b>Gtk+</b>: Acrónimo de <b>G</b>IMP <b>T</b>ool<b>K </b>it. Es una librería de alto nivel para crear interfaces gráficas con multitud de objetos predefinidos (llamados <i>widgets</i>). Es una de las más extendidas en sistemas GNU/Linux, pero en realidad es multiplataforma con versiones para Windows y macOS. Entornos de escritorio como Gnome, Xfce o aplicaciones como GIMP se basan en GTK.
+
+li.<b>GDI+</b>: Es la evolución de GDI <i>(Graphics Device Interface)</i>, un API de dibujo vectorial 2d desarrollado por Microsoft para la primera versión de Windows de 16 bits. GDI+ se introdujo con WindowsXP como un conjunto de clases C++ y está encapsulado en la plataforma .NET a través del espacio de nombres <c>System.Drawing</c>. También es accesible directamente desde C a través del <i>GDI+ Flat API</i>, pero Microsoft recomienda utilizarla a través de las clases de C++. Incorpora mejoras sustanciales con respecto a GDI, como coordenadas de punto flotante, transformaciones afines, antialias, sombreado con degradados y compatibilidad con formatos de imagen como JPG, PNG o GIF. El dibujo con máscaras y la incompatibilidad con PDF son los dos inconvenientes más notables en comparación con Quartz 2D y Cairo, sus "competidores" directos en otras plataformas.
+
+li.<b>Quartz 2D</b>: Es el nombre comercial de <i>Core Graphics</i>, la poderosa API de dibujo del macOS. Al igual que Cocoa, Core Graphics es una evolución de las bibliotecas gráficas de NeXTSTEP y llegó a Apple después de la adquisición de NeXT. Quarzt 2D se basa en los formatos Adobe PostScript y PDF, incorporando canal alfa y antialias. Los Mac clásicos (pre-NeXT) utilizaban la biblioteca <i>QuickDraw</i>, desarrollada inicialmente por Bill Atkinson para el Apple Lisa. Los macs modernos aún incorporan QuickDraw, pero Xcode ya no proporciona cabeceras, por lo que no se puede incorporar en nuevos productos. Core Graphics es un API basado en C y todas sus funciones comienzan con el prefijo <b>CG</b>.
+
+li.<b>Cairo</b>: Cairo es una librería de dibujo vectorial 2d basada en C. A diferencia de GDI+ o Quarzt 2D, es multiplataforma, se puede descargar de forma independiente e incorporarla en cualquier proyecto (bajo licencia LGPL). Desde su versión 3, GTK+ utiliza Cairo para todas las tareas de dibujado de widgets. GTK+2 también utilizaba Cairo para generar los documentos PDF para imprimir. NAppGUI usa Cairo para implementar el API <b>draw2d</b> en la plataforma GNU/Linux, ya que esta librería se encuentra de forma natural en todos los entornos de escritorio basados en GTK+: Gnome, Cinnamon, LXDE, Mate, Pantheon, Sugar o Xfce. Técnicamente, Cairo es bastante avanzada, equiparándose a Quartz 2D en términos de funcionalidad. Admite transformaciones afines, máscaras de imagen, curvas de bezier, procesamiento de texto y dibujo sobre superficies PDF y PostScript.
+
+li.<b>C stdlib</b>: C es un lenguaje pequeño y hermoso, pero no proporciona funciones de apoyo adicionales. Durante la década de 1970, el lenguaje C se hizo muy popular y los usuarios comenzaron a compartir ideas sobre cómo resolver tareas comunes y repetitivas. Con su estandarización en la década de los 80, algunas de estas ideas se convirtieron en la librería estándar de C, que proporciona un conjunto básico de funciones matemáticas, manipulación de cadenas, conversiones de tipo y entrada/salida. NAppGUI integra de una forma u otra gran parte de la librería estándar dentro <b>osbs</b>, por lo que evitamos su uso de forma directa en paquetes de nivel superior. Tampoco recomendamos su uso en aplicaciones finales. En la sección <lh>Librería estándar de C</lh> puedes encontrar una discusión al respecto.
+
+h2.Bajo y alto nivel
+
+p.Durante su diseño e implementación, NAppGUI ha tratado de mantener un balance equilibrado entre la programación de bajo y alto nivel. Los amantes del bajo nivel encontrarán una especie de <i>librería C extendida y multiplataforma</i> para acceder al sistema, los elementos de interfaz y los comandos de dibujo. No obstante, aún conservarán el poder para crear código optimizado y el acceso directo a la memoria. ¡Recuerda, estamos en C!
+
+p.Por otro lado, NAppGUI integra algunas soluciones de alto nivel como la gestión de recursos, la composición de interfaces, las traducciones automáticas o la vinculación de datos entre otras. NAppGUI también incorpora scripts CMake para la creación automatizada de proyectos en Visual Studio, Xcode o Eclipse/Make.
+
+p.Finalmente, son los desarrolladores los que deciden con qué librerías enlazar según las necesidades del proyecto y con el grado de automatización que deseen adoptar. Cada aplicación basada en NAppGUI realiza un enlace estático de todas sus dependencias, por lo que ni el ejecutable ni su distribución final tendrán rastro de código binario innecesario. De esta manera, produciremos ejecutables autocontenidos de tamaño reducido que no requerirán de instalador ni incluirán megabytes de dependencias en forma de .DLLs.

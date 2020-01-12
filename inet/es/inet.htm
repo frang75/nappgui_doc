@@ -1,0 +1,22 @@
+
+h1.INet
+
+p.La librería <b>INet</b> implementa protocolos generales de Internet. Si bien los <lp>bsocket</lp> nos permiten abrir un canal de comunicación entre dos máquinas remotas, es necesario definir un formato para los mensajes que intercambiarán ambos interlocutores, con el fin de que la comunicación se lleve a cabo de manera satisfactoria. 
+
+img(inet_depends.svg,300,.4).Dependencias de <i>INet</i>. Ver <lp>sdk</lp>.
+Árbol de dependencias de la librería inet.
+
+enum(ierror_t).Códigos de error de las conexiones de red.
+enumv(ekINONET).No hay conexión a Internet en el dispositivo.
+enumv(ekINOHOST).No se puede conectar con el servidor remoto.
+enumv(ekITIMEOUT).Se ha excedido el tiempo máximo de espera por la conexión.
+enumv(ekISTREAM).Error en el canal E/S al leer o escribir.
+enumv(ekISERVER).Error en el formato de respuesta del servidor.
+enumv(ekINOIMPL).Funcionalidad no implementada.
+enumv(ekIUNDEF).Error indeterminado.
+enumv(ekIOK).No hay error.
+
+struct(Http).Gestiona una conexión HTTP iniciada desde el proceso cliente.
+
+struct(JsonOpts).Opciones al procesar un script JSON.
+

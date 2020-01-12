@@ -1,0 +1,122 @@
+langrev.
+h1.Edit
+
+p.<b>EditBox</b> are small text boxes with editing capabilities. Like the <lt>Label</lt> they are of uniform format: The typeface and colors will affect the entire text <r>edits</r>. They are usually used to edit fields in forms, normally restricted to a single line, although they can also be extended to several of them. To edit texts with multiple attributes use <lt>TextView</lt>. In <lh>Hello Edit and UpDown!</lh> you have an example of use.
+
+li.Use <lf>edit_create</lf>to create an edit box.
+
+li.Use <lf>edit_multiline</lf> to create a multi-line editing box.
+
+img(edits.png,0,.4).Editing boxes in Windows, macOS and Linux.
+Window where several edit boxes appear, as a form.
+
+h2.Filter texts
+
+p.Depending on the value we are editing, it may be necessary to validate the text entered. We can do this at the end of editing or while we are writing. For the first case we will use the event <lf>edit_OnChange</lf> which will call the handler when the control has lost focus on the keyboard <r>text_change</r>. If we want to implement more elaborate filters, that correct the text while writing we will use the event <lf>edit_OnFilter</lf>. For example in <r>tfilter</r> we have a simple filter that only allows numeric characters <r>text_filter</r>.
+
+img(text_change.svg,420,.5).The <i>OnChange</i> event is called when the control loses focus.
+Shows the change of keyboard focus between two edit boxes.
+
+code(cpp,tfilter).Filter that only allows numeric characters.
+static void OnFilter(void *noused, Event *e)
+{
+    const EvText *params = event_params(e, EvText);
+    EvTextFilter *result = event_result(e, EvTextFilter);
+    uint32_t i = 0, j = 0;
+    while (params->text[i] != '\0')
+    {
+        if (params->text[i] >= '0' && params->text[i] <= '9')
+        {
+            result->text[j] = params->text[i];
+            j += 1;
+        }
+
+        i += 1;
+    }
+
+    result->text[j] = '\0';
+    result->apply = TRUE;
+}
+...
+edit_OnFilter(edit1, listener(NULL, i_OnFilter, void));
+code.
+
+img(text_filter.svg,360,.45).The <i>OnFilter</i> event is called after each key press.
+Show the event after pressing a key in an edit box.
+
+func(edit_create).Create a text edit control.
+fret(Edit*).The edit.
+
+func(edit_multiline).Create a text editing control that allows multiple lines.
+fret(Edit*).The edit.
+
+func(edit_OnFilter).Set a function to filter the text while editing.
+fpar(Edit*,edit).The edit.
+fpar(Listener*,listener).<i>Callback</i> function to be called after each key press. In <lt>EvTextFilter</lt> from <lf>event_result</lf> filtered text will be returned.
+fnote.See <lh>Filter texts</lh> and <lh>GUI Events</lh>.
+
+func(edit_OnChange).Set a function to detect when the text has changed.
+fpar(Edit*,edit).The edit.
+fpar(Listener*,listener).<i>Callback</i> function to be called when the control loses focus on the keyboard, indicating the end of the edition.
+fnote.See <lh>GUI Events</lh>.
+
+func(edit_text).Set the edit control text.
+fpar(Edit*,edit).The edit.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(edit_font).Set the font of the edit control.
+fpar(Edit*,edit).The edit.
+fpar(const Font*,font).Font.
+
+func(edit_align).Set text alignment.
+fpar(Edit*,edit).The edit.
+fpar(const align_t,align).Alignment.
+
+func(edit_passmode).Activate the password mode, which will hide the typed characters.
+fpar(Edit*,edit).The edit.
+fpar(const bool_t,passmode).Enable or disable password mode.
+
+func(edit_editable).Enable or disable editing in the control.
+fpar(Edit*,edit).The edit.
+fpar(const bool_t,is_editable).<c>TRUE</c>will allow to edit the text (by default).
+
+func(edit_tooltip).Assigns a tooltip to the edit control.
+fpar(Edit*,edit).The edit.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(edit_color).Set the text color.
+fpar(Edit*,edit).The edit.
+fpar(const color_t,color).Text color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(edit_color_focus).Sets the color of the text, when the control has the keyboard focus.
+fpar(Edit*,edit).The edit.
+fpar(const color_t,color).Text color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(edit_bgcolor).Set the background color.
+fpar(Edit*,edit).The edit.
+fpar(const color_t,color).Background color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(edit_bgcolor_focus).Sets the background color, when the control has keyboard focus.
+fpar(Edit*,edit).The edit.
+fpar(const color_t,color).Background color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(edit_phtext).Set an explanatory text for when the control is blank (placeholder).
+fpar(Edit*,edit).The edit.
+fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+
+func(edit_phcolor).Set the color of the placeholder text.
+fpar(Edit*,edit).The edit.
+fpar(const color_t,color).Text color.
+fnote.RGB values may not be fully portable. See <lp>color</lp>.
+
+func(edit_phstyle).Set the font style for the placeholder.
+fpar(Edit*,edit).The edit.
+fpar(const uint32_t,fstyle).Combination of values of <lt>fstyle_t</lt>.
+
+func(edit_get_text).Get control text.
+fret(const char_t*).UTF8 C-string terminated in null character <c>'\0'</c>.
+fpar(const Edit*,edit).The edit.

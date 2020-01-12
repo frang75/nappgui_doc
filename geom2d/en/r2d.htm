@@ -1,0 +1,22 @@
+langrev.
+h1.2D Rectangles
+
+p.A rectangle (or <i>frame</i>) <r>rectangle2d</r> is used to locate elements in user interfaces or other 2D systems through a point of origin <lt>V2D</lt> and a size <lt>S2D</lt>.
+
+img(rectangle2d.svg,520,.65).Positioning elements using rectangles.
+Drawing a plan several rectangular elements are located, as a user interface.
+
+func(R2D,).Create a rectangle from its components.
+fret(R2D).The rectangle.
+fpar(const real, x).Origin x coordinate.
+fpar(const real, y).Coordinate and origin.
+fpar(const real, width).Width.
+fpar(const real, height).Height.
+
+func(R2D,contains).Check if a point is inside the rectangle.
+fret(bool_t).<c>TRUE</c> if the point is inside.
+fpar(const R2D*, r2d).Rectangle.
+fpar(const real, x).X coordinate of the point.
+fpar(const real, y).Coordinate and point.
+
+const(R2D,ZERO).Value <c>[0,0,0,0]</c>.

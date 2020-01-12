@@ -1,0 +1,252 @@
+langrev.
+h1.Data binding
+
+desc.Data Binding, will allow synchronizing the internal program structures with the user interface or with input/output channels, saving a lot of intermediate programming code.
+
+ep.<i>Data Binding</i> is a technique that allows us to register the program structures or classes in order to automate certain tasks, such as synchronizing the data model with the user interface.
+
+p.In a C/C++ application the data model is represented by <c>struct</c> or <c>class</c> types that allow to create objects and access their content in memory <r>strdata</r>. 
+
+code(cpp,strdata).Simple data model based on <c>struct</c>.
+typedef enum _type_t
+{
+    ekCPU,
+    ekGPU,
+    ekHDD,
+    ekSCD
+} type_t;
+
+typedef struct _product_t
+{
+    type_t type;
+    String *code;
+    String *description;
+    Image *image64;
+    real32_t price;
+} Product;
+code.
+
+p.As a previous step, when starting the application, we can register the fields of the different structures using the command <lf>dbind</lf> <r>dbindreg</r>. It is only necessary to perform this process once. In this way the application will create internal tables with the description of each data model structure <r>dbind</r> and will be ready to automate certain tasks when working with objects of those classes.
+
+li.Use <lf>dbind</lf> to register the fields of a structure.
+
+li.Use <lf>dbind_enum</lf> to register the different values of enum types.
+
+code(cpp,dbindreg).Registering the data model of <r>strdata</r>.
+dbind_enum(type_t, ekCPU);
+dbind_enum(type_t, ekGPU);
+dbind_enum(type_t, ekHDD);
+dbind_enum(type_t, ekSCD);
+dbind(Product, type_t, type);
+dbind(Product, String*, code);
+dbind(Product, String*, description);
+dbind(Product, Image*, image64);
+dbind(Product, real32_t, price);
+code. 
+
+img(dbind.svg,520,.7).Internal tables created by <i>dbind</i> when registering the data model.
+Scheme showing a data structure and its equivalent table.
+
+h2.MVVM synchronization with GUI
+
+p.One of the usual uses of the <i>dbind</i> tables will be the synchronization of the data model with the user interface. Normally this task requires capturing the events of the controls to update the data and vice versa, refresh the contents of the controls each time the data changes. This task is tedious and requires a lot of additional code. To avoid this, when we create the view, we will link the different controls with the structure fields by <lf>cell_dbind</lf> <r>mvvmcode</r>. This paradigm is known as data binding or MVVM <i>(Model-View-ViewModel)</i> <r>mvvm</r> and will keep both parts synchronized automatically.
+
+code(cpp,mvvmcode).Binding GUI controls with data fields.
+Cell *cell0 = i_code_cell(layout);
+Cell *cell1 = i_desc_cell(layout);
+Cell *cell2 = i_type_cell(layout);
+Cell *cell3 = i_img_cell(layout);
+Cell *cell4 = i_price_cell(layout);
+cell_dbind(cell0, Product, String*, code);
+cell_dbind(cell1, Product, String*, description);
+cell_dbind(cell2, Product, type_t, type);
+cell_dbind(cell3, Product, Image*, image64);
+cell_dbind(cell4, Product, real32_t, price);
+layout_dbind(layout, Product);
+code.
+
+img(mvvm.svg,520,.7).Automatic synchronization of data and interface.
+Connections between a user interface and the data it manipulates.
+
+h2.JSON reading
+
+p.JSON scripting and translation can also be automated thanks to <i>dbind</i>. To illustrate its operation we have the following <l>http://serv.nappgui.com/dproducts.php''web service</l> which provides us with a list of <c>Product</c> type objects. In <lp>htjson</lp> you have the complete application.
+
+code(text).
+{
+    "code":0,
+    "size":80,
+    "data":[
+    {"id":0,
+    "code":"i7-8700K",
+    "description":"Intel BX80684I78700K 8th Gen Core i7-8700K Processor",
+    type":0,
+    "price":374.8899999999999863575794734060764312744140625,
+    "image":"cpu_00.jpg",
+    "image64":"\/9j\/4AAQSkZJRgABAQ....
+    },
+    ...
+}
+code.
+
+p.We register with <lf>dbind</lf> an additional structure with the script control fields <r>alljson</r>.
+
+code(cpp,alljson).JSON control fields.
+typedef struct _pjson_t
+{
+    int32_t code;
+    uint32_t size;
+    ArrPt(Product) *data;
+} PJson;
+
+dbind(PJson, int32_t, code);
+dbind(PJson, uint32_t, size);
+dbind(PJson, ArrPt(Product)*, data);
+code.
+
+p.In this way we can access the service and read the data with very few lines of code <r>jsonget</r>. <lf>json_read</lf> access the internal <i>dbind</i> tables to translate the JSON and create the objects <r>jsonparse</r>.
+
+code(cpp,jsonget).JSON data download and processing.
+Stream *stm = http_dget("serv.nappgui.com", 80, "/dproducts.php", &error);
+PJson *pjson = json_read(stm, PJson);
+stm_close(&stm);
+code.
+
+img(jsonparse.svg,520,.7).Data Binding in the analysis of JSON scripts.
+Connections between the fields of an object and a JSON script.
+
+h2.Serialization with DBind
+
+p.As we saw in <lh>Serialization</lh> and <lh>Unify serialization</lh> we need to define object reading and writing functions to send or receive them through streams. Fortunately, <i>dbind</i> knows the detailed composition of each registered object, so it's possible access the I/O without having to explicitly program these functions <r>regser</r> <r>dbindserial</r>.
+
+code(cpp,regser).Objects serialization with <i>dbind</i>.
+ArrPt(Product) *products = dbind_read(stream, ArrPt(Product));
+...
+dbind_write(stream, products, ArrPt(Product)*);
+code.
+
+img(dbindserial.svg,640,.8).Object reading/writing via <i>dbind</i>.
+Access to dbind tables to serialize objects.
+
+h2.Default constructor
+
+p.Thanks to <i>dbind</i> we can also create objects initialized with default values without creating specific constructors <r>condes</r>. They can also be destroyed guaranteeing the correct recursive release of the memory of all their fields.
+
+li.Use <lf>dbind_create</lf> to create an object registered in dbind <lh>Constructors</lh>.
+
+li.Use <lf>dbind_init</lf> to initialize an object.
+
+li.Use <lf>dbind_destroy</lf> to destroy a registered object <lh>Destructors</lh>.
+
+code(cpp,condes).Construction and destruction of registered objects.
+Product *pr1 = dbind_create(Product);
+Product *pr2 = arrst_append1(array, Product);
+dbind_init(pr2, Product);
+dbind_destroy(&pr1, Product);
+code.
+
+p.The default values when initializing object fields are <c>0</c> for numbers, <c>FALSE</c> for booleans, <c>""</c> for Strings and empty containers in the case of arrays or sets. If the object contains nested sub-objects, they will also be created/initialized recursively. These default values can be changed if necessary <r>defvalue</r>.
+
+li.Use <lf>dbind_default</lf> to set the default value.
+
+code(cpp,defvalue).Changing the default values.
+dbind_default(Product, type_t, type, ekHDD);
+dbind_default(Product, String*, code, "Empty-code");
+dbind_default(Product, real32_t, price, 5.f);
+dbind_default(Product, Image*, image64, gui_respack_image(NOIMAGE_PNG));
+code.
+
+h2.Numerical ranges
+
+p.It is possible to configure the numeric fields <c>uint32_t, int8_t, real64_t, etc</c> to limit the accepted values <r>range</r>. dbind will be responsible for validating the data every time it reads values from any data source (GUI, JSON, Streams, etc).
+
+li.Use <lf>dbind_range</lf> to set a maximum and minimum numerical values.
+
+li.Use <lf>dbind_precision</lf> to set the jump between two consecutive numeric values.
+
+li.Use <lf>dbind_increment</lf> to establish the increase produced by controls <lp>updown</lp>.
+
+li.Use <lf>dbind_suffix</lf> to set a suffix that will be added when converting numbers to text.
+
+code(cpp,range).Value range and accuracy of <c>price</c> value.
+dbind_default(Product, real32_t, price, 1);
+dbind_range(Product, real32_t, price, .50f, 1e6f);
+dbind_precision(Product, real32_t, price, .05f);
+dbind_increment(Product, real32_t, price, 5.f);
+dbind_suffix(Product, real32_t, price, "€");
+code.
+
+func(dbind).Adds a structure/class field to its internal table within dbind.
+fpar(,type).Type of structure or class.
+fpar(,mtype).Type of field to register.
+fpar(,name).Name of the field within the structure.
+fnote.Errors will be generated at compile time if the indicated field does not belong to the structure. The method also works for classes in C++.
+
+func(dbind_enum).Register an <c>enum</c> type value.
+fpar(,type).Enum type.
+fpar(,value).Value.
+
+func(dbind_create).Create an object of registered type, initializing its fields with the default values.
+fret(type*).Newly created object or <c>NULL</c> if <i>dbind</i> does not recognize the data type.
+fpar(,type).Object type.
+
+func(dbind_init).Initializes the fields of an object of a registered type with the default values.
+fpar(type*,obj).Object whose memory has been reserved, but not initialized.
+fpar(,type).Object type.
+
+func(dbind_remove).Destroys the memory reserved by the fields of an object of registered type, but does not destroy the object itself.
+fpar(type*,obj).Object.
+fpar(,type).Object type.
+
+func(dbind_destroy).Destroy an object of registered type. The memory allocated to the fields and sub-objects will also be released recursively.
+fpar(type**,obj).Object. Will be set to <c>NULL</c> after destruction.
+fpar(,type).Object type.
+
+func(dbind_destopt).Destructor optional. Like <lf>dbind_destroy</lf>, but accepting <c>NULL</c> values for the object.
+fpar(type**,obj).Object to destroy.
+fpar(,type).Object type.
+
+func(dbind_read).Creates an object of a registered type from the data read from a stream.
+fret(type*).Newly created object or <c>NULL</c> if there has been an error.
+fpar(Stream*,stm).Reading stream.
+fpar(,type).Object type to read.
+
+func(dbind_write).Write the content of an object of registered type in a write stream.
+fpar(Stream*,stm).Writing stream.
+fpar(const type*,data).Object to write.
+fpar(,type).Type of object to write.
+
+func(dbind_default).Set the default value of a field.
+fpar(,type).Type of structure or class.
+fpar(,mtype).Field type.
+fpar(,name).Name of the field within the structure.
+fpar(mtype,value).Default value as of now.
+
+func(dbind_range).Set the maximum and minimum value in numeric fields.
+fpar(,type).Type of structure or class.
+fpar(,mtype).Field type.
+fpar(,name).Name of the field within the structure.
+fpar(mtype,min).Minimum value.
+fpar(mtype,max).Maximum value.
+fnote.It will fail if used in non-numeric fields.
+
+func(dbind_precision).Set the jump between two consecutive numerical values.
+fpar(,type).Type of structure or class.
+fpar(,mtype).Field type.
+fpar(,name).Name of the field within the structure.
+fpar(mtype,prec).Accuracy (eg <c>.05f</c> in <c>real32_t</c> values).
+fnote.It will fail if used in non-numeric fields.
+
+func(dbind_increment).Sets the increment of a numerical value when clicking on a <lp>updown</lp> control.
+fpar(,type).Type of structure or class.
+fpar(,mtype).Field type.
+fpar(,name).Name of the field within the structure.
+fpar(mtype,incr).Increase.
+fnote.It will fail if used in non-numeric fields.
+
+func(dbind_suffix).Set a suffix that will be added to the numerical value when converted to text.
+fpar(,type).Type of structure or class.
+fpar(,mtype).Field type.
+fpar(,name).Name of the field within the structure.
+fpar(const char_t*,suffix).Suffix.
+fnote.It will fail if used in non-numeric fields.

@@ -1,0 +1,195 @@
+
+h1.Analizador léxico
+
+ep.El analizador léxico nos ayudará a identificar y etiquetar los diferentes campos que forman un texto.
+
+p.El analizador léxico <i>(lexical scanner)</i> nos ayudará a interpretar el contenido de archivos de texto. Si bien, los <lh>Text stream</lh> son capaces de leer caracteres, líneas o palabras delimitadas, estos se quedan cortos si nuestro cometido es procesar estructuras gramáticales algo más complicadas como el código fuente de cualquier lenguaje de programación. Aquí entraríamos en un proceso de traducción cuya primera fase es el propio escáner <r>source_translation</r>. Es el único que estará en contacto con el texto, leyendo caracteres uno a uno y agrupándolos en símbolos intermedios denominados <i>tokens</i>.
+
+img(source_translation.svg,640,.85).El análisis léxico es el primer paso a la hora de interpretar o traducir textos.
+Diferentes fases en la interpretación y traducción del lenguaje.
+
+p.NAppGUI incorpora un analizador léxico, muy sencillo de utilizar, integrado en el seno de la librería <lp>core</lp>. Reconoce los <i>tokens</i> propios del lenguaje C, que son comunes en infinidad de lenguajes y gramáticas <r>ctokens</r>. Está implementado como una máquina de estados finitos y permite cierta configuración activando diferentes opciones.
+
+code(cpp,ctokens).Lectura de los <i>tokens</i> de un archivo en C.
+lextoken_t token;
+Stream *stm = stm_from_file("source.c", NULL);
+lexscn_start(lex, stm);
+while ((token = lexscn_token(lex)) != ekTEOF)
+{
+    switch (token)
+    {
+        ...
+    }
+}
+code.
+
+li.Utiliza <lf>lexscn_create</lf> para crear el escáner.
+
+li.Utiliza <lf>lexscn_start</lf> para iniciar el escáner.
+
+li.Utiliza <lf>lexscn_token</lf> para leer el siguiente token de un stream de texto.
+
+h2.Tokens
+
+p.Un <i>token</i> es un grupo de uno o varios caracteres etiquetados como un símbolo gramatical. Etapas posteriores del procesado de gramáticas ya no trabajarán con caracteres, sino que lo harán directamente con estos símbolos. Por ejemplo, imagina que tenemos un pequeño lenguaje para procesar sumas <r>addlang</r>:
+
+code(text,addlang).Pequeño programa de sumas que debemos interpretar.
+a = 45 + 12
+b = 18 + 97
+result = a + b
+code.
+
+p.En primer lugar necesitamos identificar, dentro de este conjunto de caracteres, aquellos elementos relevantes para nuestro propósito. Un análisis léxico de este fichero lo tenemos en <r>analex</r> <r>lexscn</r>. Como vemos, ha identificado el texto <c>"45"</c> como un número, <c>"result"</c> como una variable y <c>"="</c> como el símbolo igual. En todos los casos, llamados <b>lexema</b> a la cadena de texto asociada con el <i>token</i>.
+
+code(cpp,analex).Análisis léxico de <r>addlang</r>.
+Token      Lexeme
+-----      ------
+var     -   'a'
+equal   -   '='
+number  -   '45'
+plus    -   '+'
+number  -   '12'
+var     -   'b'
+equal   -   '='
+number  -   '18'
+plus    -   '+'
+number  -   '97'
+var     -   'result'
+equal   -   '='
+var     -   'a'
+plus    -   '+'
+var     -   'b'
+code.
+
+img(lexscn.svg,480,.65).El analizador léxico fragmenta un texto en bloques etiquetados.
+Representación de los diferentes tokens que forman una sentencia.
+
+h3.Identificadores
+
+p.Un identificador es una "palabra" alfanumérica que debe comenzar por una letra o <c>'_'</c> y contiene números, letras o <c>'_'</c>. Se utiliza para nombrar variables, funciones, palabras reservadas, etc. No permiten espacios ni símbolos. <r>identf</r> <r>identifier_regex</r>.
+
+code(text,identf).Identificadores correctos e incorrectos.
+OK: while cos _reSult a56B _06_t aG h9 _12AcVb
+NO: 045 ?er "_5G _tg(
+code.
+
+img(identifier_regex.svg,400,.5).Autómata finito que reconoce un identificador.
+Autómata finito que reconoce un identificador en C.
+
+h3.Palabras clave
+
+p.Son identificadores que han sido reservados por la gramática y no pueden ser utilizados para otros fines como el nombrado de variables o funciones. Al ser de propósito general, el escáner no reconoce ningún tipo de palabra reservada por lenguajes de programación o formatos de archivo. Hay que etiquetarla expresamente tras leer el token <r>resword</r>.
+
+code(cpp,resword).Reconociendo la palabra clave <b>while</b>.
+while ((token = lexscn_token(lex)) != ekTEOF)
+{
+    if (token == ekTIDENT && str_equ_c(lexscn_lexeme(lex, NULL), "while"))
+        token = ekTRESERVED;
+    ...
+}
+code.
+
+h3.Cadenas
+
+p.Una cadena de texto es una serie de caracteres Unicode puestos entre comillas <c>(")</c> <r>string_regex</r>. <c>LexScn</c> reconoce las secuencias de escape de C para representar códigos no imprimibles o caracteres no disponibles en el teclado <r>escseq</r>.
+
+li.Utiliza <lf>lexscn_escapes</lf> para hacer efectivas las secuencias de escape al leer cadenas.
+
+code(text,escseq).Secuencias de escape aceptadas en <c>ekTSTRING</c>.
+\a      07  Alert (Beep, Bell) (added in C89)
+\b      08  Backspace
+\f      0C  Formfeed Page Break
+\n      0A  Newline (Line Feed)
+\r      0D  Carriage Return
+\t      09  Horizontal Tab
+\v      0B  Vertical Tab
+\\      5C  Backslash
+\'      27  Single quotation mark
+\"      22  Double quotation mark
+\?      3F  Question mark (used to avoid trigraphs)
+\nnn        The byte whose numerical value is given by nnn interpreted as an octal number
+\xhh        The byte whose numerical value is given by hh interpreted as a hexadecimal number
+\Uhhhhhhhh  Unicode code point where h is a hexadecimal digit
+\uhhhh      Unicode code point below 10000 hexadecimal
+code.
+
+img(string_regex.svg,420,.5).Autómata finito que reconoce una cadena de texto.
+Autómata finito que reconoce una cadena de texto.
+
+h3.Números
+
+p.En el caso de <i>tokens</i> numéricos la cosa se complica un poco debido a las diferentes bases numéricas y a la representación exponencial de números reales <r>number_regex</r>. La resumimos brevemente, aunque es común a muchos lenguajes de programación (C incluido).
+
+li.Si el número empieza por <c>0</c> será considerado octal (base 8), por lo tanto, las cifras siguientes están limitadas a <c>0-7</c>, pe: <c>043, 001, 0777</c>.
+
+li.Si el número empieza por <c>0x</c> se considerará hexadecimal (base 16) con cifras <c>0-9 a-f A-F</c>, pe: <c>0x4F, 0XAA5, 0x01EAC</c>.
+
+li.En el momento que aparezca un punto decimal <c>'.'</c> se considerará número real. El punto inicial es válido, pe: <c>.56</c>.
+
+li.Un número entero o real permite notación exponencial con el carácter <c>'e' ('E')</c>, pe: <c>12.4e2, .56e3, 1e4</c>.
+
+img(number_regex.svg,560,.7).Autómata finito que reconoce números.
+Autómata finito que reconoce números en diferentes bases.
+
+h3.Símbolos
+
+p.Los símbolos son <i>tokens</i> de un solo carácter que representan casi la totalidad de signos de puntuación US-ASCII y que suelen utilizarse como operadores, separadores o limitadores dentro de las gramáticas <r>symbolf</r> <r>symbol_regex</r>.
+
+code(text,symbolf).Símbolos reconocidos por <c>LexScn</c> como <i>tokens</i>.
+< > , . ; : ( ) [ ] { } + - * = $ % # & ' " ^ ! ? | / \ @ 
+code.
+
+img(symbol_regex.svg,400,.45).Autómata finito que reconoce algunos símbolos.
+Autómata finito que reconoce los símbolos más, menos, asterisco e igual.
+
+func(lexscn_create).Crea un analizador léxico.
+fret(LexScn*).El analizador léxico recién creado.
+
+func(lexscn_destroy).Destruye un analizador léxico.
+fpar(LexScn**,lex).Analizador léxico. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(lexscn_spaces).Opción de espacios en blanco.
+fpar(LexScn*,lex).Analizador léxico.
+fpar(const bool_t,activate).<c>TRUE</c> el analizador devolverá el token <lt>ekTSPACE</lt> al encontrar secuencias de espacios en blanco. <c>FALSE</c> ignorará los espacios en blanco. Por defecto <c>FALSE</c>.
+
+func(lexscn_newlines).Opción de nueva línea.
+fpar(LexScn*,lex).Analizador léxico.
+fpar(const bool_t,activate).<c>TRUE</c> el analizador devolverá el token <lt>ekTEOL</lt> al encontrar carácteres nueva línea. <c>FALSE</c> ignorará los saltos de línea. Por defecto <c>FALSE</c>.
+fnote.Solo tiene efecto si <lf>lexscn_spaces</lf> es <c>FALSE</c>.
+
+func(lexscn_escapes).Opción de secuencias de escape.
+fpar(LexScn*,lex).Analizador léxico.
+fpar(const bool_t,activate).<c>TRUE</c> se procesarán las secuencias de escape al leer tokens <lt>ekTSTRING</lt>. Por ejemplo, la secuencia <c>"\n"</c> se transformará en el carácter <c>0x0A (10)</c>. <c>FALSE</c> ignorará las secuencias de escape, leyendo las cadenas de texto de forma literal. Por defecto <c>FALSE</c>.
+
+func(lexscn_comments).Opción de comentarios.
+fpar(LexScn*,lex).Analizador léxico.
+fpar(const bool_t,activate).<c>TRUE</c> el analizador devolverá un token <lt>ekTMLCOM</lt> cada vez que encuentre comentarios de C <c>/* Comment */</c> y <lt>ekTSLCOM</lt> para comentarios C++ <c>// Comment</c>. <c>FALSE</c> ignorará los comentarios. Por defecto <c>FALSE</c>.
+
+func(lexscn_start).Inicia el analizador. Pone a cero el contador de líneas y columnas.
+fpar(LexScn*,lex).Analizador léxico.
+fpar(Stream*,stm).<lh>Text stream</lh> de lectura con el origen de datos.
+
+func(lexscn_token).Obtiene el siguiente token a partir del <lh>Text stream</lh> asignado en <lf>lexscn_start</lf>.
+fret(lextoken_t).El tipo de token obtenido.
+fpar(LexScn*,lex).Analizador léxico.
+
+func(lexscn_row).Obtiene el número de fila del último token leído.
+fret(uint32_t).El número de fila.
+fpar(const LexScn*,lex).Analizador léxico.
+
+func(lexscn_col).Obtiene el número de columna del primer carácter del último token leído.
+fret(uint32_t).El número de columna.
+fpar(const LexScn*,lex).Analizador léxico.
+
+func(lexscn_lexeme).Obtiene el lexema del último token leído. El lexema es la cadena de texto asociada al token.
+fret(const char_t*).El lexema. Está almacenado en un buffer temporal y se perderá al leer el siguiente token. Si lo necesitas, haz una copia con <lf>str_c</lf>.
+fpar(const LexScn*,lex).Analizador léxico.
+fpar(uint32_t*,size).Tamaño en bytes del lexema, sin contar el carácter nulo <c>'\0'</c>. Es equivalente a hacer un <lf>str_len_c</lf> del lexema.
+
+func(lexscn_string).Obtiene un texto descriptivo a partir de un tipo de token. Es útil para tareas de depuración.
+fret(const char_t*).Texto descriptivo.
+fpar(const lextoken_t,token).Token.
+fcode.
+const char_t *desc = lexscn_string(ekTEOL);
+// desc = "newline";
+fcode.

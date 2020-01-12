@@ -1,0 +1,26 @@
+langrev.
+h1.Bode
+
+p.In this project we approach the construction of an interactive user interface for <b>Bode Plots</b>, a tool widely used in Control Engineering <r>bode_win</r>. The calculus module has been written in C language by <l>mailto:francisco.gil@ua.es''Javier Gil Chica</l>, Phd of Physics Department of the University of Alicante. The complete source code is available in folder <c>/src/demo/bode</c> of the SDK distribution.
+
+img(bode_win.png,0,.65).Windows version.
+Capture of the Windows version of Bode.
+
+img(bode_macos.png,0,.65).macOS version.
+Capture of the macOS version of Bode.
+
+img(bode_linux.png,0,.65).Ubuntu version.
+Capture of the Ubuntu version of Bode.
+
+img(bode_raspberry.png,0,.65).Raspberry version.
+Capture of the Raspbian version of Bode.
+
+p.The main window has been divided vertically into two parts, using a <c>layout(2,1)</c> <r>bode_layout</r>. On the left side we have the parameters <c>P, Q, T, R</c> and some buttons. Sublayouts have been used <c>i_coeffs(4,9)</c> and <c>i_ranges(3,3)</c> to group controls. In the right area are two <lt>View</lt> drawing controls for graphics and other sublayout <c>i_sliders(3,3)</c> with the parameters <c>I, P, D</c>.
+
+p.The horizontal resizing is done entirely on the right cell (graphs and sliders), keeping the parameter area a constant horizontal size. During the vertical resizing the graphs will grow with a proportion of 50% each. For the left part, an empty cell has been reserved, which will expand horizontally, aligning the button <c>[More Info]</c> to the bottom edge of the window.
+
+img(bode_layout.svg,520,.65).Bode user interface distribution.
+Scheme showing the division of space in the Bode interface window.
+
+codefile(demo/bode/bdview.c).
+

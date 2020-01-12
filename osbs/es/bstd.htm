@@ -1,0 +1,82 @@
+
+
+h1.E/S Estándar
+
+ep.Todos los procesos disponen de canales de entrada y salida por defecto, sin necesidad de crearlos explícitamente.
+
+p.Cada proceso en ejecución tiene tres canales de comunicación estándar:
+
+li.<b>stdin:</b> entrada de datos. El proceso leerá datos que le llegan desde el exterior.
+
+li.<b>stdout:</b> salida de datos. El proceso escribirá resultados en este canal.
+
+li.<b>stderr:</b> salida de errores. El proceso escribirá en este canal información referente a errores.
+
+p.Es como tener tres archivos perpetuamente abiertos donde el programa puede leer y escribir sin límites. Cuando ejecutamos un proceso desde la Consola o el Terminal, <c>stdin</c> se conecta automáticamente al teclado y <c>stdout</c>/<c>stderr</c> a la pantalla <r>terminal_parent</r>. No obstante, estos canales estándar se pueden redirigir para usar archivos como fuentes de entrada o destinos de salida:
+
+code(text).
+dir > out.txt
+ls > out.txt
+sort < out.txt
+code.
+
+img(terminal_parent.svg,340,.4).Ejecutando un proceso desde el Terminal.
+Esquema que muestra los canales entrada/salida estándar de un proceso.
+
+p.En este fragmento de código, el resultado del comando <c>dir</c> (<c>ls</c> en Unix) se ha redirigido al archivo <c>out.txt</c>, por lo que no veremos nada por pantalla. Por otro lado, el comando <c>sort</c> no espera la entrada del usuario por el teclado. Simplemente la toma del archivo <c>out.txt</c>, ordenando sus líneas. Por tanto, siempre que escribamos aplicaciones en línea de comandos, deberemos utilizar convenientemente estos canales estándar sin hacer presunciones desde donde viene o hacia donde va la información tratada por la aplicación.
+
+func(bstd_sprintf).Escribe una cadena con formato del <c>printf</c> en un búfer de memoria.
+fret(uint32_t).El número de bytes escritos, sin incluir el carácter nulo <c>'\0'</c>.
+fpar(char_t*,str).Puntero al búfer donde será escrito el resultado. Terminará en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,size).Tamaño de <c>str</c> en bytes.
+fpar(const char_t*,format).Cadena con el formato printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+fnote.Es una función segura y no escribirá más de <c>size</c> bytes. Para obtener el tamaño necesario de <c>str</c>, llamar a esta función con <c>str=NULL</c> y <c>size=0</c>.
+
+func(bstd_vsprintf).Igual que <c>bstd_sprintf</c> pero con la lista de argumentos ya resuelta.
+fret(uint32_t).El número de bytes escritos, sin incluir el carácter nulo <c>'\0'</c>.
+fpar(char_t*,str).Puntero al búfer donde será escrito el resultado. Terminará en carácter nulo <c>'\0'</c>.
+fpar(const uint32_t,size).Tamaño de <c>str</c> en bytes.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(va_list,args).Argumentos.
+fnote.Es una función segura y no escribirá más de <c>size</c> bytes.
+
+func(bstd_printf).Escribe una cadena con formato en la salida estándar <c>(stdout)</c>. Es equivalente a la función <c>printf</c> de la librería estándar.
+fret(uint32_t).El número de bytes escritos en <c>stdout</c>.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+
+func(bstd_eprintf).Escribe una cadena con formato en la salida de error <c>(stderr)</c>.
+fret(uint32_t).El número de bytes escritos en <c>stderr</c>.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+
+func(bstd_writef).Escribe una cadena C UTF 8 en la salida estándar <c>(stdout)</c>.
+fret(uint32_t).El número de bytes escritos en <c>stdout</c>.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(bstd_ewritef).Escribe una cadena C UTF 8 en la salida de error <c>(stderr)</c>.
+fret(uint32_t).El número de bytes escritos en <c>stderr</c>.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(bstd_read).Lee datos desde la entrada estándar <c>stdin</c>.
+fret(bool_t).<c>TRUE</c> si se han leído datos. <c>FALSE</c> si ha ocurrido algún error.
+fpar(byte_t*,data).Búfer donde se escribirán los datos leídos.
+fpar(const uint32_t,size).El número de bytes máximos a leer (tamaño del búfer).
+fpar(uint32_t*,rsize).Recibe el número de bytes leídos realmente. Puede ser <c>NULL</c>.
+fnote.<lh>Standard stream</lh> implementa funciones de alto nivel para lectura/escritura en canales estándar.
+
+func(bstd_write).Escribe datos en la salida estándar <c>stdout</c>.
+fret(bool_t).<c>TRUE</c> si se han escrito datos. <c>FALSE</c> si ha ocurrido algún error.
+fpar(const byte_t*,data).Búfer que contiene los datos a escribir.
+fpar(const uint32_t,size).El número de bytes a escribir.
+fpar(uint32_t*,wsize).Recibe el número de bytes escritos realmente. Puede ser <c>NULL</c>.
+fnote.<lh>Standard stream</lh> implementa funciones de alto nivel para lectura/escritura en canales estándar.
+
+func(bstd_ewrite).Escribe datos en la salida de error <c>stderr</c>.
+fret(bool_t).<c>TRUE</c> si se han escrito datos. <c>FALSE</c> si ha ocurrido algún error.
+fpar(const byte_t*,data).Búfer que contiene los datos a escribir.
+fpar(const uint32_t,size).El número de bytes a escribir.
+fpar(uint32_t*,wsize).Recibe el número de bytes escritos realmente. Puede ser <c>NULL</c>.
+fnote.<lh>Standard stream</lh> implementa funciones de alto nivel para lectura/escritura en canales estándar.
+

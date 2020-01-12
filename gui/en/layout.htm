@@ -1,0 +1,552 @@
+langrev.
+h1.Layout
+
+p.A <b>Layout</b> is a virtual and transparent grid always linked with a <lt>Panel</lt> which serves to locate the different interface elements <r>simple_layout</r>. Its inner cells have the ability to be automatically sized according to their content, which results in great portability because it is not necessary to indicate specific coordinates or sizes for the controls. To illustrate the concept, we will slightly simplify the code of <lh>Hello Edit and UpDown!</lh> <r>basiclayout</r>, whose result we can see in <r>basic_layout</r>.
+
+li.Use <lf>layout_create</lf> to create a new layout.
+
+li.Use <lf>layout_label</lf> and similars to place controls in the different cells.
+
+img(simple_layout.svg,420,.5).A layout is used to locate controls in the panel area.
+Representation of different interface controls located in rows and columns.
+
+code(cpp,basiclayout).Layout with two columns and five rows.
+Layout *layout = layout_create(2, 5);
+Label *label1 = label_create();
+Label *label2 = label_create();
+Label *label3 = label_create();
+Label *label4 = label_create();
+Label *label5 = label_create();
+Edit *edit1 = edit_create();
+Edit *edit2 = edit_create();
+Edit *edit3 = edit_create();
+Edit *edit4 = edit_create();
+Edit *edit5 = edit_create();
+label_text(label1, "User Name:");
+label_text(label2, "Password:");
+label_text(label3, "Address:");
+label_text(label4, "City:");
+label_text(label5, "Phone:");
+edit_text(edit1, "Amanda Callister");
+edit_text(edit2, "aQwe56nhjJk");
+edit_text(edit3, "35, Tuam Road");
+edit_text(edit4, "Galway - Ireland");
+edit_text(edit5, "+35 654 333 000");
+edit_passmode(edit2, TRUE);
+layout_label(layout, label1, 0, 0);
+layout_label(layout, label2, 0, 1);
+layout_label(layout, label3, 0, 2);
+layout_label(layout, label4, 0, 3);
+layout_label(layout, label5, 0, 4);
+layout_edit(layout, edit1, 1, 0);
+layout_edit(layout, edit2, 1, 1);
+layout_edit(layout, edit3, 1, 2);
+layout_edit(layout, edit4, 1, 3);
+layout_edit(layout, edit5, 1, 4);
+code.
+
+img(basic_layout.png,0,.3).Result of <r>basiclayout</r>.
+Image of a simple form with five tags and five editbox.
+
+h2.Natural sizing
+
+p.The result of <r>basic_layout</r>, although it is not very aesthetic, it is what we call <b>natural sizing</b> which is the default layout applied depending on the content of the cells. In <r>dimnat</r> we have the default measurements of each control. The column width is fixed to that of the widest element and the height of the rows is calculated in the same way. The final size of the layout will be the sum of the measures of both columns and rows.
+
+table(dimnat).Natural dimensioning of controls.
+row.
+p.Control
+p.Width
+p.Height
+row.
+p.<lt>Label</lt>
+p.Adjusted to the text.
+p.Adjusted to the text considering <c>'\n'</c>.
+row.
+p.<lt>Button</lt> (push)
+p.Adjusted to text + margin.
+p.According to the theme of the OS.
+row.
+p.<lt>Button</lt> (check/radio)
+p.Adjusted to text + icon.
+p.Adjusted to the icon.
+row.
+p.<lt>Button</lt> (flat)
+p.Adjusted to the icon + margin.
+p.Adjusted to the icon + margin.
+row.
+p.<lt>PopUp</lt>
+p.Adjusted to the longest text.
+p.According to the theme of the OS.
+row.
+p.<lt>Edit</lt>
+p.100 Units (px).
+p.Adjusted to text + margin.
+row.
+p.<lt>Combo</lt>
+p.100 Units (px).
+p.According to the theme of the OS.
+row.
+p.<lt>UpDown</lt>
+p.According to the theme of the OS.
+p.According to the theme of the OS.
+row.
+p.<lt>Slider</lt> (horizontal)
+p.100 Units (px).
+p.According to the theme of the OS.
+row.
+p.<lt>Slider</lt> (vertical)
+p.According to the theme of the OS.
+p.100 Units (px).
+row.
+p.<lt>Progress</lt>
+p.100 Units (px).
+p.According to the theme of the OS.
+row.
+p.<lt>View</lt>
+p.128 px or <lf>view_size</lf>.
+p.128 px or <lf>view_size</lf>.
+row.
+p.<lt>Panel</lt>
+p.Natural size.
+p.Natural size.
+table.
+
+p.The margins and constants applied to the controls are those necessary to comply with the <b>human guidelines</b> of each window manager. This means that a <i>PushButton</i> with the text <c>"Hello"</c> will not have the same dimensions in WindowsXP as in macOS Mavericks or Ubuntu 16.
+
+bq.Empty cells will be 0-sized and will not affect the composition.
+
+h2.Margins and format
+
+p.The natural sizing we have just seen adjusts the panel to the minimum size necessary to correctly house all the controls, but it is not always aesthetic. We can shape it by adding margins or forcing a given size for rows and columns <r>formatlayout</r> <r>format_layout</r>.
+
+li.Use <lf>layout_hsize</lf> to force the width of a column.
+
+li.Use <lf>layout_vsize</lf> to force the height of a row.
+
+li.Use <lf>layout_hmargin</lf> to establish an inter-column margin.
+
+li.Use <lf>layout_vmargin</lf> to establish an inter-row margin.
+
+li.Use <lf>layout_margin</lf> to set a margin at the edge of the layout.
+
+code(cpp,formatlayout).Applying format to <r>basiclayout</r>.
+layout_hsize(layout, 1, 235);
+layout_hmargin(layout, 0, 5);
+layout_vmargin(layout, 0, 5);
+layout_vmargin(layout, 1, 5);
+layout_vmargin(layout, 2, 5);
+layout_vmargin(layout, 3, 5);
+layout_margin(layout, 10);
+code.
+
+img(format_layout.png,0,.50).Result of <r>formatlayout</r>.
+View of a panel to which margins have been applied.
+
+h2.Alignment
+
+p.It is usual for the width of a control to be less than the width of the column that contains it, either because a fixed width has been forced or because there are wider elements in the same column. In these cases, we can indicate the horizontal or vertical alignment of the control with respect to the cell <r>column_align</r>. In <r>alindef</r> you have the default alignments.
+
+li.Use <lf>layout_halign</lf> to change the horizontal alignment of a cell.
+
+li.Use <lf>layout_valign</lf>to change the vertical alignment of a cell.
+
+img(column_align.svg,360,.5).Horizontal alignment.
+Controls aligned to left, right, center or justified.
+
+table(alindef).Default alignment of controls.
+row.
+p.Control
+p.Horizontal
+p.Vertical
+row.
+p.<lt>Label</lt>
+p.<lt>ekLEFT</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Button</lt> (push)
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Button</lt> (check/radio)
+p.<lt>ekLEFT</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Button</lt> (flat)
+p.<lt>ekLEFT</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>PopUp</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Edit</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekTOP</lt>
+row.
+p.<lt>Edit</lt> (multiline)
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Combo</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>UpDown</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Slider</lt> (horizontal)
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>Slider</lt> (vertical)
+p.<lt>ekCENTER</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Progress</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekCENTER</lt>
+row.
+p.<lt>View</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Panel</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
+p.<lt>Layout</lt> (sublayout)
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+table.
+
+h2.Sub-layouts
+
+p.Consider now the panel of <r>complex_layout</r>. It is not difficult to realize that this arrangement does not fit in any way in a rectangular grid, so it is time to use <b>sublayouts</b>. In addition to individual controls, a cell also supports another layout, so we can divide the original panel into as many parts as necessary until the desired layout is achieved. The main layout will size each sublayout recursively and integrate it into the final composition. In <lh>Hello Sublayout!</lh> you have the code that generates this example.
+
+li.Use <lf>layout_layout</lf> to assign a complete layout to a cell in another layout.
+
+img(complex_layout.png,0,.75).Complex panel composition.
+Window with different controls organized in blocks.
+
+p.In this case we have applied the philosophy of divide and conquer, to ensure that each part fits into an individual grid <r>sublayouts</r>. Each sublayout has been coded in an independent function to give greater consistency to the code, applying margins and format individually within each of them <r>subcode</r>. 
+
+img(sublayouts.svg,520,.75).Sublayouts needed to compose the <r>complex_layout</r> panel.
+Scheme showing the limits of each sub-layout.
+
+code(cpp,subcode).Sublayout integration (partial).
+static Layout *i_main_layout(void)
+{
+    Layout *layout1 = layout_create(1, 2);
+    Layout *layout2 = i_top_layout();
+    Layout *layout3 = i_bottom_layout();
+    layout_layout(layout1, layout2, 0, 0);
+    layout_layout(layout1, layout3, 0, 1);
+    layout_margin(layout1, 5);
+    layout_vmargin(layout1, 0, 5);
+    return layout1;
+}
+code.
+
+h2.Cell expansion
+
+p.On certain occasions, the size of a layout is forced by external conditions. This happens when we have a sublayout in a cell with <lt>ekJUSTIFY</lt> alignment (internal expansion) or when the user changes the size of a resizable window (external expansion). This will produce an "pixel excess" between the natural sizing and the actual cell size <r>layout_expand</r>. This situation is resolved by distributing the pixel surplus equally among all the sublayout columns, which in turn, will be recursively expanding until they reach an empty cell or an individual control. We can change this equitable distribution through these functions:
+
+li.Use <lf>layout_hexpand</lf> to expand a single cell and leave the rest with its default size.
+
+li.Use <lf>layout_hexpand2</lf> to expand two cells indicating the growth rate of each.
+
+li.Use <lf>layout_hexpand3</lf> to expand three cells.
+
+img(layout_expand.svg,520,.65).When the size of the sublayout is given by external conditions, the excess of pixels is equally distributed between the columns (horizontal expansion) and rows (vertical expansion).
+Behavior of a sublayout when its size expands to fit a cell.
+
+bq.The vertical expansion works exactly the same, distributing the excess space between the rows of the layout.
+
+func(layout_create).Create a new layout specifying the number of columns and rows.
+fret(Layout*).The layout.
+fpar(const uint32_t,ncols).The number of columns.
+fpar(const uint32_t,nrows).The number of rows.
+
+func(layout_cell).Get a layout cell.
+fret(Cell*).The cell.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_label).Insert a <lt>Label</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(Label*,label).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_button).Insert a <lt>Button</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(Button*,button).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_popup).Insert a <lt>PopUp</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(PopUp*,popup).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_edit).Insert an <lt>Edit</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(Edit*,edit).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_combo).Insert a <lt>Combo</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(Combo*,combo).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_updown).Insert an <lt>UpDown</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(UpDown*,updown).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_slider).Insert an <lt>Slider</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(Slider*,slider).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_progress).Insert a <lt>Progress</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(Progress*,progress).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_view).Insert <lt>View</lt> in a layout.
+fpar(Layout*,layout).The layout.
+fpar(View*,view).The view to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_textview).Insert a <lt>TextView</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(TextView*,view).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_imageview).Insert an <lt>ImageView</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(ImageView*,view).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_panel).Insert a <lt>Panel</lt> control in a layout.
+fpar(Layout*,layout).The layout.
+fpar(Panel*,panel).The control to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_layout).Insert a layout into a cell in another layout.
+fpar(Layout*,layout).The main layout.
+fpar(Layout*,sublayout).The layout to insert.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_label).Gets the <lt>Label</lt> of a cell.
+fret(Label*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_button).Gets the <lt>Button</lt> of a cell.
+fret(Button*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_popup).Gets the <lt>PopUp</lt> of a cell.
+fret(PopUp*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_edit).Gets the <lt>Edit</lt> of a cell.
+fret(Edit*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_combo).Gets the <lt>Combo</lt> of a cell.
+fret(Combo*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_updown).Gets the <lt>UpDown</lt> of a cell.
+fret(UpDown*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_slider).Gets the <lt>Slider</lt> of a cell.
+fret(Slider*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_progress).Gets the <lt>Progress</lt> of a cell.
+fret(Progress*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_view).Gets the <lt>View</lt> of a cell.
+fret(View*).The view.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_textview).Gets the <lt>TextView</lt> of a cell.
+fret(TextView*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_get_imageview).Gets the <lt>ImageView</lt> of a cell.
+fret(ImageView*).The control.
+fpar(const Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+
+func(layout_taborder).Set how the keyboard focus will move when you press <c>[TAB]</c>.
+fpar(Layout*,layout).The layout.
+fpar(const orient_t,order).Loop through rows or columns.
+
+func(layout_hsize).Set a fixed width for a layout column.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col).Column index.
+fpar(const real32_t,width).Width.
+
+func(layout_vsize).Force a fixed height for the layout row.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,row).Row index.
+fpar(const real32_t,height).Height.
+
+func(layout_hmargin).Establish an inter-column margin within the layout. It is the separation between two consecutive columns.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col).Index of the column. The index 0 refers to the separation between column 0 and column 1. <c>ncols-2</c> is the maximum accepted value.
+fpar(const real32_t,margin).Margin.
+
+func(layout_vmargin).Set an inter-row margin within the layout. It is the separation between two consecutive rows.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,row).Row index Index 0 refers to the separation between row 0 and row 1. <c>nrows-2</c> is the maximum accepted value.
+fpar(const real32_t,margin).Margin.
+
+func(layout_hexpand).Set the column to expand horizontally.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col).Column index.
+fnote.See <lh>Cell expansion</lh>.
+
+func(layout_hexpand2).Set the two columns that will expand horizontally.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col1).Index of column 1.
+fpar(const uint32_t,col2).Index of column 2.
+fpar(const real32_t,exp).Expansion of <c>col1</c> between 0 and 1.
+fnote.The expansion of <c>col2 = 1 - exp</c>. See <lh>Cell expansion</lh>.
+
+func(layout_hexpand3).Set the three columns that will expand horizontally.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col1).Index of column 1.
+fpar(const uint32_t,col2).Index of column 2.
+fpar(const uint32_t,col3).Index of column 3.
+fpar(const real32_t,exp1).Expansion of <c>col1</c> between 0 and 1.
+fpar(const real32_t,exp2).Expansion of <c>col2</c> between 0 and 1.
+fnote.<c>exp1 + exp2 <<> = 1</c>. The expansion of <c> col3 = 1 - exp1 - exp2 </c> . See <lh>Cell expansion</lh>.
+
+func(layout_vexpand).Set the row that will expand vertically.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,row).Row index.
+fnote.See <lh>Cell expansion</lh>.
+
+func(layout_vexpand2).Set the two rows that will expand vertically.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,row1).Index of row 1.
+fpar(const uint32_t,row2).Index of row 2.
+fpar(const real32_t,exp).Expansion of <c>row1</c> between 0 and 1.
+fnote.The expansion of <c>row2 = 1 - exp</c>. See <lh>Cell expansion</lh>.
+
+func(layout_vexpand3).Set the three rows that will expand horizontally.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,row1).Index of row 1.
+fpar(const uint32_t,row2).Index of row 2.
+fpar(const uint32_t,row3).Index of row 3.
+fpar(const real32_t,exp1).Expansion of <c>row1</c> between 0 and 1.
+fpar(const real32_t,exp2).Expansion of <c>row2</c> between 0 and 1.
+fnote.<c>exp1 + exp2 <<> = 1</c>. The expansion of <c>row3 = 1 - exp1 - exp2</c>. See <lh>Cell expansion</lh>.
+
+func(layout_halign).Sets the horizontal alignment of a cell. It will take effect when the column is wider than the cell.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+fpar(const align_t,align).Horizontal alignment.
+
+func(layout_valign).Sets the vertical alignment of a cell. It will take effect when the row is taller than the cell.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+fpar(const align_t,align).Vertical alignment.
+
+func(layout_show_col).Show or hide a layout column.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col).Column index.
+fpar(const bool_t,visible).Visible or hidden.
+
+func(layout_show_row).Show or hide a layout row.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,row).Row index.
+fpar(const bool_t,visible).Visible or hidden.
+
+func(layout_margin).Set a uniform margin for the layout border.
+fpar(Layout*,layout).The layout.
+fpar(const real32_t,mall).Margin for all four sides (left, right, up and down).
+
+func(layout_margin2).Set a horizontal and vertical margin for the layout edge.
+fpar(Layout*,layout).The layout.
+fpar(const real32_t,mtb).Upper and lower margin.
+fpar(const real32_t,mlr).Left and right margin.
+
+func(layout_margin4).Set margins for the layout border.
+fpar(Layout*,layout).The layout.
+fpar(const real32_t,mt).Top edge margin.
+fpar(const real32_t,mr).Right edge margin.
+fpar(const real32_t,mb).Bottom edge margin.
+fpar(const real32_t,ml).Left edge margin.
+
+func(layout_bgcolor).Assign a background color to the layout.
+fpar(Layout*,layout).The layout.
+fpar(const color_t,color).The color. With <c>ekCOLOR_TRANSPARENT</c> default color is restored.
+
+func(layout_skcolor).Assign a color to the edge of the layout.
+fpar(Layout*,layout).The layout.
+fpar(const color_t,color).The color. With <c>ekCOLOR_TRANSPARENT</c> default color is restored.
+
+func(layout_update).Update the window associated with the layout.
+fpar(Layout*,layout).The layout.
+fnote.It is equivalent to calling <lf>window_update</lf>.
+
+func(layout_dbind).Associate a type <c>struct</c> with a layout.
+fpar(Layout*,layout).The layout.
+fpar(Listener*,listener).Will notify through this <c>listener</c> every time the object changes. Can be <c>NULL</c>.
+fpar(,type).The <c>struct</c> type.
+fcode.
+layout_dbind(layout, Product);
+fcode.
+
+func(layout_dbind_obj).Associate an object with a layout to view and edit it.
+fpar(Layout*,layout).The layout.
+fpar(type*,obj).The object to edit.
+fpar(,type).Object type.
+fcode.
+Product *product = i_create(...);
+layout_dbind_obj(layout, product, Product);
+fcode.

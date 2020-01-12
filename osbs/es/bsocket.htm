@@ -1,0 +1,68 @@
+
+h1.Sockets
+
+ep.Los <b>sockets</b> establecen un canal de comunicación entre dos procesos remotos a través de Internet.
+
+p.Podemos definir un <b>socket</b> como un canal de comunicación entre dos procesos que están ejecutándose en diferentes máquinas. Utilizan como base la familia de protocolos TCP/IP que rigen la comunicación por Internet desde los primeros prototipos de la gran red allá por el año 1969. Por su parte, el protocolo IP <i>(Internet Protocol)</i> se encarga del envío de pequeños paquetes de datos entre dos computadores remotos a través de la red. Como hay paquetes que pueden perderse o tomar diferentes caminos al atravesar los nodos de Internet, TCP <i>(Transmission Control Protocol)</i> se encargará de ordenarlos secuencialmente y volver a pedir aquellos que se han perdido. Otro aspecto importante que añade TCP es el concepto de <b>puerto</b> lo que permite que una misma máquina disponga de múltiples conexiones abiertas al mismo tiempo. La conjunción de TCP/IP provee al proceso de un canal fiable de comunicación bidireccional <i>(full-duplex)</i> con el ordenador remoto con el que acaba de conectarse y es la base del modelo cliente/servidor <r>socket</r>.
+
+img(socket.svg,480,.5).Los sockets TCP/IP permiten conectar dos procesos a través de Internet.
+Esquema que muestra dos procesos remotos conectados mediante un socket a través de Internet.
+
+p.Ya dentro del programa, trabajar con <i>sockets</i> es muy parecido a trabajar con archivos en disco. La implementación de TCP/IP es complicada y forma parte del sistema operativo. Accederemos a ella a través de llamadas al sistema muy simplificadas que nos permitirán crear conexiones <lf>bsocket_connect</lf>, escribir en el canal <lf>bsocket_write</lf> y leer del mismo <lf>bsocket_read</lf>. Ya que un socket tan solo permite enviar y recibir bytes, el diálogo entre los dos extremos queda determinado por el protocolo establecido, que ambos interlocutores deben implementar para que la comunicación se produzca de forma satisfactoria. Algunos de los más utilizados en Internet son: HTTP, SMTP, FTP, SSH, etc.
+
+func(bsocket_connect).Crea un socket cliente e intenta establecer una conexión con un servidor remoto.
+fret(Socket*).Manejador del socket, o <c>NULL</c> si la función falla.
+fpar(const uint32_t,ip).La dirección IPv4 32-bit del host remoto. <lf>bsocket_ipv4</lf>.
+fpar(const uint16_t,port).El puerto de conexión.
+fpar(const SockOpt*,opts).Opciones de creación del socket. Puede ser <c>NULL</c> para valores por defecto.
+fpar(serror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+
+func(bsocket_close).Cierra un socket previamente creado con <lf>bsocket_connect</lf>.
+fpar(Socket**,socket).El manejador del socket. Será puesto a <c>NULL</c> tras el cierre.
+
+func(bsocket_ip).Obtiene la dirección ip y el puerto local asociado al socket. 
+fpar(Socket*,socket).Manejador del socket.
+fpar(uint32_t*,ip).Dirección IP local.
+fpar(uint16_t*,port).Puerto IP local.
+
+func(bsocket_read).Lee datos desde el socket.
+fret(bool_t).<c>TRUE</c> si se han leído datos. <c>FALSE</c> si ha ocurrido algún error.
+fpar(Socket*,socket).Manejador del socket.
+fpar(byte_t*,data).Búfer donde se escribirán los datos leídos.
+fpar(const uint32_t,size).El número de bytes máximos a leer (tamaño del búfer).
+fpar(uint32_t*,rsize).Recibe el número de bytes leídos realmente. Puede ser <c>NULL</c>.
+fpar(serror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.<lh>Socket stream</lh> implementa funciones de alto nivel para lectura/escritura en sockets.
+
+func(bsocket_write).Escribe datos en el socket.
+fret(bool_t).<c>TRUE</c> si se han escrito datos. <c>FALSE</c> si ha ocurrido algún error.
+fpar(Socket*,socket).Manejador del socket.
+fpar(const byte_t*,data).Búfer que contiene los datos a escribir.
+fpar(const uint32_t,size).El número de bytes a escribir.
+fpar(uint32_t*,wsize).Recibe el número de bytes escritos realmente. Puede ser <c>NULL</c>.
+fpar(serror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fnote.<lh>Socket stream</lh> implementa funciones de alto nivel para lectura/escritura en sockets.
+
+func(bsocket_host_ip).Obtiene el valor decimal de la dirección IPv4 de un host a partir de su url.
+fret(bool_t).<c>TRUE</c> si ha funcionado correctamente, <c>FALSE</c> si no.
+fpar(const char_t*,url).La url del host p.e, <c>www.google.com</c>.
+fpar(uint32_t*,ip).Valor de la dirección IPv4 del host.
+fpar(serror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
+fcode.
+uint32_t ip;
+if (bhost_ip("www.google.com", &ip, NULL) == TRUE)
+{
+    Socket *sock = bsocket_connect(ip, 80, NULL, NULL);
+    ...
+}
+fcode.
+
+func(bsocket_ipv4).Compone el valor decimal de una dirección IP de 32-bit a partir de los cuatro valores de la notación por puntos (a.b.c.d).
+fret(uint32_t).El valor IP decimal de 32-bit.
+fpar(uint8_t,a).Primer valor.
+fpar(uint8_t,b).Segundo valor.
+fpar(uint8_t,c).Tercer valor.
+fpar(uint8_t,d).Cuarto valor.
+fcode.
+uint32_t ip = bsocket_ipv4(216, 58, 210, 164);
+fcode.

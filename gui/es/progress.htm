@@ -1,0 +1,24 @@
+
+h1.Progress
+
+p.Las barras de progreso son controles pasivos que muestran el tiempo restante para completar una determinada tarea <r>progress</r>. A medida que transcurra el tiempo deberemos actualizar el control. El estado indefinido mostrará una animación sin indicar estado, lo que será útil cuando no podamos determinar el tiempo requerido. En <lh>¡Hola Slider y Progress!</lh> tienes un ejemplo de uso.
+
+li.Utiliza <lf>progress_create</lf> para crear una barra de progreso.
+
+li.Utiliza <lf>progress_undefined</lf> para establecer la barra como indefinida.
+
+li.Utiliza <lf>progress_value</lf> para ir actualizando el progreso de la tarea.
+
+img(progress.png,0,.5).ProgressBar en Windows, macOS y Linux.
+Ventana donde aparecen varios controles barras de progreso.
+
+func(progress_create).Crea una barra de progreso.
+fret(Progress*).El progress.
+
+func(progress_undefined).Establece la barra de progreso como indefinida.
+fpar(Progress*, progress).El progress.
+fpar(const bool_t, running).<c>TRUE</c> para activar la animación.
+
+func(progress_value).Establece la posición del progress.
+fpar(Progress*, progress).El progress.
+fpar(const real32_t,value).La posición entre 0.0 y 1.0.

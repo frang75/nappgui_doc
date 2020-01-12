@@ -1,0 +1,138 @@
+
+h1.Arrays de punteros
+
+ep.Estructura que almacena punteros en posiciones contiguas de memoria. Para arrays de objetos utilizar <lp>arrst</lp>.
+
+func(arrpt_create).Crea un array de punteros vacío.
+fret(ArrPt(type)*).El nuevo array.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_destroy).Destruye un array y todos sus elementos.
+fpar(ArrPt(type)**).El array. Será puesto a <c>NULL</c> tras la destrucción.
+fpar(FPtr_destroy,func_destroy).Función para destruir un elemento del array <lh>Destructores</lh>. Si es <c>NULL</c> se destruirá solo el array, pero no sus elementos.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_clear).Borra el contenido del array, sin destruir el contenedor que quedará con cero elementos.
+fpar(ArrPt(type)*,array).El array.
+fpar(FPtr_destroy,func_destroy).Destructor del elemento. Puede ser <c>NULL</c>. Ver <lf>arrpt_destroy</lf>.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_read).Crea un array leyendo su contenido de un <lp>stream</lp> (de-serialización).
+fret(ArrPt(type)*).El array leído.
+fpar(Stream*,stream).Un <i>stream</i> de lectura.
+fpar(FPtr_read,func_read).Constructor para crear un objeto a partir de los datos obtenidos de un stream. <lh>Serialización</lh>.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_write).Escribe un array en un <lp>stream</lp> (serialización).
+fpar(Stream*,stream).Un <i>stream</i> de escritura.
+fpar(const ArrPt(type)*,array).El array.
+fpar(FPtr_write,func_write).Función que escribe el contenido de un elemento en un stream <lh>Serialización</lh>.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_size).Obtiene el número de elementos en un array.
+fret(uint32_t).Número de elementos.
+fpar(const ArrPt(type)*,array).El array.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_get).Obtiene un puntero al elemento en la posición <c>pos</c>.
+fret(type*).Puntero al elemento.
+fpar(const ArrPt(type)*,array).El array.
+fpar(const uint32_t,pos).Posición o índice del elemento.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_last).Obtiene un puntero al último elemento del array.
+fret(type*).Puntero al elemento.
+fpar(const ArrPt(type)*,array).El array.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_all).Obtiene un puntero a la memoria interna del array, que da acceso a todos los elementos.
+fret(type**).Puntero base. Incrementándolo uno a uno iteraremos sobre los elementos.
+fpar(const ArrPt(type)*,array).El array.
+fpar(,type).Tipo de objeto.
+fnote.Utiliza <lf>arrpt_foreach</lf> para iterar sobre los elementos de forma más segura y elegante.
+
+func(arrpt_grow).Añade <c>n</c> elementos, sin inicializar, al final del array.
+fret(type**).Puntero al primer elemento añadido.
+fpar(ArrPt(type)*,array).El array.
+fpar(const uint32_t,n).Cantidad de elementos a añadir.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_append).Añade un puntero al final del array.
+fpar(ArrPt(type)*,array).El array.
+fpar(type*,value).Puntero al elemento a añadir.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_prepend).Inserta un puntero al inicio del array. El resto de elementos serán desplazados a la derecha.
+fpar(ArrPt(type)*,array).El array.
+fpar(type*,value).Puntero al elemento a insertar.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_insert).Inserta un puntero en una posición arbitraria del array.
+fpar(ArrPt(type)*,array).El array.
+fpar(const uint32_t,pos).Posición donde será insertado. El actual elemento en <c>pos</c> y siguientes serán desplazados a la derecha.
+fpar(type*,value).Puntero al elemento a insertar.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_delete).Elimina un puntero del array.
+fpar(ArrPt(type)*,array).El array.
+fpar(const uint32_t,pos).Posición del elemento a borrar. El actual elemento en <c>pos+1</c> y siguientes serán desplazados a la izquierda.
+fpar(FPtr_destroy,func_destroy).Destructor del elemento. Puede ser <c>NULL</c>. Ver <lf>arrpt_destroy</lf>.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_pop).Elimina el último puntero del array.
+fpar(ArrPt(type)*,array).El array.
+fpar(FPtr_destroy,func_destroy).Destructor del elemento. Puede ser <c>NULL</c>. Ver <lf>arrpt_destroy</lf>.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_sort).Ordena los elementos del array utilizando Quicksort.
+fpar(ArrPt(type)*,array).El array.
+fpar(FPtr_compare,func_compare).Función para comparar dos elementos. <lh>Ordenar y buscar</lh>.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_find).Busca un determinado puntero en el array.
+fret(uint32_t).La posición del puntero si existe, o <lt>UINT32_MAX</lt> si no.
+fpar(const ArrPt(type)*,array).El array.
+fpar(type*,elem).Puntero a buscar.
+fpar(,type).Tipo de objeto.
+
+func(arrpt_search).Busca un elemento en el array de forma lineal <c>O(n)</c>.
+fret(type*).Puntero al primer elemento que coincida con el criterio de búsqueda o <c>NULL</c> si no existe ninguno.
+fpar(ArrPt(type)*,array).El array.
+fpar(FPtr_compare,func_compare).Función de comparación. El primer parámetro es el elemento, el segundo la clave de búsqueda. <lh>Ordenar y buscar</lh>.
+fpar(ktype,key).Clave a buscar. Puntero a un tipo de dato que puede ser diferente al tipo de elemento del array.
+fpar(uint32_t*,pos).Posición del elemento en el array (si existe), o <c>UINT32_MAX</c> si no existe. Puede ser <c>NULL</c>.
+fpar(,type).Tipo de objeto.
+fpar(,ktype).Tipo de clave.
+
+func(arrpt_bsearch).Busca un elemento en el array de forma logarítmica <c>O(logn)</c>.
+fret(type*).Puntero al primer elemento que coincida con el criterio de búsqueda o <c>NULL</c> si no existe ninguno.
+fpar(ArrPt(type)*,array).El array.
+fpar(FPtr_compare,func_compare).Función de comparación. El primer parámetro es el elemento, el segundo la clave de búsqueda. <lh>Ordenar y buscar</lh>.
+fpar(ktype,key).Clave a buscar. Puntero a un tipo de dato que puede ser diferente al tipo de elemento del array.
+fpar(uint32_t*,pos).Posición del elemento en el array (si existe), o <c>UINT32_MAX</c> si no existe. Puede ser <c>NULL</c>.
+fpar(,type).Tipo de objeto.
+fpar(,ktype).Tipo de clave.
+fnote.El array debe estar ordenado según el mismo criterio que la búsqueda. De no ser así el resultado es impredecible.
+
+func(arrpt_foreach).Itera sobre todos los elementos del array. Usa <c>arrpt_end</c> para cerrar el bucle.
+fpar(type*,elem).Nombre de la variable 'elemento' dentro del bucle. Añadiendo el sufijo <c>'_i'</c> obtenemos el índice.
+fpar(ArrPt(type)*,array).El array.
+fpar(,type).Tipo de objeto.
+fcode.
+arrpt_foreach(product, array, Product)
+    bstd_printf("Index:%d, Id:%d\n", product_i, product->id);
+arrpt_end()
+fcode.
+
+func(arrpt_foreach_rev).Itera sobre todos los elementos del array hacia atrás, desde el último al primero. Usa <c>arrpt_end</c> para cerrar el bucle.
+fpar(type*,elem).Nombre de la variable 'elemento' dentro del bucle. Añadiendo el sufijo <c>'_i'</c> obtenemos el índice.
+fpar(ArrPt(type)*,array).El array.
+fpar(,type).Tipo de objeto.
+fcode.
+// Now in reverse order
+arrpt_foreach_rev(product, array, Product)
+    bstd_printf("Index:%d, Id:%d\n", product_i, product->id);
+arrpt_end()
+fcode.
+
+func(arrpt_end).Cierra el bucle abierto por <lf>arrpt_foreach</lf> o <lf>arrpt_foreach_rev</lf>.

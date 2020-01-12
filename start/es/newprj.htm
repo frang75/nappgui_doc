@@ -1,0 +1,161 @@
+
+h1.Nuevo proyecto
+
+ep.Me considero una persona técnica que eligió un gran proyecto y una excelente manera para llevarlo a cabo.
+<i>Linus Torvalds</i>.
+
+p.En capítulos anteriores hemos descargado el software, ejecutado los ejemplos y aprendido algo sobre la estructura del SDK. Es el momento de crear una nueva aplicación desde cero. 
+
+h2.La Aplicación Die
+
+p.En este capítulo y el siguiente vamos a trabajar sobre una aplicación real <r>die_application</r>, incluida en el directorio <c>src/demo/die</c> del SDK. Es un sencillo programa que permite dibujar la silueta de un dado, manipulando parámetros a través de varios de controles <lt>Slider</lt>. Aquí solo veremos como crear la solución de Visual Studio.
+
+li.Consulta <lp>die</lp> para detalles sobre la aplicación.
+
+li.Consulta <lp>resources</lp> para más detalles sobre el uso de textos e iconos.
+
+li.Consulta <lp>win_mac_linux</lp> para detalles sobre la compilación en macOS y Linux.
+
+img(die_application.png,0,.65).Aplicación Die. Inspirado en DieView <i>(Cocoa Programming for OSX, Hillegass et al.)</i>.
+Captura de la aplicación Die.
+
+h2.Soluciones y proyectos
+
+p.En Visual Studio (y Xcode o GNU-Make) existe el concepto de <b>solución</b> que es, en esencia, un contenedor de proyectos que guardan algún tipo de relación. Por su parte, un proyecto es un programa ejecutable o una librería. Estas soluciones implementan los <b>guiones de compilación</b> que permiten generar, enlazar, ejecutar y depurar las aplicaciones. Al abrirla, Visual Studio cargará automáticamente todos los proyectos que contenga. Como ya vimos en <lp>quick</lp>, CMake crea la solución <c>NAppGUI</c> totalmente configurada y lista para compilar, con todas las librerías y demos del SDK. Para ello se basa en el archivo <c>/src/CMakeLists.txt</c>. Si queremos crear una nueva aplicación, tan solo deberemos añadir la siguiente línea al final del archivo:
+
+code(text).src/CMakeLists.txt
+desktopApp(Die2 die "" NRC_EMBEDDED NO)
+code.
+
+bq.Utilizamos <b>Die2</b> porque ya existe la aplicación Die como parte de las demos. VisualStudio no permite tener dos proyectos con el mismo nombre.
+
+li.Una vez listo, abre CMake.
+
+li.<b>Where is the source code</b>: <c>C:\nappgui\src</c>.
+
+li.<b>Where to build the binaries</b>: <c>C:\nappgui_build</c>.
+
+li.Pulsa <c>[Configure]</c>: Si es la primera vez que generas el proyecto, CMake pedirá el compilador (utilizamos <c>Visual Studio 16 2019</c>). Si previamente realizaste los puntos del apartado <lh>Compilar los ejemplos</lh> tan solo actualizará la solución actual.
+
+li.Pulsa <c>[Generate]</c> y luego <c>[Open Project]</c>.
+
+li.Verás que CMake ha creado un nuevo proyecto llamado <c>Die2</c> dentro de la solución <r>project_added</r>.
+
+img(project_added.png,0,.35).Proyecto <c>Die2</c> recién añadido a la solución.
+Captura del Explorador de Solución de Visual Studio donde aparece el nuevo proyecto.
+
+p.Si compilas y ejecutas <c>Die2</c>, te darás cuenta de que no es otra cosa que el <i>Hello, World!</i>, ya que esta es la plantilla predeterminada para cada nueva aplicación de escritorio. También se ha asignado un <lh>Icono de aplicación</lh> por defecto, pero lo podremos cambiar posteriormente. Si profundizamos en la sintaxis del comando <c>desktopApp</c> que acabamos de añadir al <c>CMakeLists.txt</c>, tenemos:
+
+code(text).
+desktopApp(Die2 die "" NRC_EMBEDDED NO)
+
+desktopApp(appName path depends nrcMode installer)
+code.
+
+li.<c>appName</c>: El nombre de la aplicación.
+
+li.<c>path</c>: Ruta relativa dentro de la solución donde se ubicará el proyecto (en este caso <c>C:\nappgui\die</c>). Se admite cualquier profundidad de ruta. Por ejemplo, <c>"games/die"</c> creará el proyecto en <c>C:\nappgui\games\die</c> y <c>"demo/games/die"</c> en <c>C:\nappgui\demo\games\die</c>.
+
+li.<c>depends</c>: Todas las aplicaciones enlazan de forma predeterminada con las librerías del SDK de NAppGUI. Si la aplicación necesitara dependencias adicionales, como librerías creadas por el propio usuario, las escribiremos en este campo separadas por punto y coma (pe. <c>"physics;render"</c>). Como en este proyecto no tenemos ninguna pasamos una cadena vacía (<c>""</c>).
+
+li.<c>nrcMode</c>: Cómo se administrarán los recursos. Por el momento, <c>NRC_EMBEDDED</c>. Profundizaremos en ellos en el siguiente capítulo <lp>resources</lp>.
+
+li.<c>installer</c>: Admite dos valores <c>YES</c> o <c>NO</c> que indican si hay que crear un instalador para la aplicación. Más información en <lh>Instaladores</lh>.
+
+bq.Puedes crear tantas nuevas aplicaciones como quieras. Solo debes que repetir el proceso, añadiendo nuevos <c>desktopApp()</c> al script <c>CMakeLists.txt</c>.
+
+h2.Añadir archivos
+
+p.Volviendo al proyecto <c>Die</c>, vemos que solo tiene un archivo de código fuente (<c>die.c</c>). Para este caso podría ser suficiente, pero vamos a dividir el código en varios archivos, ya que será lo habitual en, prácticamente, cualquier nueva aplicación que abordemos. Para agregar nuevos archivos fuente, simplemente los creamos a través del explorador de archivos:
+
+li.Ir a <c>C:\nappgui\src\die</c> utilizando el Explorador de Windows.
+
+li.<c>Clic derecho->Nuevo->Documento de texto</c>. Renombra a <c>die.hxx</c>. En este archivo incluiremos las definiciones de tipos compartidos.
+
+li.Repite y crea <c>dgui.h</c> y <c>dgui.c</c>. Aquí implementaremos el GUI <r>add_files</r>.
+
+img(add_files.png,0,.9).Añadiendo nuevos archivos al proyecto, directamente desde el explorador de archivos.
+Captura del Explorador de Windows, donde se están creando nuevos archivos.
+
+li.Crea una nueva carpeta dentro de <c>die</c>. Cámbiale el nombre a <c>draw</c>.
+
+li.Abre <c>draw</c> y añade dos archivos: <c>ddraw.c</c> y <c>ddraw.h</c>. Aquí vamos a implementar las funciones de dibujo.
+
+p.Pulsa <c>[Generate]</c> en CMake para actualizar la solución. Visual Studio nos informa que ha habido cambios en el proyecto <c>Die</c> <r>add_files_vs_modified</r>. Simplemente presiona <c>[Reload Solution]</c> y se agregarán los nuevos archivos <r>add_new_files</r>.
+
+img(add_files_vs_modified.png,0,1).Visual Studio advierte sobre nuevos archivos. Pulsa <c>[Reload Solution]</c>.
+Advertencia que muestra Visual Studio, al detectar que se han añadido nuevos archivos.
+
+img(add_new_files.png,0,.65).CMake clonará el sistema de archivos del proyecto dentro de la solución.
+Los nuevos archivos, dentro del árbol del proyecto de Visual Studio.
+
+bq.El contenido de cada uno de estos archivos lo tienes en <c>/src/demo/die</c> y <c>/src/demo/casino</c>. Próximamente, en <lp>libraries</lp> veremos como compartir código entre aplicaciones.
+
+p.Tras hacer clic en <c>[Generate]</c>, CMake analiza los archivos y subcarpetas del proyecto y actualiza la solución. Establece el <c>INCLUDE_PATH</c>, agrupa los fuentes en carpetas y revisa los recursos. Es necesario presionar <c>[Generate]</c> al agregar o eliminar archivos del proyecto. Si solo editamos el código no es necesario, ya que la estructura del proyecto no ha cambiado. Con volver a compilar será suficiente.
+
+h2.Aplicaciones de línea de comandos
+
+p.Hace unos cuantos años, cuando no existían los entornos gráficos o estaban en fase experimental, los ordenadores se manejaban a través de una terminal de texto. El usuario tecleaba comandos y la máquina respondía imprimiendo mensajes o datos en la pantalla. Hoy en día nuestro diálogo con la aplicación se lleva a cabo a través de clics de ratón o directamente con el propio dedo. No obstante, este tipo de aplicaciones "de consola" siguen estando muy vivas a día de hoy, sobre todo en lo relativo a la <b>automatización de tareas</b>.
+
+p.La automatización consiste en conseguir que el ordenador haga cosas sin que un operador humano esté constantemente presente. Un ejemplo lo tenemos en <r>imgresizer</r>, donde hemos improvisado una sencilla aplicación para cambiar el tamaño de imágenes. La operativa es sencilla: Abrir la imagen, seleccionar la nueva medida y pulsar el botón <c>[Resize]</c>.
+
+img(imgresizer.png, 0, .75).Sencilla aplicación para redimensionar imágenes.
+Captura de una hipotética aplicación de escritorio para redimensionar imágenes.
+
+p.El problema aquí es que somos nosotros los que, constantemente, tenemos que guiar al programa paso a paso: Abre, edita, guarda, abre, edita, guarda, ..., etc. Si tuviésemos que redimensionar 100 imágenes la tarea se haría monótona, repetitiva y muy muy cara. Una versión de la misma aplicación por línea de comandos sería algo así.
+
+code(text).
+imgresize C:\imgs\nature.jpg -w320 -h160 C:\imgs2\nature.jpg
+code.
+
+p(noindent).Podemos pensar que no hemos ganado mucho. Hemos pasado de realizar unos cuantos clics a tener que escribir una parrafada para realizar la tarea. Nada más lejos de la realidad. La primera ventaja es la facilidad con la que podemos procesar lotes de imágenes:
+
+code(text).Script en Python para procesar múltiples imágenes.
+import os
+for file in os.listdir("C:\imgs"):
+    if file.endswith(".jpg"):
+        subprocess.run(["imgsize", file, "-w360", "-h160", "C:\imgs2\" + file])
+code.
+
+p(noindent).Si en el directorio tuviésemos 1000 imágenes, este programa tardará unos pocos segundos (en el peor de los casos) y nosotros todo un día (en el mejor). También podríamos mejorar el script haciendo que suba las nuevas imágenes a un servidor remoto, por ejemplo.
+
+p.Como podrás imaginar, para crear una aplicación de consola, volveremos al <c>CMakeLists.txt</c> de nuestra solución y añadiremos una nueva línea al final del mismo:
+
+code(text).src/CMakeLists.txt
+commandApp("utils/imgresize" "" NRC_NONE)
+
+commandApp(appPath depends nrcMode)
+code.
+
+p(noindent).Los parámetros son muy simulares a los de las aplicaciones de escritorio:
+
+li.<c>appPath</c>: Directorio de la aplicación dentro de la solución.
+
+li.<c>depends</c>: Dependencias. Una aplicación de línea de comandos añade siempre una dependencia con <lp>core</lp>, ya que esta librería proporciona un montón de utilidades que enriquecen mucho el lenguaje C. Librerías como <lp>inet</lp>, <lp>draw2d</lp> y <lp>geom2d</lp> tampoco requieren de interfaz gráfica y podrían añadirse como dependencias si fuera necesario:
+
+code(text).
+commandApp("utils/imgresize" "draw2d;inet" NRC_NONE)
+code.
+
+li.<c>nrcMode</c>: <c>NRC_NONE</c>, <c>NRC_EMBEDDED</c> o <c>NRC_PACKED</c>. <lh>Distribución de recursos</lh>.
+
+p.Tras el <c>[Generate]</c> de CMake, en Visual Studio se ha creado el nuevo proyecto. Ni que decir tiene que el añadir nuevos archivos se hace de forma similar a lo visto en  aplicaciones de escritorio, no lo repetiremos. Si navegamos hasta el código fuente, CMake ha creado una sencilla plantilla:
+
+code.
+/* NAppGUI Console Application */
+    
+#include "coreall.h"
+
+int main(int argc, char *argv[])
+{
+    unref(argc);
+    unref(argv);
+    core_start();
+    bstd_printf("Hello world!\n");
+    core_finish();
+    return 0;
+}
+code.
+
+p(noindent).Que es la típica plantilla de un programa en C, a la que se le ha incluido el soporte de la librería <i>core</i>. A partir de aquí, ya podemos modificar el código y compilar. CMake ya lo configuró todo por nosotros.
+
