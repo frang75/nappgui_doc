@@ -3,7 +3,7 @@ h1.Integración continua
 
 ep.Un sistema de Integración Continua compilará proyectos continuamente de forma automática y en todas las plataformas, a medida que vayamos introduciendo cambios en el repositorio.
 
-p.Ya vimos en <lp>win_mac_linux</lp> como mover nuestras aplicaciones entre diferentes plataformas y entornos de desarrollo. Esto supone una gran ventaja con respecto a la programación nativa tradicional, ya que podemos generar ejecutables optimizados para cada CPU y sistema operativo sin tener que modificar ni una línea del código fuente. Ahora vamos a ir un paso más allá automatizando las fases de compilación y test.
+p.Ya hemos visto en <lp>win_mac_linux</lp> como mover nuestras aplicaciones entre diferentes plataformas y entornos de desarrollo, permitiéndonos generar ejecutables optimizados para cada CPU y sistema operativo sin tener que modificar ni una línea del código fuente. Ahora vamos a ir un paso más allá automatizando las fases de compilación y test.
 
 p.Un equipo de trabajo medio puede llegar a modificar el código de un proyecto varias veces al día. En entornos multiplataforma, dichos cambios deben ser compilados y probados en varias máquinas lo antes posible con el fin de subsanar errores o anomalías. Para ello el sistema de Integración Continua (IC) trabajará ininterrumpidamente, en segundo plano y de forma autónoma cada vez que se modifique el contenido del repositorio <r>contint</r>.
 
@@ -67,6 +67,10 @@ h3.CMake desde línea de comandos
 code(text).Creación de una solución Visual Studio.
 cd C:\build
 cmake -G"Visual Studio 15 2017 Win64" -Tv141 C:\src
+code.
+
+code(text).Instalar CMake por línea de comandos en macOS.
+sudo "/Applications/CMake.app/Contents/bin/cmake-gui" --install
 code.
 
 code(text).Creación de una solución Xcode.

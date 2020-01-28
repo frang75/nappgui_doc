@@ -11,26 +11,9 @@ img2(fractals_linux.png,fractals_raspbian.png,400).Versión Ubuntu y Raspbian.
 Captura de un visor de conjuntos de Julia, versión Linux/Ubuntu.
 Captura de un visor de conjuntos de Julia, versión Raspbian.
 
-p.Debido a la gran carga computacional de este algoritmo hemos dividido el cálculo en varios hilos <r>fractal_threads</r>. Este problema es fácilmente paralelizable simplemente fraccionando la imagen, gracias a que cada píxel se obtiene de forma independiente. En <r>threads</r> tienes los tiempos de ejecución según plataforma.
+p.Debido a la gran carga computacional de este algoritmo hemos dividido el cálculo en varios hilos <r>fractal_threads</r>. Este problema es fácilmente paralelizable simplemente fraccionando la imagen, gracias a que cada píxel se obtiene de forma independiente.
 
-img(fractal_threads.svg,300,.60).Colaboración de varios hilos de ejecución.
+img(fractal_threads.svg,300,.40).Colaboración de varios hilos de ejecución.
 Imagen dividida en cuatro partes y cuatro hilos de ejecución calculando cada una.
-
-table(threads).Tiempos de cálculo en función del procesador.
-row.
-p.CPU/Threads
-p.1
-p.2
-p.3
-p.4
-p.8
-row.
-p.Intel i7-4790K
-p.109ms
-p.59ms
-p.78ms
-p.31ms
-p.31ms
-table.
 
 codefile(demo/fractals/fractals.c).

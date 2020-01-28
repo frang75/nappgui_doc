@@ -4,22 +4,22 @@ h1.Portabilidad
 ep.Es muy difícil escribir software que funcione correctamente y de manera eficiente. Entonces, una vez que un programa funciona en un determinado entorno, no queremos repetir parte del trabajo al moverlo a un compilador, procesador o sistema operativo diferente. <b>Idealmente, no debería ser necesario realizar ningún cambio en absoluto</b>.
 Kernighan & Pike - The Practice of Programming.
 
-p.En <lp>quick</lp> y <lp>newprj</lp> utilizamos Visual Studio 2019 para generar las aplicaciones de ejemplo dentro de la solución <i>NAppGUI</i>. Entendemos por <b>portabilidad</b> la capacidad de compilar y depurar nuestros programas en otras plataformas diferentes a las que fueron escritos, sin que por ello tengamos que tocar ni una sola línea de código. Entendemos por <b>plataforma</b> a la combinación compilador/arquitectura. Por ejemplo,  <c>v142_x64</c> hace referencia a binarios creados con Visual Studio 2019 para procesadores Intel 64bits. En <r>portability_steps</r> se resumen las diferentes etapas.
+p.En <lp>quick</lp> y <lp>newprj</lp> utilizamos Visual Studio 2019 para generar la solución <i>NAppGUI</i>. Entendemos por <b>portabilidad</b> la capacidad de compilar y depurar nuestros programas en otras plataformas diferentes a las que fueron escritos, sin que por ello tengamos que tocar ni una sola línea de código. Entendemos por <b>plataforma</b> a la combinación de un compilador y de una arquitectura CPU. Por ejemplo, <c>v142_x64</c> hace referencia a Visual Studio 2019 e Intel 64bits. En <r>portability_steps</r> vemos los diferentes pasos en el proceso de migración de código.
 
-img(portability_steps.svg,620,.75).Etapas en la migración del código entre plataformas. 
+img(portability_steps.svg,620,.85).Etapas en la portabilidad del código entre plataformas. 
 Tres ordenadores Windows, macOS y Linux conectados en red al mismo repositorio de código fuente.
 
-li.<b>Copia de trabajo:</b> En cada máquina que vaya a compilar el código deberá existir una copia del código fuente del proyecto. Normalmente esto se llevará a cabo mediante un sistema de control de versiones como Subversion o Git, aunque se podría actualizar también desde una memoria externa.
+li.<b>Copia de trabajo:</b> En cada máquina deberá existir una copia del código fuente del proyecto. Normalmente esto se llevará a cabo mediante un sistema de control de versiones como Subversion o Git, aunque se podría actualizar también desde una memoria externa.
 
 li.<b>CMake:</b> CMake creará un proyecto de compilación (o solución) a partir del código fuente utilizando los scripts del directorio <c>/prj</c> de la distribución del SDK. Esto se realizará de forma totalmente automática.
 
-li.<b>Compilar:</b> Utilizando Visual Studio, Xcode o GCC se compilará la solución y se generarán las librerías y ejecutables contenidas en la misma.
+li.<b>Compilar:</b> Utilizando Visual Studio, Xcode o GCC se compilará la solución y se generarán las librerías y ejecutables incluidos en la misma.
 
-li.<b>Ejecutar/Depurar:</b> Los binarios se podrán ejecutar y depurar en la plataforma de destino, poniendo punto y final al proceso de portabilidad.
+li.<b>Ejecutar/Depurar:</b> Los binarios ya se podrán ejecutar y depurar en la plataforma de destino.
 
 h2.Plataformas
 
-p.En <r>platforms</r> tienes la lista de plataformas soportadas por NAppGUI. La versión gratuita incluye el soporte completo para la <c>v142_x64</c>. En la carpeta <c>/lib</c> de tu distribución podrás comprobar las que tienes instaladas. Tan solo con añadir las nuevas versiones a este directorio CMake las reconocerá y podrás compilar en dicha plataforma.
+p.En <r>platforms</r> tienes la lista completa de plataformas soportadas. En la carpeta <c>/lib</c> de cada proyecto deberán estar presentes los binarios de NAppGUI en función de las plataformas en las que deba compilar. CMake reconocerá el contenido de esta carpeta y configurará al solución en cada caso.
 
 table(platforms).Plataformas soportadas por NAppGUI.
 row.
@@ -181,7 +181,7 @@ p.Catalina
 row.
 img(mojave.png,32,.05).
 p.sdk10_14_x64
-p.Xcode 10.2.1
+p.Xcode 10.3
 p.Intel x64
 p.Mojave
 row.
@@ -284,6 +284,8 @@ li.<b>Where is the source code:</b> <c>C:\nappgui\src</c>.
 
 li.<b>Where to build the binaries:</b> <c>C:\nappgui_build</c>.
 
+li.Pulsamos <c>[Configure]</c> y <c>[Generate]</c>.
+
 p.La primera vez CMake preguntará que versión de Visual Studio queremos utilizar <r>cmake_depends_link</r> y que, obviamente, deberemos tener instalada en la máquina en cuestión. La arquitectura seleccionada por defecto se puede cambiar desde el mismo diálogo <r>generator_platform</r>. 
 
 img(cmake_depends_link.svg,560,.65).Selección de la versión de Visual Studio desde el asistente de CMake.
@@ -292,7 +294,7 @@ Desplegable que muestra las diferentes versiones de Visual Studio con las que po
 img(generator_platform.png,0,.80).Selección de la arquitectura en el panel del generador.
 CMake Optional platform for generator.
 
-p.Una vez pulsemos <c>[Configure]</c>, <c>[Generate]</c> y <c>[Open Project]</c>, tendremos el proyecto listo para compilar. Desde Visual Studio <c>Build->Build Solution</c> y depuramos <c>Debug->Start Debugging</c> <r>vs2010_debug</r>.
+p.Una vez pulsemos <c>[Open Project]</c>, tendremos el proyecto listo para compilar. Desde Visual Studio <c>Build->Build Solution</c> y depuramos <c>Debug->Start Debugging</c> <r>vs2010_debug</r>.
 
 img(vs2010_debug.png,620,.80).Depurando la aplicación <i>Die</i> en Visual Studio 2010.
 Visual Studio 2010 depurando una aplicación C.
@@ -367,7 +369,7 @@ li.<b>Where is the source code:</b> <c>/Users/fran/nappgui/src</c> (o <c>WORKING
 
 li.<b>Where to build the binaries:</b> <c>/Users/fran/nappgui_build</c>. Directorio donde irá a parar el código generado.
 
-p.Pulsa <c>[Configure]</c>. Esta vez, la primera vez CMake nos pedirá seleccionar el compilador. Al contrario que Visual Studio, solo ofrece una opción para Xcode <r>cmake_xcode</r>. Aceptamos, pulsamos <c>[Generate]</c> y después <c>[Open Project]</c>.
+p.Pulsa <c>[Configure]</c>. La primera vez CMake nos pedirá seleccionar el compilador. Al contrario que Visual Studio, solo ofrece una opción para Xcode <r>cmake_xcode</r>. Aceptamos, pulsamos <c>[Generate]</c> y después <c>[Open Project]</c>.
 
 img(cmake_xcode.png,0,.55).Selección del generador Xcode en CMake.
 Seleccionando Xcode desde el asistente de CMake.
@@ -383,7 +385,7 @@ p.Cada año, Apple lanza una nueva versión de macOS, que viene acompañada de u
 
 bq.<b>Base SDK</b> es la versión incluída en cada nueva versión mayor de Xcode, que coincide con la última versión del sistema macOS aparecida en el mercado.
 
-p.Apple tiene una política mucho más restrictiva que Microsoft en lo referente a la compatibilidad de las aplicaciones con versiones anteriores del sistema operativo. Por defecto, un programa compilado con SDK 10.14 (macOS Mojave) no funcionará en el inmediatamente anterior macOS High Sierra <r>deployment_target</r>.
+p.Apple tiene una política mucho más restrictiva que Microsoft en lo referente a la compatibilidad de las aplicaciones con versiones anteriores del sistema operativo. Por defecto, un programa compilado con SDK 10.14 (macOS Mojave) no funcionará en el inmediatamente anterior macOS High Sierra <r>deployment_error</r>.
 
 img(deployment_error.png,400,.45).<i>Die</i> con <i>Base SDK</i> 10.14 no funcionará en High Sierra.
 Error al ejecutar una aplicación con deployment target 10.14 en macOS High Sierra.
@@ -527,7 +529,7 @@ p.Es posible tener varias versiones de GCC instaladas en la misma máquina y alt
 
 code(text).Versión de gcc instalada.
 gcc --version
-gcc 7.3.0
+gcc 7.4.0
 code.
 
 code(text).Instalar gcc-6
@@ -550,9 +552,9 @@ code.
 code(text).Volver a la versión por defecto de gcc.
 sudo update-alternatives --auto gcc
 gcc --version
-gcc 7.3.0
+gcc 7.4.0
 g++ --version
-g++ 7.3.0
+g++ 7.4.0
 code.
 
 h3.Toolkits
@@ -592,7 +594,7 @@ li.<i>Debug</i>: Incluye información de depuración en los binarios y no se rea
 
 li.<i>Release</i>: Se elimina la información de depuración y se realizan todas las optimizaciones posibles. Es la versión para el usuario. 
 
-li.<i>ReleaseWithAssert</i>: Es la versión de Release, pero dejando activas las sentencias <lp>cassert</lp>. Está dirigida al usuario final, pero en casos donde es necesario obtener información detallada de posibles anomalías, a costa de una bajada del rendimiento global del programa.
+li.<i>ReleaseWithAssert</i>: Es la versión de Release, pero dejando activas las sentencias <lp>cassert</lp>. Está dirigida al usuario final, pero en casos donde sea necesario obtener información detallada de posibles anomalías, a costa de una bajada del rendimiento global del programa.
 
 p.Tanto Visual Studio como Xcode son entornos multi-configuración, es decir, podemos alternar entre una y otra directamente desde el propio editor. En Visual Studio tenemos un desplegable en la parte superior del editor <r>config_vs</r>.
 

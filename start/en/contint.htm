@@ -3,7 +3,7 @@ h1.Continuous integration
 
 ep.A Continuous Integration system will compile projects continuously automatically and on all platforms, as we make changes to the repository.
 
-p.We already saw in <lp>win_mac_linux</lp> how to move our applications between different platforms and development environments. This is a great advantage over traditional native programming, since we can generate optimized executables for each CPU and operating system without having to modify a single line of the source code. Now we are going to go one step further by automating the compilation and test phases.
+p.We already saw in <lp>win_mac_linux</lp> how to move our applications between different platforms and development environments, generating optimized executables for each CPU and operating system without having to modify a single line of the source code. Now we are going to go one step further by automating the compilation and test phases.
 
 p.An average work team can modify the code of a project several times a day. In cross-platform environments, such changes must be compiled and tested on several machines as soon as possible in order to correct errors or anomalies. For this, the Continuous Integration (CI) system will work continuously, in the background and autonomously each time the content of the repository is modified <r>contint</r>.
 
@@ -67,6 +67,10 @@ h3.CMake from command line
 code(text).Creating a Visual Studio solution.
 cd C:\build
 cmake -G"Visual Studio 15 2017 Win64" -Tv141 C:\src
+code.
+
+code(text).Install CMake by command line on macOS.
+sudo "/Applications/CMake.app/Contents/bin/cmake-gui" --install
 code.
 
 code(text).Creating an Xcode solution.

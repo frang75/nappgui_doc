@@ -11,26 +11,9 @@ img2(fractals_linux.png,fractals_raspbian.png,400).Ubuntu and Raspbian version.
 Capturing a viewer of Julia sets, Linux/Ubuntu version.
 Capturing a viewer of Julia sets, Raspbian version.
 
-p.Due to the large computational load of this algorithm we have divided the calculation into several threads <r>fractal_threads</r>. This problem is easily parallelizable simply by fractioning the image, because each pixel is obtained independently. In <r>threads</r> you have the execution times according to platform.
+p.Due to the large computational load of this algorithm we have divided the calculation into several threads <r>fractal_threads</r>. This problem is easily parallelizable simply by fractioning the image, because each pixel is obtained independently.
 
-img(fractal_threads.svg,300,.60).Collaboration of several threads.
+img(fractal_threads.svg,300,.40).Collaboration of several threads.
 Image divided into four parts and four threads calculating each.
-
-table(threads).Calculation times depending on the processor.
-row.
-p.CPU/Threads
-p.1
-p.2
-p.3
-p.4
-p.8
-row.
-p.Intel i7-4790K
-p.109ms
-p.59ms
-p.78ms
-p.31ms
-p.31ms
-table.
 
 codefile(demo/fractals/fractals.c).

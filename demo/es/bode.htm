@@ -3,16 +3,16 @@ h1.Bode
 
 p.En este proyecto abordamos la construcción de una interfaz de usuario interactiva para los <b>Diagramas de Bode</b>, herramienta muy utilizada en Ingeniería del Control <r>bode_win</r>.  El módulo de cálculo ha sido escrito en lenguaje C por <l>mailto:francisco.gil@ua.es''Javier Gil Chica</l>, profesor titular del Departamento de Física de la Universidad de Alicante. El código fuente al completo está disponible disponible en la carpeta <c>/src/demo/bode</c> de la distribución del SDK.
 
-img(bode_win.png,0,.65).Versión Windows.
+img(bode_win.png,0,.75).Versión Windows.
 Captura de la versión Windows de Bode.
 
-img(bode_macos.png,0,.65).Versión macOS.
+img(bode_macos.png,0,.75).Versión macOS.
 Captura de la versión macOS de Bode.
 
-img(bode_linux.png,0,.65).Versión Linux Ubuntu.
+img(bode_linux.png,0,.75).Versión Linux Ubuntu.
 Captura de la versión Linux de Bode.
 
-img(bode_raspberry.png,0,.65).Versión Raspberry.
+img(bode_raspberry.png,0,.75).Versión Raspberry.
 Captura de la versión Raspberry de Bode.
 
 p.La ventana principal se ha dividido verticalmente en dos partes, mediante un <c>layout(2,1)</c> <r>bode_layout</r>. En la parte izquierda tenemos los parámetros <c>P, Q, T, R</c> y algunos botones. Se han utilizado los sublayouts <c>i_coeffs(4,9)</c> y <c>i_ranges(3,3)</c> para agrupar controles. En la zona de la derecha se ubican dos controles de dibujo <lt>View</lt> para las gráficas y otro sublayout <c>i_sliders(3,3)</c> con los parámetros <c>I, P, D</c>.
