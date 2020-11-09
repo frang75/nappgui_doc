@@ -1,7 +1,7 @@
 
-h1.Memoria dinámica
+h1.Heap - Gestor de memoria
 
-ep.Gestor de memoria optimizado y control de <i>leaks</i>.
+ep.Gestor de memoria dinámica optimizado y control de <i>leaks</i>.
 
 p.<b>Heap</b> es gestor y auditor de memoria dinámica muy eficiente incluido en la librería <i>core</i> y disponible para todos los programas basados en NAppGUI (línea de comandos y escritorio). Es habitual que las aplicaciones soliciten gran cantidad de pequeños bloques de memoria para albergar diferentes objetos (cadenas de caracteres, controles de interfaz, instancias de estructuras, búfer E/S, etc). La estrategia detrás de <i>heap</i> no es otra que pedir al sistema operativo páginas de memoria de cierto tamaño (64kb) mediante <lf>bmem_malloc</lf> y utilizarlas para resolver varias solicitudes. Con esto perseguimos varios objetivos:
 

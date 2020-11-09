@@ -1,5 +1,4 @@
 
-
 h1.Strings
 
 ep.Cadenas de caracteres en UTF-8, reservadas dinámicamente.
@@ -176,6 +175,16 @@ func(str_nchars).Retorna el número de caracteres de un objeto string.
 fret(uint32_t).El número de caracteres, sin incluir el carácter nulo <c>'\0'</c>.
 fpar(const String*,str).Objeto string.
 fnote.En cadenas <lh>UTF-8</lh> el número de bytes no es el mismo que el caracteres.
+
+func(str_prefix).Localiza el inicio común de dos cadenas. 
+fret(uint32_t).El número de bytes que son idénticos al comienzo de ambas cadenas.
+fpar(const char_t*,str1).Primera cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,str2).Segunda cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(str_is_prefix).Comprueba si una cadena es prefijo de otra. 
+fret(bool_t).<c>TRUE</c> si <c>preffix</c> es prefijo de <c>str</c>.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+fpar(const char_t*,prefix).Prefijo de <c>str</c> terminado en carácter nulo <c>'\0'</c>.
 
 func(str_scmp).Compara alfabéticamente dos strings. 
 fret(int).Resultado de la comparación.

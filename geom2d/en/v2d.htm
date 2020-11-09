@@ -17,7 +17,7 @@ math(vecop).Elementary vector albegra.
  -\vec{a} & = & (-a.x, -a.y) \\
 \vec{v} & = & s \cdot \vec{a} \\
  & = & (s \cdot a.x, s \cdot a.y) \\
-|a| & = & \sqrt{a^2+b^2} \\
+|\vec{a}| & = & \sqrt{a.x^2+a.y^2} \\
  \hat{a} & = & \left(\frac{a.x}{|a|}, \frac{a.y}{|a|} \right)
 \end{eqnarray*}
 math.
@@ -25,23 +25,106 @@ math.
 img(vector2d_algebra.svg,520,.65).Geometric interpretation of basic operations with vectors.
 Drawing a plan with different operations with vectors.
 
+p.The angle of rotation of a vector will always be expressed in <b>radians</b> and the <b>positive direction</b> corresponds to the rotation from the <b>X axis to the Y axis</b>. Normally the counterclockwise direction is associated as positive and the clockwise direction negative. This is true in Cartesian coordinates but not in other types of reference systems, such as images or monitors <r>vector2d_rotate</r>. We must bear this in mind to avoid confusion, something that happens relatively frequently. The same criterion is applied when calculating the perpendicular vector, differentiating between positive and negative.
+
+img(vector2d_rotate.svg,520,.65).Rotation of a vector in different coordinate systems.
+Vector drawing of a plane with different rotations.
+
+p.Another operation used quite frequently by geometric algorithms is the projection of points onto a vector. Intuitively, we can see it as the point on the vector closest to the original point and that it will always be on the perpendicular line. We will calculate it with the dot product <r>vecproj</r> and its value (scalar) will be the distance from the origin to the projection in the direction of the vector <r>vector2d_projection</r>.
+
+math(vecproj).Projection of several points in a vector.
+\begin{eqnarray*}
+proj_{\vec{v}}(p) & = & \frac{v.x \cdot p.x + v.y \cdot p.y}{|\vec{v}|} \\
+proj_{\vec{4,3}}(1,2) & = & \frac{4 \cdot 1 + 3 \cdot 2}{5} = 2 \\
+proj_{\vec{4,3}}(2,-2) & = & 0.4 \\
+proj_{\vec{4,3}}(5,1) & = & 4.6 \\
+proj_{\vec{4,3}}(-3,1) & = & -1.8 
+\end{eqnarray*}
+math.
+
+img(vector2d_projection.svg,520,.65).Geometric interpretation of projections.
+Drawing of a plane with different projections of points in a vector.
+
+bq.If we are interested in the relative position between different projections, we can avoid dividing by the vector's modulus, which is more computationally efficient by not calculating square roots.
+
 const(V2D,ZERO).The (0,0) vector.
+
+const(V2D,X).The (1,0) vector.
+
+const(V2D,Y).The (,1) vector.
 
 func(V2D,).Create a 2d vector from its components.
 fret(V2D).2d vector.
 fpar(const real,x).X coordinate.
 fpar(const real,y).Y coordinate.
 
+func(V2D,add).Add two vectors.
+fret(V2D).The result vector.
+fpar(const V2D*,v1).Vector 1.
+fpar(const V2D*,v2).Vector 2.
+
+func(V2D,sub).Subtract two vectors.
+fret(V2D).The result vector.
+fpar(const V2D*,v1).Vector 1.
+fpar(const V2D*,v2).Vector 2.
+
+func(V2D,mul).Multiply a vector by a scalar.
+fret(V2D).The result vector.
+fpar(const V2D*,v).Vector.
+fpar(const real,s).Scalar.
+
+func(V2D,unit).Unit vector (direction) from 1 to 2.
+fret(V2D).The unit vector.
+fpar(const V2D*,v1).Point 1 (origin).
+fpar(const V2D*,v2).Point 2 (destination).
+fpar(real*,dist).Distance between points. Can be <c>NULL</c>.
+
+func(V2D,perp_pos).Gets the positive perpendicular vector.
+fret(V2D).The perpendicular vector.
+fpar(const V2D*,v).Initial vector.
+fnote.It is the perpendicular obtained by positive angle (+π/2).
+
+func(V2D,perp_neg).Gets the negative perpendicular vector.
+fret(V2D).The perpendicular vector.
+fpar(const V2D*,v).Initial vector.
+fnote.It is the perpendicular obtained by negative angle (-π/2).
+
 func(V2D,norm).Normalize a vector, that is, make it a vector of length = 1.
 fret(bool_t).<c>FALSE</c> if the vector cannot be normalized (vector 0). 
-fpar(V2D*,v2d).Vector that will be normalized.
+fpar(V2D*,v).Vector that will be normalized.
 
 func(V2D,length).Calculate the length of a vector.
 fret(real).The vector module. 
-fpar(const V2D*,v2d).Vector.
+fpar(const V2D*,v).Vector.
+
+func(V2D,sqlength).Calculate the square of the length of a vector.
+fret(real).The square of the vector modulus. 
+fpar(const V2D*,v).Vector.
+fnote.Avoid using the square root, so it is more efficient than <lf>v2d_lengthf</lf>. Often used to compare distances.
+
+func(V2D,dot).Product of two vectors.
+fret(real).Scalar product. 
+fpar(const V2D*,v1).Vector 1.
+fpar(const V2D*,v2).Vector 2.
 
 func(V2D,dist).Calculate the distance between two points.
 fret(real).Distance. 
-fpar(const V2D*,v2d1).The first point.
-fpar(const V2D*,v2d2).The second point.
+fpar(const V2D*,v1).The first point.
+fpar(const V2D*,v2).The second point.
 
+func(V2D,sqdist).Calculate the square of the distance between two points.
+fret(real).The distance squared. 
+fpar(const V2D*,v1).The first point.
+fpar(const V2D*,v2).The second point.
+fnote.It avoids using the square root, so it is more efficient than <lf>v2d_distf</lf>. Often used to compare distances.
+
+func(V2D,angle).Calculate the angle formed by two vectors.
+fret(real).The angle in radians (-Pi, Pi)
+fpar(const V2D*,v1).Vector 1.
+fpar(const V2D*,v2).Vector 2.
+fnote.Positive angles go from v1 to v2 counterclockwise. For angles greater than Pi radians (180°) it will return negative (clockwise).
+
+func(V2D,rotate).Apply a rotation to a vector.
+fpar(V2D*,v).Vector to be rotated (origin/destination.
+fpar(const real,a).Angle in radians.
+fnote.This function involves calculating the sine and cosine. Use <lf>t2d_vmultnf</lf> if you have to apply the same rotation to multiple vectors.

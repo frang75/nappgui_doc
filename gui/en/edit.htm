@@ -80,6 +80,11 @@ func(edit_editable).Enable or disable editing in the control.
 fpar(Edit*,edit).The edit.
 fpar(const bool_t,is_editable).<c>TRUE</c>will allow to edit the text (by default).
 
+func(edit_autoselect).Activate or deactivate auto-selection of text.
+fpar(Edit*,edit).The edit.
+fpar(const bool_t,autoselect).<c>TRUE</c> the control text will be fully selected when it receives focus.
+fnote.Default <c>FALSE</c>.
+
 func(edit_tooltip).Assigns a tooltip to the edit control.
 fpar(Edit*,edit).The edit.
 fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.

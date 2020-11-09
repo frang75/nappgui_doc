@@ -1,0 +1,41 @@
+langrev.
+h1.Keyboard buffer
+
+ep.Buffer to read keystrokes synchronously or asynchronously.
+
+p.The operating system generates events related to the pressing or releasing keys <lf>view_OnDown</lf> <lf>view_OnUp</lf>. Sometimes we need to know the state of a key without having to be aware of the events they generate. <lt>KeyBuf</lt> offers  a very simple query mechanism using only the value of the <lt>vkey_t</lt> key.
+
+li.Use <lf>keybuf_create</lf> to create the buffer.
+
+li.Use <lf>view_keybuf</lf> to assign the buffer to any generic view, which will be in charge of capturing events and updating it. The status may be consulted from any program function at any time.
+
+func(keybuf_create).Create a buffer with keyboard status.
+fret(KeyBuf*).The buffer.
+
+func(keybuf_destroy).Destroy the buffer.
+fpar(KeyBuf**,bufer).The buffer. It will be set to <c>NULL</c> after the destruction.
+
+func(keybuf_OnUp).Set the state of a key as released.
+fpar(KeyBuf*,bufer).The buffer.
+fpar(const vkey_t,key).The key code.
+fnote.Normally it will not be necessary to call this function. It will be done by <lt>View</lt> or the module that captures keyboard events.
+
+func(keybuf_OnDown).Sets the state of a key as pressed.
+fpar(KeyBuf*,bufer).The buffer.
+fpar(const vkey_t,key).The key code.
+fnote.Normally it will not be necessary to call this function. It will be done by <lt>View</lt> or the module that captures keyboard events.
+
+func(keybuf_clear).Clear the buffer. Set all keys as released.
+fpar(KeyBuf*,bufer).The buffer.
+fnote.Normally it will not be necessary to call this function. It will be done by <lt>View</lt> or the module that captures keyboard events.
+
+func(keybuf_pressed).Returns the state of a key.
+fret(bool_t).Pulsed (<c>TRUE</c>) or released (<c>FALSE</c>).
+fpar(const KeyBuf*,bufer).The buffer.
+fpar(const vkey_t,key).The key code.
+
+func(keybuf_str).Returns a text string associated with a key.
+fpar(const vkey_t,key).The key code.
+
+func(keybuf_dump).Dump the buffer status into the <lp>log</lp>.
+fpar(const KeyBuf*,bufer).The buffer.

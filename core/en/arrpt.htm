@@ -89,6 +89,12 @@ fpar(ArrPt(type)*,array).The array.
 fpar(FPtr_compare,func_compare).Function to compare two elements. <lh>Sort and search</lh>.
 fpar(,type).Object type.
 
+func(arrpt_sort_ex).Sort array elements using Quicksort and additional data.
+fpar(ArrPt(type)*,array).The array.
+fpar(FPtr_compare_ex,func_compare).Function to compare two elements using an additional data.
+fpar(,type).Object type.
+fpar(,dtype).Type of data in the comparison function.
+
 func(arrpt_find).Search for a specific pointer in the array.
 fret(uint32_t).The position of the pointer if it exists, or <lt>UINT32_MAX</lt> if not.
 fpar(const ArrPt(type)*,array).The array.

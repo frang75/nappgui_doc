@@ -1,0 +1,41 @@
+
+h1.Búfer de teclado
+
+ep.Búfer para leer las pulsaciones del teclado de forma síncrona o asíncrona.
+
+p.El sistema operativo genera eventos relacionados con la pulsación o liberación de las teclas <lf>view_OnDown</lf> <lf>view_OnUp</lf>. En ciertas ocasiones necesitamos saber el estado de una tecla sin tener por ello que estar pendientes de los eventos que generan. <lt>KeyBuf</lt> nos ofrece un mecanismo muy sencillo de consulta utilizando tan solo el valor de la tecla <lt>vkey_t</lt>.
+
+li.Utiliza <lf>keybuf_create</lf> para crear el búfer.
+
+li.Utiliza <lf>view_keybuf</lf> para asignar el búfer a cualquier vista genérica, que será la encargada de capturar eventos y actualizarlo. El estado podrá ser consultado desde cualquier función del programa en cualquier momento.
+
+func(keybuf_create).Crea un búfer con el estado del teclado.
+fret(KeyBuf*).El búfer.
+
+func(keybuf_destroy).Destruye el búfer.
+fpar(KeyBuf**,bufer).El búfer. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(keybuf_OnUp).Establece el estado de una tecla como liberada.
+fpar(KeyBuf*,bufer).El búfer.
+fpar(const vkey_t,key).El código de la tecla.
+fnote.Normalmente no será necesario llamar a esta función. Lo hará <lt>View</lt> o el módulo que capture los eventos de teclado.
+
+func(keybuf_OnDown).Establece el estado de una tecla como pulsado.
+fpar(KeyBuf*,bufer).El búfer.
+fpar(const vkey_t,key).El código de la tecla.
+fnote.Normalmente no será necesario llamar a esta función. Lo hará <lt>View</lt> o el módulo que capture los eventos de teclado.
+
+func(keybuf_clear).Limpia el búfer. Establece todas las teclas como liberadas.
+fpar(KeyBuf*,bufer).El búfer.
+fnote.Normalmente no será necesario llamar a esta función. Lo hará <lt>View</lt> o el módulo que capture los eventos de teclado.
+
+func(keybuf_pressed).Retorna el estado de una tecla.
+fret(bool_t).Pulsada (<c>TRUE</c>) o liberada (<c>FALSE</c>).
+fpar(const KeyBuf*,bufer).El búfer.
+fpar(const vkey_t,key).El código de la tecla.
+
+func(keybuf_str).Retorna una cadena de texto asociada a una tecla.
+fpar(const vkey_t,key).El código de la tecla.
+
+func(keybuf_dump).Vuelca en el <lp>log</lp> el estado del búfer.
+fpar(const KeyBuf*,bufer).El búfer.

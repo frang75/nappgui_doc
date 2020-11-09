@@ -108,3 +108,10 @@ func(window_defbutton).Establece el botón por defecto de la ventana. Será acti
 fpar(Window*,window).La ventana.
 fpar(Button*,button).El botón.
 
+func(window_cursor).Cambia el cursor del ratón.
+fpar(Window*,window).La ventana.
+fpar(const cursor_t,cursor).Identificador del nuevo cursor.
+fpar(const Image*,image).Imagen personalizada. Solo válido en <lt>ekCUSER</lt>.
+fpar(const real32_t,hot_x).Coordenada x del punto de clic. Solo válido en <lt>ekCUSER</lt>.
+fpar(const real32_t,hot_y).Coordenada y del punto de clic. Solo válido en <lt>ekCUSER</lt>.
+fnote.<c>hot_x, hot_y</c> indican el punto "sensible" dentro de la imagen, que indicará la posición exacta del ratón.

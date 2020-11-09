@@ -1,0 +1,93 @@
+langrev.
+h1.Regular expressions
+
+p.Regular expressions define a text pattern that can be used to find or compare strings.
+
+li.Use <lf>regex_create</lf> to create a regular expression.
+
+li.Use <lf>regex_match</lf> to check if a string matches the pattern.
+
+h2.Define patterns
+
+p.We can build a regular expression from a text string, following these simple rules:
+
+li.A string pattern corresponds only to that same string.
+code(txt,ref1,no).
+"hello" --> {"hello"}
+code.
+
+li.A period <c>'.'</c> is equivalent to "any character".
+code(txt,ref1,no).
+"h.llo" --> {"hello", "htllo", "hällo", "h5llo", ...}
+code.
+
+li.A dash <c>'A-Z'</c> sets a range of characters, using the ASCII/Unicode code from both ends.
+code(txt,ref1,no).
+"A-Zello" --> {"Aello", "Bello", "Cello", ..., "Zello"}
+
+'A-Z': (65-90) (ABCDEFGHIJKLMNOPQRSTUVWXYZ)
+'0-9': (48-57) (0123456789)
+'á-ú': (225-250) (áâãäåæçèéêëìíîïðñòóôõö÷øùú)
+code.
+
+bq.Like <lt>String</lt> objects, patterns are expressed in <lh>UTF-8</lh>, therefore the entire Unicode set can be used to create regular expressions.
+
+li.The brackets <c>'[áéíóú]'</c> allow you to switch between several characters.
+code(txt,ref1,no).
+"h[áéíóú]llo" --> {"hállo", "héllo", "híllo", "hóllo", "húllo"}
+code.
+
+li.The asterisk <c>'*'</c> allows the last character to appear zero or more times.
+code(txt,ref1,no).
+"he*llo" --> {"hllo", "hello", "heello", "heeello", "heeeello", ...}
+"h.*llo" --> {"hllo", "hello", "hallo", "hillo", "hasello", ...}
+"hA-Z*llo" --> {"hllo", "hAllo", "hABllo", "hVFFRREASllo", "hAQWEDllo", ...}
+"FILE_0-9*.PNG" --> {"FILE_.PNG", "FILE_0.PNG", "FILE_01.PNG", "FILE_456.PNG", ...}
+code.
+
+li.The parentheses <c>'(he*llo)'</c> allow grouping a regular expression, so that it behaves as a single character.
+code(txt,ref1,no).
+"[(hello)(bye)]" --> {"hello", "bye" }
+"[(red)(blue)(1*)]" --> {"red", "blue", "", "1", "11", "111", ... }
+"(hello)*" --> {"", "hello", "hellohello", "hellohellohello", ... }
+"(he*llo)ZZ" --> {"hlloZZ", "helloZZ", "heelloZZ", "heeelloZZ", ... }
+code.
+
+li.For <c>'.', '-', '[]', '*', '()'</c> to be interpreted as characters, use the <i>backslash</i> <c>'\'</c>.
+code(txt,ref1,no).
+"\(he\*\-llo\)" --> {"(he*-llo)"}
+code.
+
+bq.Remember that for expressions inserted as constants in C code, the <i>backslash</i> character is represented by a double slash <c>"\(he\\*\\-llo\\)"</c>.
+
+h2.Regular languages ​​and automata
+
+p.Regular languages ​​are those that are defined recursively using three basic operations on the set of characters (or symbols) available. They can be described using the regular expressions discussed above.
+
+li.Each character <b>'a'</b> is a regular language <b>'A'</b>.
+
+li.The union of two regular languages, is a regular language <b>A∪B</b>.
+
+li.The concatenation of two regular languages, is a regular language <b>A·B</b>.
+
+li.The closure of a regular language is a regular language <b>A*</b>. This is where recursion comes in.
+
+bq.In this context the symbols are all Unicode characters. But you can define languages ​​based on other alphabets, including the binary {0, 1}.
+
+p.To recognize whether or not a string belongs to a certain regular language, it is necessary to build a <b>Finite Automata</b> based on the rules reflected in <r>regex</r>.
+
+img(regex.svg,480,.6).Construction of finite automata to filter regular expressions.
+Concatenation, Union and Closure of finite automata.
+
+func(regex_create).Create a regular expression from a pattern.
+fret(RegEx*).Regular expression (automata).
+fpar(const char_t*, pattern).Search pattern.
+fnote.See <lh>Define patterns</lh>.
+
+func(regex_destroy).Destroy a regular expression.
+fpar(RegEx**,regex).Regular expresion. Will be set to <c>NULL</c> after destruction.
+
+func(regex_match).Check if a string matches the search pattern.
+fret(bool_t).<c>TRUE</c> if the string is accepted by the regular expression.
+fpar(const RegEx*,regex).Regular expresion.
+fpar(const char_t*,str).String to evaluate.

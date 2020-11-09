@@ -9,6 +9,8 @@ p.La operación más elemental es dibujar una recta entre dos puntos. En context
 
 li.<lf>draw_line</lf> dibujará una línea.
 li.<lf>draw_polyline</lf> dibujará varias líneas conectadas.
+li.<lf>draw_arc</lf> dibujará un arco.
+li.<lf>draw_bezier</lf> dibujará una curva de Bézier de grado 3 (cúbica).
 li.<lf>draw_line_color</lf> establecerá el color de línea.
 li.<lf>draw_line_width</lf> establecerá el ancho de línea.
 li.<lf>draw_line_cap</lf> establecerá el estilo de los extremos.
@@ -116,9 +118,27 @@ draw_fill_matrix(ctx, &matrix);
 draw_ellipse(ctx, ekSKFILL, 0, 0, 100, 50); 
 code.
 
+h3.Gradientes en líneas
+
+p.Además del relleno de regiones, los gradientes también pueden aplicarse a líneas y contornos <r>gradient_lines</r> <r>gradlin</r>.
+
+li.Utiliza <lf>draw_line_fill</lf> para dibujar las líneas con el patrón de relleno actual.
+
+li.Utiliza <lf>draw_line_color</lf> para volver al color sólido.
+
+img(gradient_lines.png,550,.65).Dibujo de líneas utilizando gradientes.
+Varias líneas dibujadas con degradados de color.
+
+code(cpp,gradlin).Gradientes en líneas.
+draw_fill_linear(ctx, c, stop, 2, 0, 0, 600, 400);
+draw_fill_matrix(ctx, kT2D_IDENTITYf);
+draw_line_fill(ctx);
+draw_bezier(ctx, 30, 200, 140, 60, 440, 120, 570, 200);
+code.
+
 h3.Límites del gradiente
 
-p.Como hemos comentado, el relleno de color se extenderá de manera uniforme e indefinida por todas las líneas perpendiculares al vector, pero... ¿Que ocurre fuera de sus límites? En <r>wrapgrad</r> <r>gradient_wrap</r> el gradiente se ha definido en x=[200, 400], siendo esta medida inferior a la figura a rellenar:
+p.Como hemos comentado, el relleno de color se extenderá de manera uniforme e indefinida por todas las líneas perpendiculares al vector, pero... ¿Que ocurre fuera de los límites de este vector? En <r>wrapgrad</r> <r>gradient_wrap</r> el gradiente se ha definido en x=[200, 400], siendo esta medida inferior a la figura a rellenar:
 
 li.Utiliza <lf>draw_fill_wrap</lf> para definir el comportamiento del gradiente fuera de límites.
 
@@ -139,13 +159,17 @@ Gradientes con diferentes tratamientos en el área exterior.
 
 h2.Dibujar texto
 
-p.El renderizado del texto es la parte más importante de la interfaz de usuario y una de las más complejas de resolver técnicamente. Antiguamente, se utilizaban pequeños <i>bitmaps</i> con la imagen de cada carácter, pero hoy en día el juego de carácteres <lp>unicode</lp> tiene miles de entradas que hay que dibujar con diferentes estilos. Los textos se pueden escalar, rotar, rellenar con diferentes patrones o maquetar en párrafos. Afortunadamente, toda esta casuística está resuelta por las APIs nativas de cada sistema operativo, lo que nos permite proporcionar una interfaz simplificada e intuitiva.
+p.El renderizado del texto es la parte más importante de la interfaz de usuario. Antiguamente, se utilizaban pequeños <i>bitmaps</i> con la imagen de cada carácter, pero a principios de los 90 entraron en juego las fuentes vectoriales basadas en curvas de Bezier. La gran cantidad de tipografías, el inmenso juego de carácteres <lp>unicode</lp> y la posibilidad de escalar, rotar, o maquetar el texto en párrafos supuso un gran reto técnico en aquellos años. Afortunadamente, toda esta casuística está ampliamente resuelta por las APIs nativas de cada sistema operativo, lo que nos permite proporcionar una interfaz simplificada para añadir texto a nuestros contextos gráficos.
 
 li.Utiliza <lf>draw_text</lf> para dibujar textos en <lp>dctx</lp>.
+
+li.Utiliza <lf>draw_text_color</lf> para establecer el color del texto.
 
 li.Utiliza <lf>draw_font</lf> para establecer la fuente tipográfica.
 
 li.Utiliza <lf>draw_text_width</lf> para establecer el ancho máximo de un bloque de texto.
+
+li.Utiliza <lf>draw_text_trim</lf> par indicar como será cortado el texto que no quepa en el ancho indicado.
 
 li.Utiliza <lf>draw_text_align</lf> para establecer la alineación del texto, con respecto a su punto de inserción.
 
@@ -158,20 +182,20 @@ p.Para dibujar textos de una sola línea, tan solo debemos llamar a la función 
 code(cpp,simtext).Dibujo de una línea de texto.
 Font *font = font_system(20, 0);
 draw_font(ctx, font);
-draw_fill_color(ctx, kCOLOR_BLUE);
+draw_text_color(ctx, kCOLOR_BLUE);
 draw_text_align(ctx, ekLEFT, ekTOP);
-draw_text(ctx, ekFILL, "Text 文本 Κείμενο", 25, 25);
+draw_text(ctx, "Text 文本 Κείμενο", 25, 25);
 code.
 
 img(text_single_line.png,0,.65).Textos de una sola línea, con alineación y transformaciones.
 Dibujo de una cadena de texto varias veces.
 
-p.Si la cadena a visualizar tiene saltos de línea (carácter '\n') se tendrán en cuenta y el texto se mostrará en varias líneas <r>multext</r> <r>text_multiline</r>. También podemos obtener la medida en píxeles de un bloque, útil para integrar el texto con otras primitivas.
+p.Si la cadena a visualizar tiene saltos de línea (carácter '\n') se tendrán en cuenta y el texto se mostrará en varias líneas <r>multext</r> <r>text_multiline</r>. También es posible obtener su medida en píxeles, útil para evitar solapamientos con otras primitivs.
 
 code(cpp,multext).Dibujo de textos con saltos de línea.
 const char_t *text = "Text new line\n文字换行\nΓραμμή κειμένου";
 real32_t width, height;
-draw_text(ctx, ekFILL, text, 25, 25);
+draw_text(ctx, text, 25, 25);
 draw_text_extents(ctx, text, -1, &width, &height);
 code.
 
@@ -184,14 +208,14 @@ code(cpp,blocktext).Anchura máxima y alineación interna en bloques de texto.
 const char_t *text = "Lorem ipsum dolor sit amet...consequat";
 draw_text_width(ctx, 200);
 draw_text_halign(ctx, ekLEFT);
-draw_text(ctx, ekFILL, text, 25, 25);
+draw_text(ctx, text, 25, 25);
 draw_text_extents(ctx, text, 200, &width1, &height1);
 code.
 
 img(text_paragraph.png,0,.65).Párrafos de texto con límite de anchura. Se muestra la anchura máxima y la real obtenida con <lf>draw_text_extents</lf>.
 Dibujo de bloques de texto con varias anchuras.
 
-p.El texto se comporta como cualquier otra región: Es posible combinar el dibujo del contorno con el relleno, o incluso utilizar gradientes mediante el parámetro <c>op</c> de <lf>draw_text</lf> <r>gradtext</r> <r>text_stroke_fill</r>.
+p.Por último, podemos utilizar <lf>draw_text_path</lf> para tratar al texto como cualquier otra región geométrica, resaltando el borde o rellenando con gradientes. En este caso <lf>draw_text_color</lf> no tendrá efecto y se utilizarán los valores de <lf>draw_fill_color</lf>, <lf>draw_fill_linear</lf> y <lf>draw_line_color</lf> <r>gradtext</r> <r>text_stroke_fill</r>.
 
 code(cpp,gradtext).Texto con borde punteado y relleno con gradiente.
 color_t c[2];
@@ -203,13 +227,13 @@ draw_line_dash(ctx, dash, 2);
 draw_line_color(ctx, kCOLOR_GREEN);
 draw_text_extents(ctx, "Gradient dashed text", -1, &width, &height);
 draw_fill_linear(ctx, c, stop, 2, 25, 0, 25 + width, 0);
-draw_text(ctx, ekFILLSK, "Gradient dashed text", 25, 250);
+draw_text_path(ctx, ekFILLSK, "Gradient dashed text", 25, 250);
 code.
 
 img(text_stroke_fill.png,0,.65).Combinando rellenos y bordes.
 Texto con diferentes estilos de borde y relleno.
 
-bq.La forma óptima de dibujar textos es con color sólido y operación <lt>ekFILL</lt>. Así debe configurarse en el caso que tengamos que hacer un uso intensivo: Navegadores, procesadores de texto, informes, etc. Dibujar contornos o utilizar gradientes tendrá una penalización en el rendimiento.
+bq.<lf>draw_text</lf> en mucho más rápida que <lf>draw_text_path</lf>, por lo que debemos delimitar el uso de esta última a lo estrictamente necesario.
 
 h2.Dibujar imágenes
 
@@ -272,6 +296,10 @@ p.LineDash
 p.Sólido
 p.<lf>draw_line_dash</lf>
 row.
+p.TextColor
+p.<lt>kCOLOR_BLACK</lt>
+p.<lf>draw_text_color</lf>
+row.
 p.FillColor
 p.<lt>kCOLOR_BLACK</lt>
 p.<lf>draw_fill_color</lf>
@@ -318,9 +346,33 @@ fpar(const bool_t,closed).<c>TRUE</c> para unir el último punto con el primero.
 fpar(const V2Df*,points).Array de puntos que forman la polilínea.
 fpar(const uint32_t,n).Número de puntos.
 
+func(draw_arc).Dibuja un arco (segmento circular).
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const real32_t,x).Coordenada x del centro del arco.
+fpar(const real32_t,y).Coordenada y del centro del arco.
+fpar(const real32_t,radius).Radio del arco.
+fpar(const real32_t,start).Ángulo inicial con respecto al vector <c>X=[1,0]</c> en radianes.
+fpar(const real32_t,sweep).Ángulo de barrido o tamaño del arco en radianes.
+fnote.Los ángulos positivos son los que giran desde el vector X al vector Y. Ver <lp>v2d</lp>.
+
+func(draw_bezier).Dibuja una curva de Bézier cúbica (grado 3) utilizando dos extremos (x0,y0)-(x3,y3) y dos puntos de control intermedios (x1,y1)-(x2,y2).
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const real32_t,x0).Coordenada x del punto inicial.
+fpar(const real32_t,y0).Coordenada y del punto inicial.
+fpar(const real32_t,x1).Coordenada x del primer punto intermedio.
+fpar(const real32_t,y1).Coordenada y del primer punto intermedio.
+fpar(const real32_t,x2).Coordenada x del segundo punto intermedio.
+fpar(const real32_t,y2).Coordenada y del segundo punto intermedio.
+fpar(const real32_t,x3).Coordenada x del punto final.
+fpar(const real32_t,y3).Coordenada y del punto final.
+
 func(draw_line_color).Establece el color de dibujo de líneas y contornos.
 fpar(DCtx*,ctx).Contexto de dibujo.
 fpar(const color_t,color).Color de línea.
+
+func(draw_line_fill).Establece el patrón de relleno actual para el dibujo de líneas.
+fpar(DCtx*,ctx).Contexto de dibujo.
+fnote.El patrón de relleno debe haber sido establecido previamente mediante <lf>draw_fill_linear</lf>. Ver <lh>Gradientes en líneas</lh>.
 
 func(draw_line_width).Establece el grosor de línea.
 fpar(DCtx*,ctx).Contexto de dibujo.
@@ -410,18 +462,33 @@ fpar(DCtx*,ctx).Contexto de dibujo.
 fpar(const Font*, font).Fuente tipográfica.
 fnote.Tendrá efecto a partir del siguiente texto dibujado. Ver <lp>font</lp>.
 
+func(draw_text_color).Establece el color del texto.
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const color_t,color).Color.
+
 func(draw_text).Dibuja un bloque de texto.
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const char_t*,text).Cadena UTF8, terminada en carácter nulo <c>'\0'</c>.
+fpar(const real32_t, x).Coordenada x en el lienzo del origen del texto.
+fpar(const real32_t, y).Coordenada y en el lienzo del origen del texto.
+fnote.El texto se dibujará con la fuente y color preestablecido y será sensible a la transformación del contexto (rotaciones, escalados, etc). Ver <lh>Dibujar texto</lh>.
+
+func(draw_text_path).Dibuja un bloque de texto como un área geométrica. Similar a <lf>draw_text</lf>, pero permite utilizar gradientes o dibujar sólo el borde del texto.
 fpar(DCtx*,ctx).Contexto de dibujo.
 fpar(const drawop_t,op).Operación de dibujo.
 fpar(const char_t*,text).Cadena UTF8, terminada en carácter nulo <c>'\0'</c>.
 fpar(const real32_t, x).Coordenada x en el lienzo del origen del texto.
 fpar(const real32_t, y).Coordenada y en el lienzo del origen del texto.
-fnote.El texto se dibujará con la fuente y estilo preestablecido y será sensible a la transformación del contexto. Ver <lh>Dibujar texto</lh>.
+fnote.El texto se dibujará con la fuente y estilo (relleno y línea) preestablecido y será sensible a la transformación del contexto. Ver <lh>Dibujar texto</lh>.
 
 func(draw_text_width).Establece el ancho máximo de los bloques de texto.
 fpar(DCtx*,ctx).Contexto de dibujo.
 fpar(const real32_t, width).Anchura máxima.
 fnote.Si el texto a dibujar con <lf>draw_text</lf> es más ancho que <c>width</c>, se fragmentará en varias líneas. Pasar -1 para dibujar todo el bloque en una sola línea. No se tiene en cuenta el escalado del contexto. La medición se realiza en función del tamaño de la fuente preestablecida. Ver <lh>Dibujar texto</lh>.
+
+func(draw_text_trim).Establece como el texto será recortado cuando sea más ancho que el valor de <lf>draw_text_width</lf>.
+fpar(DCtx*,ctx).Contexto de dibujo.
+fpar(const ellipsis_t,ellipsis).Estilo de recorte.
 
 func(draw_text_align).Establece la alineación del texto con respecto al punto de inserción.
 fpar(DCtx*,ctx).Contexto de dibujo.

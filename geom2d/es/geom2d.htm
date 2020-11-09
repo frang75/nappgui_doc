@@ -1,7 +1,7 @@
 
 h1.Geom2D
 
-p.Estamos ante una librería de cálculo geométrico en dos dimensiones. Geom2D permite trabajar con primitivas en el plano real: Puntos, vectores, transformaciones, curvas y regiones. Ofrece tan solo funcionalidad matemática, es decir, no define ningún tipo de representación ni operación de dibujo. Depende únicamente de la librería <lp>core</lp> <r>geom2d_depends</r>, por lo que puede utilizarse tanto en aplicaciones de escritorio como en utilidades por línea de comandos. Todos los tipos y funciones se definen en simple <c>(float)</c> y <c>double</c> precisión, además de poder hacer uso de las <lh>Plantillas matemáticas C++</lh>.
+p.Estamos ante una librería de cálculo geométrico en dos dimensiones. Geom2D permite trabajar con primitivas en el plano real: Puntos, vectores, transformaciones, curvas y superficies. Ofrece tan solo funcionalidad matemática, es decir, no define ningún tipo de representación ni operación de dibujo. Depende únicamente de la librería <lp>core</lp> <r>geom2d_depends</r>, por lo que puede utilizarse tanto en aplicaciones de escritorio como en utilidades por línea de comandos. Todos los tipos y funciones se definen en simple <c>(float)</c> y <c>double</c> precisión, además de poder hacer uso de las <lh>Plantillas matemáticas C++</lh>.
 
 img(geom2d_depends.svg,300,.4).Dependencias de <i>geom2d</i>. Ver <lp>sdk</lp>.
 Árbol de dependencias de la librería geom2d.
@@ -26,15 +26,29 @@ struct(R2D,real).Rectángulo en 2d. <lp>r2d</lp>.
 smember(V2D,pos).Origen.
 smember(S2D,size).Tamaño.
 
-struct(B2D,real).Bounding Box en 2d. <lp>b2d</lp>.
-smember(V2D,min).Coordenada mínima del bounding.
-smember(V2D,max).Coordenada máxima del bounding.
-
 struct(T2D,real).Transformación afín en 2d. <lp>t2d</lp>.
 smember(V2D,i).Componente i de la transformación lineal.
 smember(V2D,j).Componente j de la transformación lineal.
 smember(V2D,p).Posición.
 
-struct(Curve2D,real).Curva paramétrica en 2d. <lp>curve2d</lp>.
+struct(Seg2D,real).Segmento de recta en 2d. <lp>seg2d</lp>.
+smember(V2D,p0).Coordenada del primer punto del segmento.
+smember(V2D,p1).Coordenada del segundo punto del segmento.
 
-struct(Brep2D,real).Área o región en 2d. <lp>brep2d</lp>.
+struct(Cir2D,real).Círculo en 2d. <lp>cir2d</lp>.
+smember(V2D,c).Centro.
+smember(real,r).Radio.
+
+struct(Box2D,real).Bounding Box en 2d. <lp>box2d</lp>.
+smember(V2D,min).Coordenada mínima del bounding.
+smember(V2D,max).Coordenada máxima del bounding.
+
+struct(OBB2D,real).Caja (rectángulo) orientada en 2d. <lp>obb2d</lp>.
+
+struct(Pol2D,real).Polígono convexo en 2d. <lp>pol2d</lp>.
+
+struct(Cur2D,real).Curva paramétrica en 2d. <lp>cur2d</lp>.
+
+struct(Reg2D,real).Región en 2d, definida de forma arbitraria. <lp>reg2d</lp>.
+
+struct(Col2D,real).Datos de colisión en 2d. <lp>col2d</lp>.

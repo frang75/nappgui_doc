@@ -1,32 +1,112 @@
 
 h1.View
 
-p.Las <b>View</b> o vistas personalizadas son áreas en blanco dentro de la ventana que nos permiten implementar nuestros propios componentes. Se caracterizan por tres cosas:
+p.Los controles <b>View</b> o vistas personalizadas <r>view</r> son áreas en blanco dentro de la ventana que nos permiten implementar nuestros propios componentes. Tendremos total libertad para dibujar y capturar los eventos del teclado o ratón que nos permitan interactuar con la misma. 
 
-li.Están integradas dentro de un <lt>Layout</lt> como el resto de elementos de interfaz. El layout gestionará la posición y tamaño de la vista en función de su configuración.
+li.Utiliza <lf>view_create</lf> para crear una vista.
 
-li.Permiten dibujar cualquier cosa a través del evento <b>OnDraw</b>. El manejador recibirá un contexto 2D listo para dibujar.
+li.Utiliza <lf>view_data</lf> para vincular un objeto.
 
-li.Permiten capturar los eventos de teclado y ratón producidos por el usuario, lo que hará posible interactuar con las escenas generadas.
+li.Utiliza <lf>view_get_data</lf> para obtener este objeto.
 
-li.No asumen nada sobre el contenido. Es el programador el que debe sincronizar los eventos del usuario con el dibujo para producir el efecto deseado.
+li.Utiliza <lf>view_size</lf> para establecer el tamaño por defecto. Ver <lh>Dimensionado natural</lh>.
 
-li.Utiliza <lf>view_create</lf> para crear una vista personalizada.
+img(view.svg,520,.7).Control de vista personalizada.
+Captura de una sencilla aplicación que incorpora una vista personalizada.
 
-li.Utiliza <lf>view_OnDraw</lf> para dibujar en una vista.
+h2.Dibujar en vistas.
 
-li.Utiliza <lf>view_data</lf> para asociar datos de usuario con la vista.
+p.No podemos actualizar el área de dibujo cuando queramos. Esta puede verse afectada por otras ventanas del entorno, por lo que el <i>framebuffer</i> es gestionado directamente por el sistema operativo. Este último mandará una notificación cada vez que el control deba refrescar su contenido.
 
-p.No podemos dibujar en la vista cuando queramos. Al ser un área dentro de la ventana está sujeta a solapamientos por lo que el búfer de dibujo es gestionado por el sistema operativo. El ciclo de refresco se divide en varios pasos <r>view_events</r>:
+li.Utiliza <lf>view_OnDraw</lf> para establecer el manejador de dibujo.
+
+li.Utiliza <lf>view_update</lf> para forzar la actualización del área.
+
+p.En <lp>die</lp> tienes una sencilla aplicación de ejemplo que implementa el dibujado de vistas personalizadas. El ciclo completo puede resumirse en estos pasos <r>view_events</r>:
 
 li.Se produce algún evento que requiere actualizar el contenido de la vista.
 
-li.Llamamos al método <lf>view_update</lf> para notificar que la vista debe ser actualizada. 
+li.La aplicación llama al método <lf>view_update</lf> para notificar que la vista debe ser actualizada. 
 
-li.En el momento oportuno, el sistema mandará un evento <c>OnDraw</c> con un objeto <lt>DCtx</lt> preparado para recibir nuestros comando de dibujo. En <lp>drawimg</lp> o <lp>die</lp> tienes ejemplos de uso de vistas personalizadas.
+li.En el momento oportuno, el sistema mandará un evento <c>OnDraw</c> con un contexto <lt>DCtx</lt> listo para dibujar.
 
 img(view_events.svg,420,.6).Ciclo de refresco de una vista personalizada.
 Gráfico con las diferentes fases de la actualización de una vista.
+
+bq.El sistema operativo puede lanzar eventos <c>OnDraw</c> en cualquier momento sin que hallamos llamado previamente a <c>view_update</c>.
+
+h2.Vistas con scroll
+
+p.Es posible que la "escena" a representar sea mucho más grande que el propio control, por lo que este mostrará solo un pequeño fragmento de la misma <r>bigdraw</r>. En estos casos diremos que la vista es un <i>viewport</i> de la escena. Podemos gestionarlo de dos maneras:
+
+img(bigdraw.svg,420,.6).Escena y vista (viewport).
+Relación de una escena 2D con el viewport donde de visualiza.
+
+li.Utilizar <lf>draw_matrix</lf> para indicar la transformación que integra el desplazamiento, zoom y posible rotación del viewport con respecto a la escena. Todo ello debe ser gestionado por la aplicación y no tenemos que hacer nada especial, salvo llamar a <c>view_update()</c> cuando sea necesario.
+
+li.Utilizar barras de scroll que permitan al usuario desplazarse libremente por el contenido. En este caso la gestión de la vista se complica un poco más. Esto es lo que debemos tener en cuenta:
+
+lili.Incluir las constantes <lt>ekVSCROLL</lt> y <lt>ekHSCROLL</lt> en el constructor.
+
+lili.Utilizar <lf>view_content_size</lf> para indicar las medidas de la escena, con el fin de que se dimensionen correctamente las barras.
+
+lili.Utilizar <lf>view_scroll_to</lf> para mover el origen del área visible.
+
+lili.Utilizar <lf>view_viewport</lf> para obtener la posición y dimensiones del área visible.
+
+p.Algo muy importante es evitar dibujar elementos no visibles, sobre todo en escenas muy grandes o con multitud de objetos. El sistema operativo mandará sucesivos eventos <c>OnDraw()</c> a medida que el usuario manipule las scrollbars, indicando en la estructura <lt>EvDraw</lt> los parámetros del área visible. En <lp>drawbig</lp> tienes un ejemplo de como gestionar correctamente este tipo de casos. 
+
+bq.Es posible que las dimensiones del viewport recibido en <c>OnDraw()</c> sean algo superiores a las medidas reales devueltas por <c>view_viewport()</c>. Esto es debido a que determinados sistemas (macOS, Linux) obligan a dibujar en ciertas zonas no visibles cercanas a los bordes, con el fin de evitar parpadeos en desplazamientos muy rápidos.
+
+h2.Uso del ratón
+
+p.Para poder interactuar con el control es necesario definir manejadores para los diferentes eventos del ratón <r>mouse_events</r>. El sistema operativo notificará las acciones del usuario con el fin de que la aplicación pueda lanzar las acciones pertinentes. No es necesario utilizarlos todos, tan solo los imprescindibles en cada caso.
+
+img(mouse_events.svg,360,.5).Eventos de posición con respecto a la vista.
+Ilustración de los eventos de ratón de una vista 2d.
+
+li.Utiliza <lf>view_OnEnter</lf> para saber cuando el cursor entre en la vista.
+
+li.Utiliza <lf>view_OnExit</lf> para saber cuando el cursor salga de la vista.
+
+li.Utiliza <lf>view_OnMove</lf> para saber cuando el cursor se está moviendo por la vista.
+
+li.Utiliza <lf>view_OnDown</lf> para saber cuando se pulse un botón dentro de la vista.
+
+li.Utiliza <lf>view_OnUp</lf> para saber cuando se libere un botón dentro de la vista.
+
+li.Utiliza <lf>view_OnClick</lf> para identificar un click (Up + Down rápido).
+
+li.Utiliza <lf>view_OnDrag</lf> para desplazamientos del cursor con un botón pulsado.
+
+li.Utiliza <lf>view_OnWheel</lf> para el uso de la ruedecilla del ratón.
+
+bq.Si la vista utiliza barras de scroll, la posición (x,y) del cursor pasada a <lt>EvMouse</lt> en cada evento, hace referencia a los coordenadas globales de la escena, teniendo en cuenta el desplazamiento. En vistas sin barras de scroll, son las coordenadas locales del control.
+
+h2.Uso del teclado
+
+p.Para poder recibir eventos de teclado, es necesario que la vista sea capaz de obtener el foco, algo que por defecto está desactivado. 
+
+li.Utiliza <lf>layout_tabstop</lf> para incluir la vista en el <i>tab-list</i> de la ventana y permitir que reciba el foco del teclado mediante la tecla <c>[TAB]</c> o al hacer clic sobre ella.
+
+li.Utiliza <lf>view_OnKeyDown</lf> para saber cuando se pulsa una tecla (si la vista tiene el foco).
+
+li.Utiliza <lf>view_OnKeyUp</lf> para saber cuando se libera una tecla.
+
+li.Utiliza <lf>view_OnFocus</lf> para notificar a la aplicación cada vez que la vista reciba (o pierda) el foco del teclado. En  <r>view_focus</r>, la vista cambia el color de la celda activa cuando tiene el foco.
+
+img(view_focus.svg,460,.6).Vista sin el foco del teclado (izquierda) y con él (derecha).
+Cambio del foco del teclado entre dos controles.
+
+p.En los eventos <c>KeyDown</c> y <c>KeyUp</c> se recibirá un <lt>vkey_t</lt> con el valor de la tecla pulsada. En <r>keycodes</r> y <r>extkeycodes</r> se muestran la correspondencia de estos códigos.
+
+img(keycodes.svg,0,1).Códigos del teclado.
+Representación de un teclado con el código de cada tecla.
+
+img(extkeycodes.svg,0,1).Códigos extendidos del teclado.
+Representación de un teclado extendido con el código de cada tecla extendida.
+
+p.En <lh>Aplicaciones síncronas</lh> es posible que necesitemos saber si una tecla está pulsada o no durante el ciclo de actualización (síncrono) donde no tenemos acceso a los eventos <c>OnKeyDown</c> y <c>OnKeyUp</c> (asíncronos). Esto es posible hacerlo asignando a la vista un búfer de teclado mediante <lf>view_keybuf</lf>, que capturá los eventos asociados a cada tecla y nos permitirá consultar su estado en cualquier momento de forma cómoda.
 
 func(view_create).Crea una nueva vista personalizada.
 fret(View*).El control vista.
@@ -58,11 +138,6 @@ fpar(View*,view).La vista.
 fpar(Listener*,listener).Función <i>callback</i> que se llamará cada vez que la vista cambie de tamaño.
 fnote.Ver <lh>Eventos GUI</lh>.
 
-func(view_OnMoved).Establece un manejador para el movimiento del ratón.
-fpar(View*,view).La vista.
-fpar(Listener*,listener).Función <i>callback</i> que se llamará a medida que el cursor del ratón se desplace por encima de la vista.
-fnote.Ver <lh>Eventos GUI</lh>.
-
 func(view_OnEnter).Establece un manejador para la entrada del ratón.
 fpar(View*,view).La vista.
 fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando el cursor del ratón entre en el área de la vista.
@@ -73,24 +148,29 @@ fpar(View*,view).La vista.
 fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando el cursor del ratón salga del área de la vista.
 fnote.Ver <lh>Eventos GUI</lh>.
 
+func(view_OnMove).Establece un manejador para el movimiento del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará a medida que el cursor del ratón se desplace por encima de la vista.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnDown).Establece un manejador para la pulsación de un botón del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se pulse un botón.
+fnote.Ver <lh>Eventos GUI</lh>.
+
+func(view_OnUp).Establece un manejador para la liberación de un botón del ratón.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se libere un botón.
+fnote.Ver <lh>Eventos GUI</lh>.
+
 func(view_OnClick).Establece un manejador para el clic del ratón.
 fpar(View*,view).La vista.
 fpar(Listener*,listener).Función <i>callback</i> que se llamará cada vez que se haga clic sobre la vista.
 fnote.Ver <lh>Eventos GUI</lh>.
 
-func(view_OnStartDrag).Establece un manejador para el inicio del arrastre del ratón.
-fpar(View*,view).La vista.
-fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se empiece a arrastrar el ratón.
-fnote."Arrastrar" es desplazar el ratón con uno de los botones pulsados. Ver <lh>Eventos GUI</lh>.
-
 func(view_OnDrag).Establece un manejador para el arrastre del ratón.
 fpar(View*,view).La vista.
 fpar(Listener*,listener).Función <i>callback</i> que se llamará mientras se esté arrastrando el cursor del ratón sobre la vista.
-fnote."Arrastrar" es desplazar el ratón con uno de los botones pulsados. Ver <lh>Eventos GUI</lh>.
-
-func(view_OnEndDrag).Establece un manejador para el final del arrastre del ratón.
-fpar(View*,view).La vista.
-fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se termine de arrastrar el ratón.
 fnote."Arrastrar" es desplazar el ratón con uno de los botones pulsados. Ver <lh>Eventos GUI</lh>.
 
 func(view_OnWheel).Establece un manejador para la ruedecilla del ratón.
@@ -108,15 +188,40 @@ fpar(View*,view).La vista.
 fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se libere una tecla y la vista tenga el foco del teclado.
 fnote.Ver <lh>Eventos GUI</lh>.
 
-func(view_scrollbar_size).Obtiene el tamaño de las barras de scroll.
+func(view_OnFocus).Establece un manejador para el foco del teclado.
+fpar(View*,view).La vista.
+fpar(Listener*,listener).Función <i>callback</i> que se llamará cuando se reciba o se pierda el foco del teclado.
+fnote.Ver <lh>Uso del teclado</lh> y <lh>Eventos GUI</lh>.
+
+func(view_keybuf).Establece un búfer de teclado para la consulta síncrona o asíncrona del estado de las teclas.
+fpar(View*,view).La vista.
+fpar(Keybuf*,buffer).Bufer de teclado que será mantenido por la vista, capturando los eventos <c>OnKeyDown</c> y <c>OnKeyUp</c>.
+fnote.Solo mantiene una referencia al búfer, que deberá ser destruido por el objeto que lo creó. Ver <lp>keybuf</lp>. La aplicación podrá seguir recibiendo eventos de teclado a través de <lf>view_OnKeyDown</lf> y <lf>view_OnKeyUp</lf>.
+
+func(view_get_size).Obtiene el tamaño actual de la vista.
 fpar(const View*,view).La vista.
-fpar(S2Df*,size).El ancho de la barra horizontal y alto de la vertical.
-fnote.Útil si debemos tener en cuenta las barras de scroll al dibujar en la vista.
+fpar(S2Df*,size).El tamaño.
 
 func(view_content_size).Establece el tamaño del área de dibujo cuando existen barras de scroll.
 fpar(View*,view).La vista.
 fpar(const S2Df,size).El tamaño interno del área de dibujo.
 fnote.Cuando se crea una vista con scroll, este método indica la totalidad del área de dibujo. El control lo utilizará para dimensionar y posicionar las barras de scroll.
+
+func(view_scroll_to).Desplaza las barras de scroll a la posición indicada.
+fpar(View*,view).La vista.
+fpar(const real32_t,x).Nueva posición de la barra horizontal.
+fpar(const real32_t,y).Nueva posición de la barra vertical.
+
+func(view_viewport).Obtiene las dimensiones del área visible de la vista.
+fpar(const View*,view).La vista.
+fpar(V2Df*,pos).La posición del viewport. Puede ser <c>NULL</c>.
+fpar(S2Df*,size).El tamaño del viewport. Puede ser <c>NULL</c>.
+fnote.Si la vista no tiene barras de scroll, <c>pos</c> será <c>(0,0)</c>.
+
+func(view_point_scale).Obtiene el escalado del punto.
+fpar(const View*,view).La vista.
+fpar(real32_t*,scale).El escalado.
+fnote.El tamaño de la vista y coordenadas de dibujo se expresan en puntos, que normalmente corresponden con píxeles (1pt = 1px). En <lh>Pantallas retina</lh> puede ocurrir que (1pt = 2px). Si bien los <lp>dctx</lp> gestionan esto automáticamente, es posible que necesitemos saber la cantidad de píxeles para crear otro tipo de <i>framebuffers</i> (OpenGL, DirectX, etc). Pixels = <lf>view_get_size</lf> * <lf>view_point_scale</lf>.
 
 func(view_update).Manda una orden al sistema operativo que la vista debe ser refrescada.
 fpar(View*,view).La vista.

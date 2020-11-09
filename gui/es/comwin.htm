@@ -1,16 +1,25 @@
 
 h1.Diálogos comunes
 
-p.Los diálogos comunes son ventanas predeterminadas proporcionadas por el sistema operativo para realizar tareas cotidianas como: Abrir archivos <r>file_explorer_windows</r>, seleccionar colores, tipografías, etc. Su uso es doblemente beneficioso. Por un lado evitamos programarlas como parte de la aplicación y, por otro, aprovechamos el conocimiento previo del usuario ya que seguramente las habrá utilizado en otros programas.
+p.Los diálogos comunes son ventanas predeterminadas proporcionadas por el sistema operativo para realizar tareas cotidianas como: Abrir archivos <r>file_explorer_windows</r>, seleccionar colores <r>colordialog_win</r>, tipografías, etc. Su uso es doblemente beneficioso. Por un lado evitamos programarlas como parte de la aplicación y, por otro, aprovechamos el conocimiento previo del usuario ya que seguramente las habrá utilizado en otros programas.
 
-img(file_explorer_windows.png).Explorador de archivos en Windows.
+img(file_explorer_windows.png,0,.8).Explorador de archivos en Windows.
 Captura del explorador de archivos en Windows.
 
-img(file_explorer_macos.png).Explorador de archivos en macOS.
+img(file_explorer_macos.png,0,.8).Explorador de archivos en macOS.
 Captura del explorador de archivos en macOS.
 
-img(file_explorer_linux.png).Explorador de archivos en Linux.
+img(file_explorer_linux.png,0,.8).Explorador de archivos en Linux.
 Captura del explorador de archivos en Linux.
+
+img(colordialog_macos.png,0,.4).Selección de colores en macOS.
+Captura del diálogo de color en macOS.
+
+img(colordialog_win.png,0,.8).Selección de colores en Windows.
+Captura del diálogo de color en Windows.
+
+img(colordialog_linux.png,0,.8).Selección de colores en Linux.
+Captura del diálogo de color en Linux.
 
 func(comwin_open_file).Lanza el diálogo de abrir archivo.
 fret(const char_t*).El nombre del archivo seleccionado o <c>NULL</c> si el usuario ha abortado el diálogo.
@@ -28,3 +37,24 @@ fpar(const uint32_t,size).Número de tipos de archivo.
 fpar(const char_t*,start_dir).Directorio de inicio del diálogo. Pueder ser <c>NULL</c>.
 fnote.Se lanzará de forma <b>modal</b>. <c>parent</c> quedará bloqueada hasta que se acepte el diálogo.
 
+func(comwin_color).Lanza el diálogo de selección de colores.
+fpar(Window*,parent).Ventana padre.
+fpar(const real32_t,x).Posición x inicial.
+fpar(const real32_t,y).Posición y inicial.
+fpar(const align_t,halign).Alineación horizontal respecto a <c>x</c>.
+fpar(const align_t,valign).Alineación vertical respecto a <c>y</c>.
+fpar(const color_t,current).Color actual que mostrará el panel.
+fpar(color_t*,colors).Colores personalizados que mostrará el panel y que pueden también ser editados. Puede ser <c>NULL</c> sólo si <c>n=0</c>.
+fpar(const uint32_t,n).Número de colores personalizados.
+fpar(Listener*,OnChange).Función <i>callback</i> que se llamará tras cada cambio de color.
+fnote.En sistemas Windows y Linux el diálogo se lanzará de forma modal y deberá ser aceptado para que se produzca una notificación del cambio de color a través de <c>OnChange</c>. En macOS se lanzarán notificaciones continuamente a medida que se manipula el diálogo.
+fcode.
+static void i_OnColorChange(App *app, Event *e)
+{
+    color_t *color = event_params(e, color_t);
+    // Do something
+    ...
+}
+
+comwin_color(window, "Select color", 100, 50, ekRIGHT, ekTOP, kCOLOR_BLUE, NULL, 0, listener(app, i_OnColorChange, App));
+fcode.

@@ -1,20 +1,140 @@
 langrev.
 h1.TextView
 
-p.<b>TextViews</b> are views that can display multiple blocks of rich text, where fonts, sizes and colors can be combined.
+p.<b>TextView</b> are views designed to work with rich text blocks <r>richtext</r>, where fonts, sizes and colors can be combined. We can consider them as the basis of a text editor. In <lh>Hello TextView!</lh> you have an example of use.
+
+li.Use <lf>textview_create</lf> to create a text view.
+
+li.Use <lf>textview_writef</lf> to add text to the view.
+
+li.Use <lf>textview_printf</lf> to add text in the format of <c>printf</c>.
+
+li.Use <lf>textview_rtf</lf> to add content in Microsoft <b>RTF</b> format.
+
+li.Use <lf>textview_clear</lf> to erase all text.
+
+img(richtext.png,0,.8).Plain text and rich text.
+Comparison between a plain text block and a rich text block.
+
+h2.Character format
+
+p.One of the advantages of rich text over plain text is the ability to combine different character formats within the same paragraph <r>charformat</r>. Changes will be applied to new text added to the control.
+
+p.Use <lf>textview_family</lf> to change the font.
+
+p.Use <lf>textview_fsize</lf> to change the character size.
+
+p.Use <lf>textview_fstyle</lf> to change the style.
+
+p.Use <lf>textview_color</lf> to change the color of the text.
+
+p.Use <lf>textview_bgcolor</lf> to change the background color of the text.
+
+img(charformat.png,0,.45).Typical Character Format Controls.
+Selection of fonts and text attributes.
+
+h2.Paragraph format
+
+p.You can also set attributes per paragraph <r>parformat</r>. The new line character <c>'\n'</c> is considered the closing or end of the paragraph.
+
+p.Use <lf>textview_halign</lf> to set to paragraph alignment.
+
+p.Use <lf>textview_lspacing</lf> to set line spacing (line spacing).
+
+p.Use <lf>textview_bfspace</lf> to indicate the vertical space before the paragraph.
+
+p.Use <lf>textview_afspace</lf> to indicate the vertical space after the paragraph.
+
+img(parformat.png,0,.45).Typical controls for paragraph formatting.
+Formatting a paragraph of text.
+
+h2.Document format
+
+p.Finally we have several attributes that affect the entire document or control.
+
+p.Use <lf>textview_units</lf> to set the text units.
+
+p.Use <lf>textview_pgcolor</lf> to set the background color of the control (page).
 
 func(textview_create).Create a text view.
-fret(TextView*).The view.
+fret(TextView*).The text view.
 
-func(textview_insert).Insert a string at the end of a view, with the default format.
+func(textview_size).Sets the default size of the view.
 fpar(TextView*,view).The view.
-fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
+fpar(const S2Df,size).The size.
+fnote.It corresponds to the <lh>Natural sizing</lh> of the control. Default 245x144.
 
-func(textview_text).Set the control text.
+func(textview_clear).Clears all content from view.
 fpar(TextView*,view).The view.
-fpar(const char_t*,text).UTF8 C-string terminated in null character <c>'\0'</c>.
-fnote.It will remove the previous content of the control.
 
-func(textview_get_text).Get control text.
-fret(const char_t*).UTF8 C-string terminated in null character <c>'\0'</c>.
-fpar(const TextView*,view).The view.
+func(textview_printf).Writes text to the view, using the format of the <c>printf</c>.
+fret(uint32_t).The number of bytes written.
+fpar(TextView*,view).The view.
+fpar(const char_t*,format).String in type-printf format with a variable number of parameters.
+fpar(,...).Printf arguments or variables.
+fcode.
+textview_printf(view, Code: %-10s Price %5.2f\n", code, price);
+fcode.
+
+func(textview_writef).Write a C UTF8 string to the view.
+fpar(TextView*,view).The view.
+fpar(const char_t*,str).String C UTF8 terminated in null character <c>'\0'</c>.
+
+func(textview_rtf).Insert text in Microsoft <b>RTF</b> format.
+fpar(TextView*,view).The view.
+fpar(Stream*,rtf_in).Reading stream with RTF content.
+
+func(textview_units).Sets the text units.
+fpar(TextView*,view).The view.
+fpar(const uint32_t,units).Units <lt>ekFPIXELS</lt> or <lt>ekFPOINTS</lt>.
+fnote.<lt>ekFPOINTS</lt> is the default value and the one normally used by word processors. See <lh>Size in points</lh>.
+
+func(textview_family).Sets the font family of the text (<i>"Arial", "Times New Roman", "Helvetica", etc</i>).
+fpar(TextView*,view).The view.
+fpar(const char_t*,family).The font family.
+fnote.Not all families will be present on all platforms. Use <lf>font_exists_family</lf> or <lf>font_installed_families</lf> to check.
+
+func(textview_fsize).Set the text size.
+fpar(TextView*,view).The view.
+fpar(const real32_t,size).The size.
+fnote.The value is conditional on the units established in <lf>textview_units</lf>.
+
+func(textview_fstyle).Sets the text style.
+fpar(TextView*,view).The view.
+fpar(const uint32_t,fstyle).Combination of <lt>ekFBOLD</lt>, <lt>ekFITALIC</lt>, <lt>ekFSTRIKEOUT</lt>, <lt>ekFUNDERLINE</lt> <lt>ekFSUBSCRIPT</lt>, <lt>ekFSUPSCRIPT</lt>. To override any previous style use <lt>ekFNORMAL</lt>.
+
+func(textview_color).Sets the text color.
+fpar(TextView*,view).The view.
+fpar(const color_t, color).The color. Use <lt>kCOLOR_DEFAULT</lt> to restore the default color.
+
+func(textview_bgcolor).Sets the background color of the text.
+fpar(TextView*,view).The view.
+fpar(const color_t, color).The color. Use <lt>kCOLOR_DEFAULT</lt> to restore the default color.
+
+func(textview_pgcolor).Sets the background color of the control.
+fpar(TextView*,view).The view.
+fpar(const color_t, color).The color. Use <lt>kCOLOR_DEFAULT</lt> to restore the default color.
+
+func(textview_halign).Sets the alignment of text in a paragraph.
+fpar(TextView*,view).The view.
+fpar(const align_t, align).The alignment. By default <lt>ekLEFT</lt>.
+
+func(textview_lspacing).Sets the line spacing of the paragraph.
+fpar(TextView*,view).The view.
+fpar(const real32_t, scale).Scale factor in font height. <c>1</c> is the default value, <c>2</c> twice this height, <c>3</c> triple, etc. Intermediate values ​​are also valid (eg <c>1.25</c>).
+
+func(textview_bfspace).Sets a vertical space before the paragraph.
+fpar(TextView*,view).The view.
+fpar(const real32_t,space).The space in the preset units.
+
+func(textview_afspace).Sets a vertical space after the paragraph.
+fpar(TextView*,view).The view.
+fpar(const real32_t,space).The space in the preset units.
+
+func(textview_scroll_down).Forces a scroll to the lower limit of the content of the view.
+fpar(TextView*,view).The view.
+fnote.Will make the last inserted content visible. 
+
+func(textview_editable).Sets whether or not the control text is editable.
+fpar(TextView*,view).The view.
+fpar(const bool_t,is_editable).<c>TRUE</c> will allow you to edit the text. By default <c>FALSE</c>.

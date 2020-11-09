@@ -239,41 +239,47 @@ p.Xcode 3.2.6
 p.Intel x86
 p.Snow Leopard
 row.
+img(ubuntu20_logo.png,32,.05).
+p.gcc9_gtk3_x64
+p.GCC 9.3/GTK 3.24
+p.Intel x64
+p.Ubuntu 20.04 LTS
+row.
 img(ubuntu_logo.png,32,.05).
 p.gcc7_gtk3_x64
 p.GCC 7.3.0
 p.Intel x64
-p.18.04 LTS
+p.Ubuntu 18.04 LTS
 row.
 img(ubuntu_logo.png,32,.05).
 p.gcc5_gtk3_x64
 p.GCC 5.3.1
 p.Intel x64
-p.16.04 LTS
+p.Ubuntu 16.04 LTS
 row.
 img(ubuntu_logo.png,32,.05).
 p.gcc5_gtk3_x86
 p.GCC 5.3.1
 p.Intel x86
-p.16.04 LTS
+p.Ubuntu 16.04 LTS
 row.
 img(ubuntu_logo.png,32,.05).
 p.gcc4_gtk3_x64
 p.GCC 4.8.2
 p.Intel x64
-p.14.04 LTS
+p.Ubuntu 14.04 LTS
 row.
 img(ubuntu_logo.png,32,.05).
 p.gcc4_gtk3_x86
 p.GCC 4.8.2
 p.Intel x86
-p.14.04 LTS
+p.Ubuntu 14.04 LTS
 row.
 img(raspbian.png,32,.05).
 p.gcc6_gtk3_arm
 p.GCC 6.3.0
 p.ARM
-p.9.1 Strech
+p.Raspbian 9.1 Strech
 table.
 
 h2.Windows Portability
@@ -441,7 +447,20 @@ Debugging the Die application from Xcode in Snow Leopard.
 
 h2.Linux portability
 
-p.In the Linux world, the <c>gcc</c> compiler and <c>make</c> tool are used to generate the binaries, but there is no an "official" development environment. We will use <l>https://www.eclipse.org/cdt/''Eclipse CDT</l> but there are other alternatives, including working directly with a terminal. The work methodology does not change at all. We open CMake, select the directories, press <c>[Configure]</c> and then <c>[Generate]</c> <r>cmake_linux</r>.
+p.In the Linux world, the <c>gcc</c> compiler and the <c>make</c> tool are used to generate the binaries, but there is no "official" development environment. To carry out an elementary configuration of our team in Ubuntu, type the following commands:
+
+code(text).
+sudo apt-get install gcc
+sudo apt-get install g++
+sudo apt-get install make
+sudo apt-get install svn
+sudo apt-get install cmake cmake-qt-gui
+sudo apt-get install libgtk-3-dev
+sudo apt-get install libglu1-mesa-dev freeglut3-dev mesa-common-dev
+gsettings set org.gtk.Settings.Debug enable-inspector-keybinding true
+code.
+
+p.The work methodology does not change at all. We open CMake, select the directories, press <c>[Configure]</c> and then <c>[Generate]</c> <r>cmake_linux</r>.
 
 img(cmake_linux.png,0,.80).Configuring CMake on Linux.
 Configure the CMake directories on Linux.
@@ -480,6 +499,8 @@ h3.Eclipse CDT
 
 p.Working directly with the terminal will give us the highest level of freedom possible to coding. With returning to the console and typing <c>make</c> everything necessary will be re-compiled. However, the use of <c>GDB</c> directly will be quite tedious, so we will make the leap to Eclipse CDT. This environment will allow us to program with a methodology similar to that of Visual Studio and Xcode: Situate breakpoints, inspect the stack and variables, search for files within the code directory, multiple editions, mass searches, etc.
 
+bq.It is not imperative to use Eclipse. You can choose the editor/IDE you prefer.
+
 p.The only difference is that we must use the generator <c>Eclipse CDT4 - Unix Makefiles</c> in CMake <r>make_generators</r> that in addition to <c>Makefile</c> will create the files <c>.cproject</c> and <c>.project</c> needed to import the project into Eclipse.
 
 img(make_generators.png,0,.65).Generators based on <c>Makefile</c>. 
@@ -489,6 +510,10 @@ p.We open Eclipse and we do <c>File->Import->Existing Projects into Workspace</c
 
 img(eclipse_debug.png,0,.80).Debugging the <i>Die</i> application with Eclipse.
 Debugging the Die application from Eclipse.
+
+p.Some interesting Eclipse CDT options under <c>Window->Preferences</c>.
+
+li.Run/Debug->Launching->Terminate and Relaunch while launching.
 
 h3.update-alternatives
 
@@ -613,34 +638,32 @@ Configuration selection menu in CMake.
 
 h2.Installers
 
-p.The last step, once a program has been created and refined, will be to create a package/installer that contains the executable and its possible dependencies, to distribute it comfortably to the final user. This packaging process has been automated in NAppGUI thanks to CPack, a utility included with CMake. The process is simple, you just have to follow three steps:
+p.The last step, once a program has been created and refined, will be to create a package/installer that contains the executable and its possible dependencies, to distribute it comfortably to the final user. This packaging process has been automated in NAppGUI thanks to CPack, a utility included with CMake <r>packing</r>.
 
-li.Indicate that we want to package an application through the last parameter of the command <c>desktopApp</c> (<c>CMakeLists.txt</c>), that we already saw in <lh>Solutions and projects</lh>. We changed <c>NO</c> by <c>YES</c>.
+img(packing.png,0,.65).Packaging options in CMake.
+CMake dashboard with packaging options.
 
-code(text).
-desktopApp(Die die "" NRC_EMBEDDED YES)
-code.
+li.Activate the <c>CMAKE_PACKAGE</c> option in the CMake panel.
 
-bq.The packaging of a program consumes time. Switch to <c>YES</c> only when we go to distribute. During the development process maintain the value <c>NO</c>.
-
-li.In CMake there is a variable called <c>CMAKE_PACKAGE_PATH</c> in which we must establish the directory in which they will store the generated packages.
+li.Set in <c>CMAKE_PACKAGE_PATH</c> the directory where the generated packages are to be saved.
 
 li.Select the type of packaging through the variable <c>CMAKE_PACKAGE_GEN</c> that admits three values:
 
-lili.<c>TGZ</c>: Create a compressed package <c>.tar.gz</c> that can be opened with any utility <c>.zip</c> installed on the computer <r>pack_tgz</r>. 
+lili.<c>TGZ</c>: Creates a compressed package <c>.tar.gz</c> that can be opened with any <c>.zip</c> utility installed on the computer <r>pack_tgz</r>. 
 
-img(pack_tgz.png,0,.80).Packaging .tar.gz in Linux.
+img(pack_tgz.png,0,.80).Packaging .tar.gz on Linux.
 Packaging an application with .tar.gz.
 
-lili.<c>DragNDrop</c>: (Only macOS). Create a <c>dmg</c> unit with a bundle <c>.app</c> and a link to the folder <c>/Applications</c> <r>pack_drag_n_drop</r>.
+lili.<c>DragNDrop</c>: (MacOS only). Create a <c>dmg</c> drive with a bundle <c>.app</c> and a link to the <c>/Applications</c> <r>pack_drag_n_drop</r> folder.
 
-img(pack_drag_n_drop.png,0,.80).Packaging dmg in macOS.
-Packaging an application with .tar.gz.
+img(pack_drag_n_drop.png,0,.80).Dmg packaging in macOS.
+Packaging an application in dmg.
 
-lili.<c>NSIS</c>: (Windows only). Create an installer using the <i>Nullsoft scriptable install system</i> utility <r>pack_nsis</r>. It is necessary to have the software installed <l>https://nsis.sourceforge.io/Download''NSIS</l> (only to create the installer). The user who receives the package does not need to have this software installed.
+lili.<c>NSIS</c>: (Windows only). Create an installer using the <i>Nullsoft scriptable install system</i> <r>pack_nsis</r> utility. It is necessary to have installed the software <l>https://nsis.sourceforge.io/Download''NSIS</l> (only to create the installer). The user who receives the package does not need to have such software installed.
 
-img(pack_nsis.png,0,.80).NSIS Installer.
-NSIS installer with the application that we just created.
+img(pack_nsis.png,0,.80).NSIS installer.
+NSIS installer with the application we just created.
 
-p.Each package includes a copy of the license with which we will distribute the application. The content of it can be edited from the file <c>/res/license.txt</c> included in the resource directory of each project. 
+p.Each package includes a copy of the license with which we are going to distribute the application. The content of it can be edited from the file <c>/res/license.txt</c> included in the resources directory of each project. 
 
+bq.Packaging a program is time consuming. Activate <c>CMAKE_PACKAGE</c> only when we are going to distribute. During the development process it is advisable to deactivate the checkbox.

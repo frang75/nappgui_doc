@@ -44,7 +44,7 @@ dbind(Product, Image*, image64);
 dbind(Product, real32_t, price);
 code. 
 
-img(dbind.svg,520,.7).Tablas internas creadas por <i>dbind</i> al registrar el modelo de datos.
+img(dbind.svg,520,.5).Tablas internas creadas por <i>dbind</i> al registrar el modelo de datos.
 Esquema que muestra una estructura de datos y su tabla equivalente.
 
 h2.MVVM sincronización con GUI
@@ -185,6 +185,12 @@ fnote.Se generarán errores en tiempo de compilación si el campo indicado no pe
 func(dbind_enum).Registra un valor tipo <c>enum</c>.
 fpar(,type).Tipo del enum.
 fpar(,value).Valor.
+
+func(dbind_alias).Crea un alias para un valor enumerado.
+fpar(,type).Tipo del enum.
+fpar(,value).Valor.
+fpar(const char_t*,alias).Cadena de texto con el alias.
+fnote.<c>dbind_alias(mode_t, ekIMAGE_ANALISYS, "Image Analisys");</c>. Utiliza la cadena "Image Analisys" en lugar de "ekIMAGE_ANALISYS" para aquellas operaciones E/S o interfaz que requieran mostrar los valores del enumerado. Por ejemplo, para rellenar los campos de un <lt>PopUp</lt> vinculado con un campo de datos.
 
 func(dbind_create).Crea un objeto de tipo registrado, inicializando sus campos con los valores por defecto.
 fret(type*).Objeto recién creado o <c>NULL</c> si <i>dbind</i> no reconoce el tipo de dato.

@@ -1,0 +1,96 @@
+langrev.
+h1.Palettes
+
+p.A palette is nothing more than a list of colors, usually related to an indexed <lp>pixbuf</lp> <r>palette</r>. Its main utility is to save space in the images representation, since each pixel is encoded by an index of 1, 2, 4 or 8 bits instead of the real color where 24 or 32 bits are necessary. For this reason, it is usual to have palettes of 2, 4, 16 or 256 colors.
+
+li.Use <lf>palette_create</lf> to create a palette.
+
+li.Use <lf>palette_colors</lf> to access the elements.
+
+img(palette.svg,380,.5).Indexed Pixel buffer.
+Pixel buffer related to the colors of a palette. 
+
+h2.Predefined palette
+
+p.We have several predefined palettes both in color <r>color_palette</r> and in grays <r>gray_palette</r>. The RGB8 palette has been created by combining 8 tones of red (3bits), 8 tones of green (3bits) and 4 tones of blue (2bits). This is so because the human eye distinguishes much less the variation of blue than the other two colors.
+
+li.Use <lf>palette_rgb8</lf> and similars to create a color palette.
+
+li.Use <lf>palette_gray4</lf> and similars to create a palette in grays.
+
+img(color_palette.svg,560,.65).Predefined color palettes.
+CGA and EGA palettes. 
+
+img(gray_palette.svg,560,.65).Predefined gray palettes.
+Palettes in shades of gray. 
+
+h2.Optimal palette
+
+p.Normally RGB images use 8 bits for each channel, which means 16.777.216 different colors, much more than the human eye can distinguish <r>image_true_color</r>. To optimize the space occupied by the image, with the least possible loss, the optimal palette is calculated using <b>color quantification</b> algorithms <r>image_palette_optimal</r>. This contrasts with the use of a generic palette, where the loss of quality is evident since many colors may not be used as they are very different from those required <r>image_palette_rgb8</r>.
+
+li.Use <lf>palette_optimal</lf> to get the optimal palette for an RGB image.
+
+img(image_true_color.png,560,.75).RGB 24 bits image (true color).
+Image of a landscape and associated RGB space.
+
+img(image_palette_optimal.png,560,.75).256-color image using an optimal palette.
+Image of a landscape and its optimal palette of 256 colors.
+
+img(image_palette_rgb8.png,560,.75).256-color image using a generic palette.
+Image of a landscape and its generic 81-color palette.
+
+func(palette_create).Create a palette.
+fret(Palette*).The palette. The initial content is undetermined. Edit with <lf>palette_colors</lf>.
+fpar(const uint32_t,size).The number of colors.
+
+func(palette_optimal).Create an optimal color palette, applying color quantization algorithms.
+fret(Palette*).The palette.
+fpar(const uint32_t,width).The width in pixels of the image.
+fpar(const uint32_t,height).The pixel height of the image.
+fpar(const pixformat_t,format).The pixel format. Only <lt>ekRGB24</lt> and <lt>ekRGBA32</lt> are valid.
+fpar(const byte_t*,data).Buffer with pixel color information.
+fpar(const uint32_t,size).Number of colors in the resulting palette.
+fnote.<lh>Optimal palette</lh>
+
+func(palette_cga2).Create the 4-color (2-bit) palette of CGA cards.
+fret(Palette*).The palette.
+fpar(const bool_t,mode).<c>TRUE</c> for CGA mode 1, <c>FALSE</c> mode 0.
+fpar(const bool_t,intense).<c>TRUE</c> for bright colors.
+fnote.<lh>Predefined palette</lh>
+
+func(palette_ega4).Create the default palette for EGA cards (16 colors, 4 bits).
+fret(Palette*).The palette.
+fnote.<lh>Predefined palette</lh>
+
+func(palette_rgb8).Create the default 8-bit RGB palette. Colors combine 8 tones of red, 8 green and 4 blue.
+fret(Palette*).The palette.
+fnote.<lh>Predefined palette</lh>
+
+func(palette_gray1).Create a palette of 2 tones of gray (1 bit). Black (0) and white (1).
+fret(Palette*).The palette.
+fnote.<lh>Predefined palette</lh>
+
+func(palette_gray2).Create a palette of 4 tones of gray (2 bit). Black (0), White (3).
+fret(Palette*).The palette.
+fnote.<lh>Predefined palette</lh>
+
+func(palette_gray4).Create a palette of 16 tones of gray (4 bit). Black (0), White (15).
+fret(Palette*).The palette.
+fnote.<lh>Predefined palette</lh>
+
+func(palette_gray8).Create a palette of 256 shades of gray (8 bit). Black (0), White (255).
+fret(Palette*).The palette.
+fnote.<lh>Predefined palette</lh>
+
+func(palette_destroy).Destroy the palette.
+fpar(Palette**).The palette. It will be set to <c>NULL</c> after the destruction.
+
+func(palette_size).Returns the number of colors in the palette.
+fret(uint32_t).The number of colors.
+fpar(Palette*).The palette.
+
+func(palette_colors).Get the color list.
+fret(color_t*).Colors. The size of the array is given by <lf>palette_size</lf>.
+fpar(Palette*).The palette.
+fnote.The buffer is read/write.
+

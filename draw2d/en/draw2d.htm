@@ -28,9 +28,15 @@ img(draw2d_tech.svg,400,.5).<i>draw2d</i> connects to the drawing APIs of each o
 Dependencies of draw2d depending on each operating system.
 
 enum(pixformat_t).Pixel format in an image. Number of bits per pixel and color model.
+enumv(ekINDEX1).1 bit per pixel. 2 colors, indexed.
+enumv(ekINDEX2).2 bits per pixel. 4 colors, indexed.
+enumv(ekINDEX4).4 bits per pixel. 16 colors, indexed.
+enumv(ekINDEX8).8 bits per pixel. 256 colors, indexed.
 enumv(ekGRAY8).8 bits per pixel in grayscale. 256 shades of gray.
 enumv(ekRGB24).24 bits per RGB pixel. 8 bits per channel (red, green, blue). The lowest order byte corresponds to the red one and the highest one to the blue one.
 enumv(ekRGBA32).32 bits per pixel RGBA. 8 bits per channel (red, green, blue, alpha). The lowest order byte corresponds to the red one and the highest one to alpha (transparency).
+enumv(ekFIMAGE).Represents the original format of the image. Only valid at <lf>image_pixels</lf>.
+enumv(ekOPTIMAL).Optimal format. Fewer bits to represent an image <b>without loss</b> of information. Only valid at <lf>image_pixels</lf>.
 
 enum(codec_t).Image encoding and compression format.
 enumv(ekJPG).<i>Joint Photographic Experts Group</i>.
@@ -44,6 +50,8 @@ enumv(ekFBOLD).<b>Bold</b> font.
 enumv(ekFITALIC).<i>Italic</i> font.
 enumv(ekFSTRIKEOUT).<del>Crossed out</del> font.
 enumv(ekFUNDERLINE).<u>Underlined</u> font.
+enumv(ekFSUBSCRIPT).Subscript. See <lf>textview_fstyle</lf>.
+enumv(ekFSUPSCRIPT).Superscript. See <lf>textview_fstyle</lf>
 enumv(ekFPIXELS).Font sizes will be indicated in pixels.
 enumv(ekFPOINTS).Font sizes will be indicated in points. <lh>Size in points</lh>.
 
@@ -86,6 +94,10 @@ enumv(ekELLIPMLINE).Multi-line text (without ellipsis).
 struct(color_t).32-bit integer representing an RGBA color. The lowest order byte corresponds to the red channel (Red) and the highest order to the Alpha channel (transparency). <lp>color</lp>.
 
 struct(DCtx).2D drawing context, recipient for drawing commands. It is also known as canvas or surface. <lp>dctx</lp>.
+
+struct(Palette).Color palette, usually related to indexed <lt>Pixbuf</lt>. <lp>palette</lp>.
+
+struct(Pixbuf).In-memory buffer with pixel information. <lp>pixbuf</lp>.
 
 struct(Image).Represents a bitmap image, composed of pixels. <lp>image</lp>.
 

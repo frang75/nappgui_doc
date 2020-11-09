@@ -56,52 +56,20 @@ Image generated from drawing commands.
 
 h2.Pixel access
 
-p.Another way to generate images is through algorithms that calculate the value of each pixel. A clear application of this is found in the representation of fractal sets <r>fractals</r>, an area of mathematics dedicated to the study of certain dynamic systems. In <lp>fractals</lp> you have the complete application.
+p.Images are <b>immutable objects</b> optimized for recurring on-screen drawing, so certain licenses are allowed, both in the internal organization of color information and in the management of possible copies. For this reason it is not possible to directly manipulate the pixels, but we must access them using a <lp>pixbuf</lp>. 
 
-li.Use <lf>image_from_pixels</lf> to create an image from a buffer.
+li.Use <lf>image_from_pixels</lf> to create an image from the color information.
 
-li.Use <lf>image_pixels</lf> to get a buffer with the image pixels.
+li.Use <lf>image_from_pixbuf</lf> to create an image from a pixel buffer.
 
-img(fractals.png,480,.65).Image generated pixel by pixel using fractal algorithms.
-Representation of a Julia set.
+li.Use <lf>image_pixels</lf> to get a buffer with the pixels of the image.
 
-p.Images are objects optimized for recurring on-screen drawing, so certain licenses are allowed in the internal organization of color information. For this reason it is not possible to directly manipulate the pixels, but we must access them through an intermediate buffer. A <b>pixbufer</b> <r>pixel_format</r> it is nothing more than a memory area that contains all the pixels sequentially and where each element can be accessed by a simple offset, taking into account the color format <r>accpixel</r>. The algorithms will write directly to this memory and, later, an <lt>Image</lt> object will be created <r>pixel_buffer</r>, to be able to draw it on the screen or send it through the output channels.
+bq.Apple technical documentation: "Treat NSImage and its image representations as immutable objects. The goal of NSImage is to provide an efficient way to display images on the target canvas. Avoid manipulating the data of an image representation directly, especially if there are alternatives to manipulating the data, such as compositing the image and some other content into a new image object."
 
-img(pixel_format.svg,420,.5).Pixel formats. <b>(a)</b> <lt>ekRGBA32</lt>, <b>(b)</b> <lt>ekRGB24</lt>, <b>(c)</b> <lt>ekGRAY8</lt>.
-Visual representation of an array of pixels according to the format.
+p.The <b>pixel buffers</b> allow us to optimally manipulate the content of the image. To view the result or store it in any of the supported formats, we must create a new image <r>image_pixels</r>. 
 
-code(cpp,accpixel).Direct access to the pixel (x, y).
-// Pixel format = kRGBA32
-byte_t *pixbuf = heap_new_n(width * height * 4, byte_t);
-byte_t *pixel = pixbuf + (y * width + x) * 4;
-pixel[0] = red;
-pixel[1] = green;
-pixel[2] = blue;
-pixel[3] = alpha;
-
-// Pixel format = kRGB24
-byte_t *pixbuf = heap_new_n(width * height * 3, byte_t);
-byte_t *pixel = pixbuf + (y * width + x) * 3;
-pixel[0] = red;
-pixel[1] = green;
-pixel[2] = blue;
-
-// Pixel format = kGRAY8
-byte_t *pixbuf = heap_new_n(width * height, byte_t);
-byte_t *pixel = pixbuf + (y * width + x);
-pixel[0] = gray;
-code.
-
-img(pixel_buffer.svg,620,.8).Image from the color information.
+img(image_pixels.svg,620,.8).Image editing process.
 Process from a pixel buffer to an image.
-
-p.Another application of pixels direct access is the implementation of image filters. In these cases we start by extracting the <b>pixbuf</b> from an existing image <r>image_filter</r>, edit the buffer and create a new image with the result. In <lp>filters</lp> you have the full example application <r>imagefilter</r>.
-
-img(image_filter.svg,620,.8).Basic process of an image filter.
-Image filter operation.
-
-img(imagefilter.png,0,.8).Example application of the use of image filters.
-Capture an image to which a filter has been applied.
 
 h2.Save images: Codecs
 
@@ -143,7 +111,7 @@ p.<lf>image_from_resource</lf>
 p.The original codec.
 row.
 p.<lf>image_from_pixels</lf>
-p.<lt>ekJPG</lt>.
+p.Transparencies? Yes:<lt>ekPNG</lt> No:<lt>ekJPG</lt>.
 row.
 p.<lf>dctx_image</lf>
 p.<lt>ekPNG</lt>.
@@ -155,7 +123,14 @@ fpar(const uint32_t,width).The image width (in pixels).
 fpar(const uint32_t,height).The image height (in pixels).
 fpar(const pixformat_t,format).Pixel format.
 fpar(const byte_t*,data).Buffer that contains the color value of each pixel. It will depend on the resolution and format.
+fpar(const color_t*,palette).Color palette required to render indexed images. If it is <c>NULL</c> a <lh>Predefined palette</lh> will be used if necessary.
 fnote.See <lh>Pixel access</lh>.
+
+func(image_from_pixbuf).Create an image from a buffer pixel.
+fret(Image*).The image.
+fpar(const Pixbuf*,pixbuf).The buffer.
+fpar(const Palette*,palette).The palette.
+fnote.Equal to <lf>image_from_pixels</lf> avoiding indicating parameters separately.
 
 func(image_from_file).Create an image from a file on disk.
 fret(Image*).The image.
@@ -174,6 +149,13 @@ fret(Image*).The image.
 fpar(const ResPack*,pack).The resource package.
 fpar(const ResId,id).The resource identifier.
 fnote.See <lp>resources</lp>.
+
+func(image_rotate).Create a new image by rotating an existing one.
+fret(Image*).The newly created image.
+fpar(const Image*,image).The original image.
+fpar(const real32_t,angle).Angle in radians.
+fpar(const bool_t,nsize).<c>TRUE</c> the resulting image will be resized to fit the entire original. <c>FALSE</c> the resulting image will have the same dimensions as the original, cutting part of the content (clipping).
+fpar(const color_t,background).Background color. The new image will have "blank" areas due to rotation.
 
 func(image_scale).Create a copy of the image, with a new size.
 fret(Image*).The image.
@@ -211,20 +193,19 @@ fpar(const Image*,image).The image.
 fpar(uint32_t*,width).The width of the image in pixels.
 fpar(uint32_t*,height).The height of the image in pixels.
 
-func(image_pixformat).Get the pixel format of the image.
+func(image_format).Get the pixel format of the image.
 fpar(const Image*,image).The image.
 fpar(pixformat_t*,format).Pixel format.
 
 func(image_pixels).Get a buffer with the pixels that make up the decoded image.
 fpar(const Image*,image).The image.
-fpar(uint32_t*,width).The width of the image in pixels. Can be <c>NULL</c>.
-fpar(uint32_t*,height).The height of the image in pixels. Can be <c>NULL</c>.
-fpar(pixformat_t*,format).The pixel format. Necessary to interpret <c>pixels</c> vector data. Can be <c>NULL</c>.
-fpar(Buffer**,pixels).The buffer where the pixels will be stored. It must be destroyed with <lf>buffer_destroy</lf> when it is no longer necessary. Can be <c>NULL</c>.
-fnote.See <lh>Pixel access</lh>.
+fpar(const pixformat_t,format).The required pixel format.
+fpar(Pixbuf**,pixels).The buffer where the result will be stored. Must be destroyed with <lf>pixbuf_destroy</lf>.
+fpar(Palette**,palette).The color palette for indexed images. Must be destroyed with <lf>palette_destroy</lf>. It can be <c>NULL</c>.
+fnote.If in <c>pixformat</c> we indicate <lt>ekOPTIMAL</lt> the format that uses the fewest bits without loss of information will be used. <lt>ekFIMAGE</lt> will use the original format of the image. For any other value, the conversion will be carried out if necessary.
 
 func(image_codec).Change the default codec associated with the image.
-fpar(Image*,image).The image.
+fpar(const Image*,image).The image.
 fpar(const codec_t,codec).The new codec.
 fnote.The change will take effect the next time we save or write the image. By default, the image retains the codec with which it was read. When we create it with <lf>image_from_pixels</lf> <lt>ekJPG</lt> codec is assigned as default. For images from 2d contexts <lf>dctx_image</lf>, the default codec is <lt>ekPNG</lt>.
 fcode.
@@ -249,8 +230,3 @@ fret(real32_t).Sequence time in seconds.
 fpar(const Image*,image).The image.
 fpar(const uint32_t,findex).The frame index.
 fnote.Only <i>gif</i> format supports animations.
-
-func(image_bpp).Get the number of bytes per pixel of the format. 
-fret(uint32_t).Bytes por pixel.
-fpar(const pixformat_t,format).Pixel format.
-

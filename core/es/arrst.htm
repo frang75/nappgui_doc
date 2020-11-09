@@ -1,5 +1,4 @@
 
-
 h1.Arrays
 
 ep.Muéstrame tus diagramas de flujo y oculta tus tablas y seguiré desconcertado. Muéstrame tus tablas y, generalmente, no necesitaré tus diagramas, serán obvios. <b>La representación es la esencia de la programación</b>.
@@ -83,7 +82,7 @@ code.
 p(noindent).o en un contenedor
 
 code.
-Product *product = arrst_append1(array, Product);
+Product *product = arrst_new(array, Product);
 code.
 
 p(noindent).el contenido inicial del mismo es basura, entendido como bytes indeterminados. Inicializar un objeto es asignar valores válidos y coherentes a cada campo del mismo <r>arrinit</r>.
@@ -117,14 +116,14 @@ Product product;
 i_init(&product);
 arrst_append(array, product, Product);
 
-Product *product = arrst_append1(array, Product);
+Product *product = arrst_new(array, Product);
 i_init(product);
 
 Product *product = i_create();
 arrpt_append(array, product, Product);
 code.
 
-bq.Utilizar <lf>arrst_append1</lf>, <lf>arrst_insert1</lf> o <lf>arrst_prepend1</lf> siempre que sea posible para insertar en arrays de registros, ya que evitan tener que copiar el objeto.
+bq.Utilizar <lf>arrst_new</lf>, <lf>arrst_insert_n</lf> o <lf>arrst_prepend_n</lf> siempre que sea posible para insertar en arrays de registros, ya que evitan tener que copiar el objeto.
 
 h2.Serialización
 
@@ -218,7 +217,7 @@ arrst_delete(arrst, 4, i_remove, Product);
 arrpt_delete(arrpt, 4, i_destroy, Product);
 code.
 
-li.<b>Clear:</b> Borra todos los elementos de un contenedor, pero no lo destruye, solo lo deja a cero <r>clear</r>. Al igual que <lf>arrst_delete</lf>, opcionalmente puede liberar memoria.
+li.<b>Clear:</b> Borra todos los elementos de un contenedor, pero no lo destruye, solo lo deja a cero <r>clear</r>. Al igual que <lf>arrst_delete</lf>, opcionalmente puede liberar memoria de los elementos.
 
 code(cpp,clear).Elimina todos los elementos de un contenedor.
 arrst_clear(arrst, NULL, Product);
@@ -228,7 +227,7 @@ code.
 
 h2.Ordenar y buscar
 
-p.La forma habitual de utilizar arrays será ir añadiendo elementos al final mediante <lf>arrst_append1</lf> para después iterar sobre el conjunto. Este orden "natural" será suficiente en la mayoría de casos, pero es posible que necesitemos organizar los elementos siguiendo otro criterio para:
+p.La forma habitual de utilizar arrays será ir añadiendo elementos al final mediante <lf>arrst_new</lf> para después iterar sobre el conjunto. Este orden "natural" será suficiente en la mayoría de casos, pero es posible que necesitemos organizar los elementos siguiendo otro criterio para:
 
 li.Presentar la información ordenada por uno o varios campos de la estructura.
 
@@ -331,18 +330,12 @@ fpar(,type).Tipo de objeto.
 fnote.Utiliza <lf>arrst_foreach</lf> para iterar sobre los elementos de forma más segura y elegante.
 
 func(arrst_grow).Añade <c>n</c> elementos, sin inicializar, al final del array.
-fret(type*).Puntero al primer elemento añadido.
 fpar(ArrSt(type)*,array).El array.
 fpar(const uint32_t,n).Cantidad de elementos a añadir.
 fpar(,type).Tipo de objeto.
 
-func(arrst_append).Añade un elemento al final del array.
-fpar(ArrSt(type)*,array).El array.
-fpar(type,value).Elemento a añadir.
-fpar(,type).Tipo de objeto.
-
-func(arrst_append1).Reserva espacio para un elemento al final del array.
-fret(type*).Puntero al elemento añadido, que puede ser utilizado para inicializarlo.
+func(arrst_new).Reserva espacio para un elemento al final del array.
+fret(type*).Puntero al elemento añadido.
 fpar(ArrSt(type)*,array).El array.
 fpar(,type).Tipo de objeto.
 fcode.
@@ -351,35 +344,62 @@ Product product;
 i_init_product(&product, ...);
 arrst_append(array, product, Product);
 
-// arrst_append1 avoids the copy
-Product *product = arrst_append1(array, Product);
+// arrst_new avoids the copy
+Product *product = arrst_new(array, Product);
 i_init_product(product, ...);
 fcode.
-fnote.Es ligeramente más rápido que <c>arrst_append</c>, especialmente en estructuras grandes, ya que evita copiar el contenido del objeto.
+fnote.Es ligeramente más rápido que <c>arrst_append</c>, especialmente en estructuras grandes, ya que evita copiar el contenido del objeto. El contenido inicial de la memoria es indeterminado.
+
+func(arrst_new0).Reserva espacio para un elemento al final del array y lo inicializa a 0.
+fret(type*).Puntero al elemento añadido.
+fpar(ArrSt(type)*,array).El array.
+fpar(,type).Tipo de objeto.
+fnote.Igual que <lf>arrst_new</lf> pero inicializando toda la memoria a 0.
+
+func(arrst_new_n).Reserva espacio para varios elementos al final del array.
+fret(type*).Puntero al primer elemento añadido.
+fpar(ArrSt(type)*,array).El array.
+fpar(const uint32_t,n).Número de elementos a añadir.
+fpar(,type).Tipo de objeto.
+fnote.Igual que <lf>arrst_new</lf> pero reservando varios elementos en la misma llamada. El contenido inicial de la memoria es indeterminado.
+
+func(arrst_new_n0).Reserva espacio para varios elementos al final del array y los inicializa a 0.
+fret(type*).Puntero al primer elemento añadido.
+fpar(ArrSt(type)*,array).El array.
+fpar(const uint32_t,n).Número de elementos a añadir.
+fpar(,type).Tipo de objeto.
+fnote.Igual que <lf>arrst_new_n</lf> pero pero inicializando toda la memoria a 0.
+
+func(arrst_prepend_n).Reserva espacio para varios elemento al principio del array. El resto de elementos serán desplazados a la derecha.
+fret(type*).Puntero al primer elemento insertado.
+fpar(ArrSt(type)*,array).El array.
+fpar(const uint32_t,n).Número de elementos a insertar.
+fpar(,type).Tipo de objeto.
+fnote.El contenido inicial de la memoria es indeterminado.
+
+func(arrst_insert_n).Reserva espacio para varios elemento en una posición arbitraria del array.
+fret(type*).Puntero al primer elemento insertado.
+fpar(ArrSt(type)*,array).El array.
+fpar(const uint32_t,pos).Posición donde será insertado. El actual elemento en <c>pos</c> y siguientes serán desplazados a la derecha.
+fpar(const uint32_t,n).Número de elementos a insertar.
+fpar(,type).Tipo de objeto.
+fnote.El contenido inicial de la memoria es indeterminado.
+
+func(arrst_append).Añade un elemento al final del array.
+fpar(ArrSt(type)*,array).El array.
+fpar(type,value).Elemento a añadir.
+fpar(,type).Tipo de objeto.
 
 func(arrst_prepend).Inserta un elemento al inicio del array. El resto de elementos serán desplazados a la derecha.
 fpar(ArrSt(type)*,array).El array.
 fpar(type,value).Elemento a insertar.
 fpar(,type).Tipo de objeto.
 
-func(arrst_prepend1).Reserva espacio para un elemento al principio del array. El resto de elementos serán desplazados a la derecha.
-fret(type*).Puntero al elemento insertado, que debe ser utilizado para inicializarlo.
-fpar(ArrSt(type)*,array).El array.
-fpar(,type).Tipo de objeto.
-fnote.Ver discusión en <lf>arrst_append1</lf>.
-
 func(arrst_insert).Inserta un elemento en una posición arbitraria del array.
 fpar(ArrSt(type)*,array).El array.
 fpar(const uint32_t,pos).Posición donde será insertado. El actual elemento en <c>pos</c> y siguientes serán desplazados a la derecha.
 fpar(type,value).Elemento a insertar.
 fpar(,type).Tipo de objeto.
-
-func(arrst_insert1).Reserva espacio para un elemento en una posición arbitraria del array.
-fret(type*).Puntero al elemento insertado, que debe ser utilizado para inicializarlo.
-fpar(ArrSt(type)*,array).El array.
-fpar(const uint32_t,pos).Posición donde será insertado. El actual elemento en <c>pos</c> y siguientes serán desplazados a la derecha.
-fpar(,type).Tipo de objeto.
-fnote.Ver discusión en <lf>arrst_append1</lf>.
 
 func(arrst_delete).Elimina un elemento del array.
 fpar(ArrSt(type)*,array).El array.
@@ -396,6 +416,12 @@ func(arrst_sort).Ordena los elementos del array utilizando Quicksort.
 fpar(ArrSt(type)*,array).El array.
 fpar(FPtr_compare,func_compare).Función para comparar dos elementos. <lh>Ordenar y buscar</lh>.
 fpar(,type).Tipo de objeto.
+
+func(arrst_sort_ex).Ordena los elementos del array utilizando Quicksort y datos adicionales.
+fpar(ArrSt(type)*,array).El array.
+fpar(FPtr_compare_ex,func_compare).Función para comparar dos elementos utilizando un dato adicional.
+fpar(,type).Tipo de objeto.
+fpar(,dtype).Tipo de dato en la función de comparación.
 
 func(arrst_search).Busca un elemento en el array de forma lineal <c>O(n)</c>.
 fret(type*).Puntero al primer elemento que coincida con el criterio de búsqueda o <c>NULL</c> si no existe ninguno.

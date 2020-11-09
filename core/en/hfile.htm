@@ -1,5 +1,4 @@
 langrev.
-
 h1.File operations
 
 ep.Provides high level functions on <lp>bfile</lp>.
@@ -98,7 +97,7 @@ func(hfile_dir_loop).Browse all the files in a directory.
 fret(bool_t).<c>TRUE</c> tf the loop has been successfully completed. <c>FALSE</c> if an error has occurred.
 fpar(const char_t*,pathname).Directory Path. <lh>Filename and pathname</lh>.
 fpar(Listener*,listener).<i>Callback</i> function to be called for each directory file.
-fpar(const bool_t,direntry).If <c>TRUE</c> the loop will enter the subdirectories.
+fpar(const bool_t,subdirs).If <c>TRUE</c> the loop will process the subdirectories.
 fpar(const bool_t,hiddens).If <c>TRUE</c> hidden files will be processed.
 fpar(ferror_t*,error).Error code if the function fails. It can be <c>NULL</c>.
 fnote.For each file, an event will be sent to <c>listener</c>. Will be of type <lt>ekEFILE</lt> for regular files, <lt>ekEENTRY</lt> when enters a subdirectory and <lt>ekEEXIT</lt> when leaves it. The file attributes are sent in the event parameter as a <lt>EvFileDir</lt> object. The tour will continue until all files/subdirectories have been processed or returned <c>FALSE</c> in <lf>event_result</lf> . This controlled output will not be considered an error and this function will return <c>TRUE</c>.
@@ -108,17 +107,30 @@ static void OnFile(App *app, Event *event)
     uint32_t type = event_type(event);
     const EvFileDir *params = event_params(event, EvFileDir);
     if (type == ekEFILE)
-        bstd_printf("File: %s\n", params->pathname);
-    else if (type == ekEDIRENTRY)
-        bstd_printf("Entering: %s\n", params->pathname);
-    else if (type == ekEDIREXIT)
-        bstd_printf("Exiting: %s\n", params->pathname);
-
-    // Abort the directory loop
-    if (app->more == FALSE)
     {
-        bool_t *more = event_result(event, bool_t);
-        *more = FALSE;
+        bstd_printf("File: %s\n", params->pathname);
+        // Abort the directory loop
+        if (app->more == FALSE)
+        {
+            bool_t *more = event_result(event, bool_t);
+            *more = FALSE;
+        }    
+    }
+    else if (type == ekEDIRENTRY)
+    {
+        if (app->direntry == TRUE)
+        {
+            bstd_printf("Entering: %s\n", params->pathname);
+        }
+        else
+        {
+            bool_t *entry = event_result(event, bool_t);
+            *entry = FALSE;
+        }
+    }
+    else if (type == ekEDIREXIT)
+    {
+        bstd_printf("Exiting: %s\n", params->pathname);
     }
 }
 

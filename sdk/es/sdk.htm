@@ -29,6 +29,35 @@ li.<lp>inet</lp>: Protocolos y servicios de Internet. Http, Ftp, Google, etc.
 
 p.La implementación de NAppGUI se ha dividido en varias librerías estáticas escritas en ANSI-C (C90) con pequeñas partes en C++98 <r>sdk_big_picture</r>. El proyecto compila sin problemas en todas las versiones de Visual Studio (desde VS2005), Xcode (desde 3) y GCC (desde 4). Se puede utilizar para el desarrollo de aplicaciones de alto rendimiento escritas en C en los sistemas Windows, macOS y Linux. Se ha marcado una clara línea que separa los paquetes orientados a cálculo y acceso a datos <i>(back-end)</i> de aquellos destinados a las capas de presentación o interfaz <i>(front-end)</i>. También hemos seguido ciertos <lh>Estándares</lh> cuyas bases se centralizan en la librería <lp>sewer</lp>, que si bien no incorpora mucha funcionalidad, si que define los tipos básicos y las macros de configuración comunes a todo el proyecto.
 
+h2(nobook).Versiones
+
+table.
+row.
+p.Versión
+p.Build
+p.Fecha
+p.Descarga
+p.eBook
+row.
+p.<lh>SDK 1.2.1</lh>
+p.2788
+p.8 Noviembre 2020
+p.<l>https://nappgui.com/sdk/nappgui_1_2_1.zip''[⇩]</l>
+p.<l>https://nappgui.com/ebook/nappgui_1_2_1_es.pdf''[⇩]</l>
+row.
+p.NAppGUI 1.1.1
+p.2374
+p.28 Enero 2020
+p.-
+p.-
+row.
+p.NAppGUI 1.1.0
+p.2266
+p.31 Diciembre 2019
+p.-
+p.-
+table.
+
 h2.Un poco de historia
 
 p.Empecé a trabajar en este proyecto de manera inconsciente, a mediados del año 2008 cuando estaba finalizando mis estudios de Ingeniería Informática en la Universidad de Alicante. Quería desarrollar un simulador de sistemas físicos que funcionase tanto en ordenadores PC-Windows como en los iMac de Apple sin que por ello tuviese que duplicar todo el trabajo. Las alternativas tecnológicas de la época, como GTK o Qt, no me convencían en absoluto ya que eran demasiado pesadas, complicadas de utilizar y lentas por lo que acabarían empañando la calidad, elegancia y empeño que estaba poniendo en mis algoritmos de cálculo matemático. Después de perder varios meses evaluando diferentes librerías para la programación multiplataforma descargué unos manuales técnicos de Apple para programar directamente en Cocoa, la tecnología base del fabricante de la manzanita para desarrollar software sobre iMac. A mediados de 2010 empecé a ver los primeros resultados y esto fue alentador. Había creado una aplicación con el prototipo de mi simulador en apenas 500Kb <r>imech</r>, en contraste con los más de 30Mb de dependencias exigidos por las soluciones de terceros. El código era compacto y limpio, la aplicación funcionaba a velocidad de vértigo y, sobre todo, tenía una apariencia profesional que recordaba en parte al iMovie, permitía manipular vistas 3D como en un videojuego y aportaba datos técnicos de la simulación en tiempo real. Esto me inspiró a seguir trabajando en trazar una barrera entre la parte de la aplicación reutilizable y aquella dependiente de una tecnología concreta. Esto permitiría adaptar mi simulador a diferentes modelos de ordenador y sistemas operativos.

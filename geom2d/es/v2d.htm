@@ -17,7 +17,7 @@ math(vecop).Álbegra vectorial elemental.
  -\vec{a} & = & (-a.x, -a.y) \\
 \vec{v} & = & s \cdot \vec{a} \\
  & = & (s \cdot a.x, s \cdot a.y) \\
-|a| & = & \sqrt{a^2+b^2} \\
+|\vec{a}| & = & \sqrt{a.x^2+a.y^2} \\
  \hat{a} & = & \left(\frac{a.x}{|a|}, \frac{a.y}{|a|} \right)
 \end{eqnarray*}
 math.
@@ -25,23 +25,106 @@ math.
 img(vector2d_algebra.svg,520,.65).Interpretación geométrica de las operaciones básicas con vectores.
 Dibujo de un plano con diferentes operaciones con vectores.
 
+p.El ángulo de rotación de un vector se expresará siempre en <b>radianes</b> y el <b>sentido positivo</b> corresponde al giro desde el <b>eje X hacia el eje Y</b>. Normalmente se asocia como positiva la dirección antihoraria y negativa la horaria. Esto es cierto en coordenadas cartesianas pero no en otro tipo de sistemas de referencia, como imágenes o monitores <r>vector2d_rotate</r>. Debemos tenerlo presente para evitar confusiones, algo que sucede con relativa frecuencia. El mismo criterio se aplica al calcular el vector perpendicular, diferenciando entre positivo y negativo.
+
+img(vector2d_rotate.svg,520,.65).Rotación de un vector en diferentes sistemas de coordenadas.
+Dibujo de un plano con diferentes rotaciones de vectores.
+
+p.Otra operación utilizada con bastante frecuencia por los algoritmos geométricos es la proyección de puntos sobre un vector. Intuitivamente, podemos verlo como el punto sobre el vector más cercano al punto original y que siempre estará sobre la línea perpendicular. La calcularemos con el producto escalar <r>vecproj</r> y su valor (escalar) será la distancia desde el origen a la proyección en la dirección del vector <r>vector2d_projection</r>.
+
+math(vecproj).Proyección de varios puntos en un vector.
+\begin{eqnarray*}
+proj_{\vec{v}}(p) & = & \frac{v.x \cdot p.x + v.y \cdot p.y}{|\vec{v}|} \\
+proj_{\vec{4,3}}(1,2) & = & \frac{4 \cdot 1 + 3 \cdot 2}{5} = 2 \\
+proj_{\vec{4,3}}(2,-2) & = & 0.4 \\
+proj_{\vec{4,3}}(5,1) & = & 4.6 \\
+proj_{\vec{4,3}}(-3,1) & = & -1.8 
+\end{eqnarray*}
+math.
+
+img(vector2d_projection.svg,520,.65).Interpretación geométrica de las proyecciones.
+Dibujo de un plano con diferentes proyecciones de puntos en un vector.
+
+bq.Si lo que nos interesa es la posición relativa entre diferentes proyecciones, podemos evitar la división por el módulo del vector, lo que es más eficiente computacionalmente al no calcular raíces cuadradas.
+
 const(V2D,ZERO).El vector (0,0).
+
+const(V2D,X).El vector (1,0).
+
+const(V2D,Y).El vector (0,1).
 
 func(V2D,).Crea un vector 2d a partir de sus componentes.
 fret(V2D).El vector 2d.
 fpar(const real,x).Coordenada x.
 fpar(const real,y).Coordenada y.
 
+func(V2D,add).Suma dos vectores.
+fret(V2D).El vector resultado.
+fpar(const V2D*,v1).Vector 1.
+fpar(const V2D*,v2).Vector 2.
+
+func(V2D,sub).Resta dos vectores.
+fret(V2D).El vector resultado.
+fpar(const V2D*,v1).Vector 1.
+fpar(const V2D*,v2).Vector 2.
+
+func(V2D,mul).Multiplica un vector por un escalar.
+fret(V2D).El vector resultado.
+fpar(const V2D*,v).Vector.
+fpar(const real,s).Escalar.
+
+func(V2D,unit).Vector unitario (dirección) desde 1 a 2.
+fret(V2D).El vector unitario.
+fpar(const V2D*,v1).Punto 1 (origen).
+fpar(const V2D*,v2).Punto 2 (destino).
+fpar(real*,dist).Distancia entre puntos. Puede ser <c>NULL</c>.
+
+func(V2D,perp_pos).Obtiene el vector perpendicular positivo.
+fret(V2D).El vector perpendicular.
+fpar(const V2D*,v).Vector inicial.
+fnote.Es la perpendicular que se obtiene mediante ángulo positivo (+π/2).
+
+func(V2D,perp_neg).Obtiene el vector perpendicular negativo.
+fret(V2D).El vector perpendicular.
+fpar(const V2D*,v).Vector inicial.
+fnote.Es la perpendicular que se obtiene mediante ángulo negativo (-π/2).
+
 func(V2D,norm).Normaliza un vector, es decir, lo convierte en un vector de longitud = 1.
 fret(bool_t).<c>FALSE</c> si el vector no se puede normalizar (el vector 0). 
-fpar(V2D*,v2d).El vector que será normalizado.
+fpar(V2D*,v).El vector que será normalizado.
 
 func(V2D,length).Calcula la longitud de un vector.
 fret(real).El módulo del vector. 
-fpar(const V2D*,v2d).El vector.
+fpar(const V2D*,v).El vector.
+
+func(V2D,sqlength).Calcula el cuadrado de la longitud de un vector.
+fret(real).El cuadrado del módulo del vector. 
+fpar(const V2D*,v).El vector.
+fnote.Evita utilizar la raíz cuadrada, por lo que es más eficiente que <lf>v2d_lengthf</lf>. Suele utilizarse para comparar distancias.
+
+func(V2D,dot).Producto escalar de dos vectores.
+fret(real).Producto escalar. 
+fpar(const V2D*,v1).Vector 1.
+fpar(const V2D*,v2).Vector 2.
 
 func(V2D,dist).Calcula la distancia entre dos puntos.
 fret(real).La distancia. 
-fpar(const V2D*,v2d1).El primer punto.
-fpar(const V2D*,v2d2).El segundo punto.
+fpar(const V2D*,v1).Punto 1.
+fpar(const V2D*,v2).Punto 2.
 
+func(V2D,sqdist).Calcula el cuadrado de la distancia entre dos puntos.
+fret(real).La distancia al cuadrado. 
+fpar(const V2D*,v1).Punto 1.
+fpar(const V2D*,v2).Punto 2.
+fnote.Evita utilizar la raíz cuadrada, por lo que es más eficiente que <lf>v2d_distf</lf>. Suele utilizarse para comparar distancias.
+
+func(V2D,angle).Calcula el ángulo formado por dos vectores.
+fret(real).El ángulo en radianes (-Pi, Pi)
+fpar(const V2D*,v1).Vector 1.
+fpar(const V2D*,v2).Vector 2.
+fnote.Los ángulos positivos se expresan desde v1 a v2, en el mismo sentido que el giro del eje X hacia el eje Y.  Para ángulos mayores de π rad (180°) se devolverá sentido negativo.
+
+func(V2D,rotate).Aplica un rotación a un vector.
+fpar(V2D*,v).Vector que será rotado (origen/destino).
+fpar(const real,a).Ángulo en radianes.
+fnote.Esta función implica calcular el seno y coseno. Utiliza <lf>t2d_vmultnf</lf> si tienes que aplicar la misma rotación a varios vectores.

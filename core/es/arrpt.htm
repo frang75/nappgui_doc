@@ -89,6 +89,12 @@ fpar(ArrPt(type)*,array).El array.
 fpar(FPtr_compare,func_compare).Función para comparar dos elementos. <lh>Ordenar y buscar</lh>.
 fpar(,type).Tipo de objeto.
 
+func(arrpt_sort_ex).Ordena los elementos del array utilizando Quicksort y datos adicionales.
+fpar(ArrPt(type)*,array).El array.
+fpar(FPtr_compare_ex,func_compare).Función para comparar dos elementos utilizando un dato adicional.
+fpar(,type).Tipo de objeto.
+fpar(,dtype).Tipo de dato en la función de comparación.
+
 func(arrpt_find).Busca un determinado puntero en el array.
 fret(uint32_t).La posición del puntero si existe, o <lt>UINT32_MAX</lt> si no.
 fpar(const ArrPt(type)*,array).El array.

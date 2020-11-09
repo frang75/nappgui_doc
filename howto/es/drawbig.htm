@@ -1,0 +1,27 @@
+
+h1.Dibujos con scroll
+
+p.La siguiente aplicación muestra como gestionar un área de dibujo muy grande, de la que únicamente una pequeña porción es visible. Representaremos una rejilla de 2000x2000 celdas, utilizando un control <lt>View</lt> con barras de scroll. Los objetivos que perseguimos con este ejemplo son:
+
+li.Optimizar el evento <c>OnDraw</c> para dibujar únicamente el área visible, evitando lanzar comandos innecesarios.
+
+li.Dimensionar las barras de scroll con <lf>view_content_size</lf>.
+
+li.Desplazar el área visible mediante <lf>view_scroll_to</lf>.
+
+li.Obtener el área visible con <lf>view_viewport</lf>.
+
+li.Uso del ratón: Poder hacer click sobre una celda o resaltarla cuando el cursor está sobre ella.
+
+li.Uso del teclado: Permitir a la vista capturar el foco y mover la celda activa con las teclas <c>[Left]</c>, <c>[Right]</c>, <c>[Up]</c> y <c>[Down]</c>. La navegación con el teclado exige que dicha celda siempre sea visible.
+
+img(drawbig_win.png,0,.7).Versión Windows.
+Captura de una aplicación con ejemplos de dibujo. Versión Windows.
+
+img(drawbig_macos.png,0,.7).Versión macOS.
+Captura de una aplicación con ejemplos de dibujo. Versión macOS.
+
+img(drawbig_linux.png,0,.7).Versión Linux.
+Captura de una aplicación con ejemplos de dibujo. Versión Linux.
+
+codefile(howto/drawbig/drawbig.c).

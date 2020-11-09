@@ -44,7 +44,7 @@ dbind(Product, Image*, image64);
 dbind(Product, real32_t, price);
 code. 
 
-img(dbind.svg,520,.7).Internal tables created by <i>dbind</i> when registering the data model.
+img(dbind.svg,520,.5).Internal tables created by <i>dbind</i> when registering the data model.
 Scheme showing a data structure and its equivalent table.
 
 h2.MVVM synchronization with GUI
@@ -185,6 +185,12 @@ fnote.Errors will be generated at compile time if the indicated field does not b
 func(dbind_enum).Register an <c>enum</c> type value.
 fpar(,type).Enum type.
 fpar(,value).Value.
+
+func(dbind_alias).Create an alias for an enumerated value.
+fpar(,type).Enum type.
+fpar(,value).Value.
+fpar(const char_t*,alias).Text string with the alias.
+fnote.<c>dbind_alias(mode_t, ekIMAGE_ANALISYS, "Image Analisys");</c>. Use the string "Image Analisys" instead of "ekIMAGE_ANALISYS" for those I/O or interface operations that require displaying the enumeration values. For example, to populate the fields of a <lt>PopUp</lt> linked with a data field.
 
 func(dbind_create).Create an object of registered type, initializing its fields with the default values.
 fret(type*).Newly created object or <c>NULL</c> if <i>dbind</i> does not recognize the data type.

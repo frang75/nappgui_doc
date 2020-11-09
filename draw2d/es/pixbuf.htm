@@ -1,0 +1,275 @@
+
+h1.Pixel Buffer
+
+p.Un <b>pixel buffer</b> es una área de memoria que representa una rejilla de puntos de color o píxeles. Permiten el acceso directo a la información pero no están optimizados para el dibujo en pantalla, por lo que deberemos crear un objeto <lt>Image</lt> para poder visualizarlos. Son muy eficientes para la generación procedimental o la aplicación de filtros, ya que leer o escribir un valor no requiere más que acceder a su posición dentro del búfer.
+
+li.Utiliza <lf>pixbuf_create</lf> para crear un nuevo píxel búfer.
+
+li.Utiliza <lf>image_pixels</lf> para obtener los píxeles de una imagen.
+
+li.Utiliza <lf>pixbuf_width</lf> para obtener la anchura de la rejilla.
+
+li.Utiliza <lf>pixbuf_height</lf> para obtener la altura de la rejilla.
+
+bq.Todas las operaciones sobre pixel buffers se realizan en la CPU. Son eficientes en la medida que accedemos directamente a memoria, pero no se pueden comparar con alternativas que utilicen la GPU para el procesamiento digital de imágenes.
+
+h2.Formatos de píxel
+
+p.El formato hace referencia a como se codifica el valor de cada píxel dentro del búfer <r>pixtable</r> <r>pixformat</r>.
+
+li.Utiliza <lf>pixbuf_format</lf> para obtener el formato del píxel.
+
+table(pixtable).Formatos de pixel.
+row.
+p.Valor
+p.Descripción
+row.
+p.<lt>ekRGB24</lt>
+p.<i>True color</i> +16 Millones simultáneos, 24 bits por píxel.
+row.
+p.<lt>ekRGBA32</lt>
+p.<i>True color</i> con canal alpha (transparencias), 32 bits por píxel.
+row.
+p.<lt>ekGRAY8</lt>
+p.256 tonos de gris, 8 bits por píxel.
+row.
+p.<lt>ekINDEX1</lt>
+p.Indexado, 1 bit por pixel.
+row.
+p.<lt>ekINDEX2</lt>
+p.Indexado, 2 bits por pixel.
+row.
+p.<lt>ekINDEX4</lt>
+p.Indexado, 4 bits por pixel.
+row.
+p.<lt>ekINDEX8</lt>
+p.Indexado, 8 bits por pixel.
+table.
+
+img(pixformat.svg,480,.7).<b>(a)</b> Color real, <b>(b)</b> tonos de gris, <b>(c)</b> indexados.
+Diferentes arrays de bytes con datos de píxeles.
+
+h2.Imágenes procedimentales
+
+p.Una forma de "rellenar" los buffers es mediante algoritmos que calculen el valor de cada píxel. Un claro ejemplo lo encontramos en la representación de conjuntos fractales <r>fractals</r>, un área de la matemática dedicada al estudio de determinados sistemas dinámicos. En <lp>fractals</lp> tienes la aplicación completa.
+
+li.Utiliza <lf>pixbuf_data</lf> para obtener un puntero al contenido del búfer.
+
+li.Utiliza <lf>pixbuf_set</lf> para escribir el valor de un píxel.
+
+li.Utiliza <lf>pixbuf_get</lf> para leer el valor de un píxel.
+
+img(fractals.png,480,.65).Conjunto de Julia. Imagen generada píxel a píxel mediante algoritmos fractales.
+Representación de un conjunto de Julia.
+
+h2.Filtros y convolución
+
+p.La convolución es una operación sobre la imagen donde el valor resultante de cada píxel se calcula en función de sus vecinos <r>convform</r> <r>convolution</r>. El operador se codifica mediante una matriz que se va desplazando de forma secuencial por todos los puntos del búfer original. Los valores de la dicha matriz determinarán la naturaleza del filtro y desarrollan con detalle dentro de la teoría del tratamiento digital de imágenes. En <lp>filters</lp> tienes una aplicación de ejemplo.
+
+li.Utiliza <lf>pixbuf_convolution</lf> para aplicar un filtro de convolución.
+
+math(convform).Fórmula de convolución.
+\begin{equation*}
+Img[x][y] = \sum_{x'}\sum_{y'} Conv[x'][y'] \cdot Img[x + x'][y + y']
+\end{equation*}
+math.
+
+img(convolution.svg,620,.8).Convolución aplicada a un píxel.
+Aplicación de un filtro de imagen.
+
+bq.La convolución no soporta formatos indexados, debido a que promedia entre valores de color real. Sí que funciona con tonos de gris.
+
+h2.Transformaciones geométricas
+
+li.Utiliza <lf>pixbuf_rotate</lf> para rotar el búfer.
+
+li.Utiliza <lf>pixbuf_scale</lf> para estirar o estrechar la imagen.
+
+img(pixbuf_transform.svg,620,.8).Proceso básico de un filtro de imagen.
+Operativa de un filtro de imagen.
+
+h2.Dibujo de primitivas
+
+li.Utiliza <lf>pixbuf_fill</lf> para rellenar todo el búfer con el mismo valor.
+
+li.Utiliza <lf>pixbuf_fill_rect</lf> para rellenar una región.
+
+li.Utiliza <lf>pixbuf_line</lf> para dibujar una línea.
+
+li.Utiliza <lf>pixbuf_circle</lf> para dibujar el contorno de un círculo.
+
+h2.Copia y conversión
+
+p.Durante el procesamiento digital de una imagen es posible que tengamos que encadenar varias operaciones, por lo que será de utilidad poder realizar copias de los búfer o conversiones de formato.
+
+li.Utiliza <lf>pixbuf_copy</lf> para realizar una copia.
+
+li.Utiliza <lf>pixbuf_convert</lf> para convertir a otro formato <r>convtable</r>. 
+
+table(convtable,| c | c | p{.7\textwidth} |).Conversión entre formatos.
+row.
+p.Desde
+p.Hacia
+p.Observaciones
+row.
+p.RGB24
+p.RGB32
+p.Se añade canal alfa con el valor 255
+row.
+p.RGB32
+p.RGB24
+p.Se elimina el canal alfa con posible pérdida de información.
+row.
+p.RGB
+p.Gray
+p.Se ponderan los canales RGB a razón de 77/255, 148/255, 30/255. Se pierde el canal alfa.
+row.
+p.Gray
+p.RGB
+p.Se duplican los canales RGB(gray, gray, gray). Canal alfa a 255.
+row.
+p.RGB
+p.Indexed
+p.Si se especifica una paleta, se calcula la menor distancia entre cada píxel y la paleta. Si no, se calcula la <lh>Paleta óptima</lh>. Posible pérdida de información.
+row.
+p.Indexed
+p.RGB
+p.Se utilizará una <lh>Paleta predefinida</lh> si no se especifica ninguna otra.
+row.
+p.Indexed
+p.Indexed
+p.Si el destino tiene menor número de bits, se aplicará <i>out = in % bpp</i> con posible pérdida de información.
+row.
+p.Gray
+p.Indexed
+p.El formato Gray8 se considerará indexado a todos los efectos.
+row.
+p.Indexed
+p.Gray
+p.El formato Gray8 se considerará indexado a todos los efectos.
+table.
+
+func(pixbuf_create).Crea un nuevo pixel búfer.
+fret(Pixbuf*).El píxel búfer.
+fpar(const uint32_t,width).Anchura.
+fpar(const uint32_t,height).Altura.
+fpar(const pixformat_t,format).Formato de píxel.
+fnote.El contenido inicial estará indeterminado.
+
+func(pixbuf_copy).Crea una copia del pixel búfer.
+fret(Pixbuf*).La copia.
+fpar(const Pixbuf*,pixbuf).El búfer original.
+
+func(pixbuf_convert).Cambia el formato de un píxel búfer.
+fret(Pixbuf*).El búfer convertido.
+fpar(const Pixbuf*,pixbuf).El búfer original.
+fpar(const Palette*,palette).Paleta de colores necesaria para determinadas conversiones.
+fpar(const pixformat_t,oformat).Formato del búfer resultado.
+fnote.Ver <lh>Copia y conversión</lh>.
+
+func(pixbuf_rotate).Crea un píxel búfer rotando un búfer de entrada.
+fret(Pixbuf*).El nuevo búfer rotado.
+fpar(const Pixbuf*,pixbuf).El búfer original.
+fpar(const real32_t,cx).Coordenada x del centro de giro (en imagen original).
+fpar(const real32_t,cy).Coordenada y del centro de giro (en imagen original).
+fpar(const real32_t,angle).Ángulo en radianes.
+fpar(const bool_t,clip).<c>TRUE</c> la imagen resultado tendrá las mismas dimensiones que la original, perdiendo parte del contenido. <c>FALSE</c> la imagen resultado se redimensionará para que quepa toda la original.
+fpar(const uint32_t,background).Valor de fondo con el que rellenar aquellos píxeles que no correspondan a ninguno de la original.
+fnote.Ver <lh>Transformaciones geométricas</lh>.
+
+func(pixbuf_scale).Crea un píxel búfer escalando un búfer de entrada.
+fret(Pixbuf*).El nuevo búfer escalado.
+fpar(const Pixbuf*,pixbuf).El búfer original.
+fpar(const uint32_t,nwidth).La anchura del búfer resultado.
+fpar(const uint32_t,nheight).La altura del búfer resultado.
+fnote.Ver <lh>Transformaciones geométricas</lh>.
+
+func(pixbuf_convolution).Aplica un filtro de convolución al búfer de entrada.
+fret(Pixbuf*).El nuevo búfer con el resultado.
+fpar(const Pixbuf*,pixbuf).El búfer original.
+fpar(const real32_t*,matrix).La matriz de convolución.
+fpar(const uint32_t,mwidth).Número de columnas de la matriz.
+fpar(const uint32_t,mheight).Número de filas de la matriz.
+fpar(const real32_t,factor).Factor de escala a aplicar al resultado.
+fpar(const real32_t,bias).Offset o desplazamiento a aplicar al resultado.
+fnote.Ver <lh>Filtros y convolución</lh>.
+
+func(pixbuf_destroy).Destruye el búfer.
+fpar(Pixbuf**,pixbuf).El búfer. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(pixbuf_size).Obtiene el tamaño del búfer (en píxeles).
+fret(uint32_t).Anchura x altura.
+fpar(const Pixbuf*,pixbuf).El búfer.
+
+func(pixbuf_width).Obtiene la anchura del búfer.
+fret(uint32_t).Anchura.
+fpar(const Pixbuf*,pixbuf).El búfer.
+
+func(pixbuf_height).Obtiene la altura del búfer.
+fret(uint32_t).Altura.
+fpar(const Pixbuf*,pixbuf).El búfer.
+
+func(pixbuf_format).Obtiene el formato de píxel.
+fret(pixformat_t).El formato.
+fpar(const Pixbuf*,pixbuf).El búfer.
+fnote.Ver <lh>Formatos de píxel</lh>.
+
+func(pixbuf_cdata).Obtiene un puntero de solo lectura al contenido del búfer.
+fret(const byte_t*).Puntero al primer elemento.
+fpar(const Pixbuf*,pixbuf).El búfer.
+fnote.Manipular correctamente el búfer requiere conocer los <lh>Formatos de píxel</lh> y, en ocasiones, utilizar los operadores a nivel de bit. Utilizar <lf>pixbuf_get</lf> para leer correctamente un píxel.
+
+func(pixbuf_data).Obtiene un puntero de lectura/escritura al contenido del búfer.
+fret(byte_t*).Puntero al primer elemento.
+fpar(Pixbuf*,pixbuf).El búfer.
+fnote.Manipular correctamente el búfer requiere conocer los <lh>Formatos de píxel</lh> y, en ocasiones, utilizar los operadores a nivel de bit. Utilizar <lf>pixbuf_get</lf> y <lf>pixbuf_set</lf> para leer/escribir correctamente un píxel.
+
+func(pixbuf_format_bpp).Obtiene los bits por píxel según el formato.
+fret(uint32_t).Bits por píxel.
+fpar(const pixformat_t,format).El formato.
+fnote.Ver <lh>Formatos de píxel</lh>.
+
+func(pixbuf_get).Obtiene el valor de un píxel.
+fret(uint32_t).El valor.
+fpar(const Pixbuf*,pixbuf).El búfer.
+fpar(const uint32_t,x).Coordenada x del píxel.
+fpar(const uint32_t,y).Coordenada y del píxel.
+fnote.Ver <lh>Formatos de píxel</lh> para interpretar correctamente el valor.
+
+func(pixbuf_set).Establece el valor de un píxel.
+fpar(Pixbuf*,pixbuf).El búfer.
+fpar(const uint32_t,x).Coordenada x del píxel.
+fpar(const uint32_t,y).Coordenada y del píxel.
+fpar(const uint32_t,value).El valor.
+fnote.Ver <lh>Formatos de píxel</lh> para interpretar correctamente el valor.
+
+func(pixbuf_fill).Rellena todo el búfer con el mismo valor.
+fpar(Pixbuf*,pixbuf).El búfer.
+fpar(const uint32_t,value).El valor.
+fnote.Ver <lh>Dibujo de primitivas</lh>.
+
+func(pixbuf_fill_rect).Rellena una región rectangular con el mismo valor.
+fpar(Pixbuf*,pixbuf).El búfer.
+fpar(const uint32_t,x).Coordenada x de la esquina superior-izquierda.
+fpar(const uint32_t,y).Coordenada y de la esquina superior-izquierda.
+fpar(const uint32_t,width).Anchura del rectángulo.
+fpar(const uint32_t,height).Altura del rectángulo.
+fpar(const uint32_t,value).El valor.
+fnote.Ver <lh>Dibujo de primitivas</lh>.
+
+func(pixbuf_line).Dibuja una línea, mediante el algoritmo de Bresenham.
+fpar(Pixbuf*,pixbuf).El búfer.
+fpar(const uint32_t,x0).Coordenada x del primer punto.
+fpar(const uint32_t,y0).Coordenada y del primer punto.
+fpar(const uint32_t,x1).Coordenada x del segundo punto.
+fpar(const uint32_t,y1).Coordenada y del segundo punto.
+fpar(const uint32_t,value).El valor.
+fnote.Ver <lh>Dibujo de primitivas</lh>.
+
+func(pixbuf_circle).Dibuja una círculo, mediante el algoritmo de Bresenham.
+fpar(Pixbuf*,pixbuf).El búfer.
+fpar(const uint32_t,x).Coordenada x del centro.
+fpar(const uint32_t,y).Coordenada y del centro.
+fpar(const uint32_t,r).Radio.
+fpar(const uint32_t,value).El valor.
+fnote.Ver <lh>Dibujo de primitivas</lh>.

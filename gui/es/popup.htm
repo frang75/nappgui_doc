@@ -3,7 +3,11 @@ h1.PopUp
 
 p.Los <b>PopUps</b> son botones que tienen asociado un menú desplegable <r>popups</r>. Aparentemente parecen <i>pushbuttons</i> que al pulsarse muestran una lista de opciones. En <lh>¡Hola PopUp y Combo!</lh> tienes un ejemplo de uso.
 
-img(popups.png,0,.8).PopUps en Windows, macOS y Linux.
+li.Utiliza <lf>popup_create</lf> parar crear un popup.
+
+li.Utiliza <lf>popup_add_elem</lf> para añadir un elemento a la lista.
+
+img(popups.png,0,.35).PopUps en Windows, macOS y Linux.
 Captura de varios controles PopUp en una ventana.
 
 func(popup_create).Crea un nuevo control de lista desplegable <i>(PopUp button)</i>.
@@ -28,6 +32,13 @@ fpar(PopUp*,popup).El popup.
 fpar(const uint32_t,index).El índice del elemento a sustituir.
 fpar(const char_t*,text).El texto del elemento en UTF-8 o el identificador del recurso. <lp>resources</lp>.
 fpar(const Image*,image).Icono asociado al elemento o el identificador del recurso. Por cuestión de espacio, se escalará a un alto máximo de 16 píxeles.
+
+func(popup_clear).Elimina todos los elementos de la lista desplegable.
+fpar(PopUp*,popup).El popup.
+
+func(popup_size).Obtiene el número de elementos de la lista.
+fret(uint32_t).El número de elementos.
+fpar(const PopUp*,popup).El popup.
 
 func(popup_list_height).Establece el tamaño de la lista desplegable.
 fpar(PopUp*,popup).El popup.

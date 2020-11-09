@@ -29,6 +29,35 @@ li.<lp>inet</lp>: Protocols and Internet services. Http, Ftp, Google, etc.
 
 p.The NAppGUI implementation has been divided into several static libraries written in ANSI-C (C90) with small parts in C++ 98 <r>sdk_big_picture</r>. The project compiles without problems in all the versions of Visual Studio (from VS2005), Xcode (from 3) and GCC (from 4). It can be used for the development of high performance applications written in C on Windows, MacOS and Linux systems. A clear line has been marked that separates the packages oriented to perform calculations and data access <i>(back-end)</i> from those destined to the presentation or interface layers <i>(front-end)</i>. Also we have applied certain <lh>Standards</lh> whose bases are centralized in the library <lp>sewer</lp>, that although it does not incorporate much functionality, defines the basic types and configuration macros common to the entire project.
 
+h2(nobook).Versions
+
+table.
+row.
+p.Version
+p.Build
+p.Date
+p.Download
+p.eBook
+row.
+p.<lh>SDK 1.2.1</lh>
+p.2788
+p.November, 8 2020
+p.<l>https://nappgui.com/sdk/nappgui_1_2_1.zip''[⇩]</l>
+p.<l>https://nappgui.com/ebook/nappgui_1_2_1_en.pdf''[⇩]</l>
+row.
+p.NAppGUI 1.1.1
+p.2374
+p.28 January 2020
+p.-
+p.-
+row.
+p.NAppGUI 1.1.0
+p.2266
+p.December 31, 2019
+p.-
+p.-
+table.
+
 h2.A little history
 
 p.I started working on this project unconsciously, in mid 2008 when I was finishing my Computer Engineering studies at the University of Alicante. I wanted to develop a physical systems simulator that worked both on PC-Windows computers and Apple iMac without having to duplicate all the work. The technological alternatives of the time, such as GTK or Qt, did not convince me at all as they were too heavy, complicated to use and slow so they would end up tarnishing the quality, elegance and commitment that I was putting into my mathematical calculation algorithms. After losing several months evaluating different libraries for multiplatform programming I downloaded some technical manuals from Apple to program directly in Cocoa, the base technology to develop software for the iMac. In mid 2010 I started to see the first results and this was encouraging. I had created an application with the prototype of my simulator in just 500Kb <r>imech</r>, in contrast to the more than 30Mb of dependencies required by third-party solutions. The code was compact and clean, the application worked at breakneck speed and, above all, it had a professional appearance that reminded us in part of the iMovie, it allowed to manipulate 3D views as in a videogame and it provided technical data of the simulation in real time. This inspired me to continue working on drawing a barrier between the part of the reusable application and that dependent on a specific technology. This would allow me to adapt my simulator to different computer models and operating systems.

@@ -27,10 +27,16 @@ li.Rendimiento: Los programas son más pequeños ya que no requieren enlazar con
 img(draw2d_tech.svg,400,.5).<i>draw2d</i> conecta con las APIs de dibujo de cada sistema operativo.
 Dependencias de draw2d en función de cada sistema operativo.
 
-enum(pixformat_t).Formato de pixel en una imagen. Número de bits por pixel y modelo de color.
+enum(pixformat_t).<lh>Formatos de píxel</lh> en una imagen. Número de bits y modelo de color.
+enumv(ekINDEX1).1 bit por pixel. 2 colores, indexado.
+enumv(ekINDEX2).2 bits por pixel. 4 colores, indexado.
+enumv(ekINDEX4).4 bits por pixel. 16 colores, indexado.
+enumv(ekINDEX8).8 bits por pixel. 256 colores, indexado.
 enumv(ekGRAY8).8 bits por pixel en escala de grises. 256 tonos de gris.
 enumv(ekRGB24).24 bits por pixel RGB. 8 bits por canal (rojo, verde, azul). El byte de menor orden corresponde al rojo y el de mayor al azul.
 enumv(ekRGBA32).32 bits por pixel RGBA. 8 bits por canal (rojo, verde, azul, alpha). El byte de menor orden corresponde al rojo y el de mayor al alpha (transparencia).
+enumv(ekFIMAGE).Representa el formato original de la imagen. Sólo válido en <lf>image_pixels</lf>.
+enumv(ekOPTIMAL).Formato óptimo. Menor cantidad de bits para representar una imagen <b>sin pérdida</b> de información. Sólo válido en <lf>image_pixels</lf>.
 
 enum(codec_t).Formato de codificación y compresión de imágenes.
 enumv(ekJPG).<i>Joint Photographic Experts Group</i>.
@@ -44,6 +50,8 @@ enumv(ekFBOLD).Fuente <b>en negrita</b>.
 enumv(ekFITALIC).Fuente <i>en itálica</i>.
 enumv(ekFSTRIKEOUT).Fuente <del>tachada</del>.
 enumv(ekFUNDERLINE).Fuente <u>subrayada</u>.
+enumv(ekFSUBSCRIPT).Subíndice. Ver <lf>textview_fstyle</lf>.
+enumv(ekFSUPSCRIPT).Superíndice. Ver <lf>textview_fstyle</lf>.    
 enumv(ekFPIXELS).Los tamaños de fuente se indicarán en píxeles.
 enumv(ekFPOINTS).Los tamaños de fuente se indicarán en puntos. <lh>Tamaño en puntos</lh>.
 
@@ -86,6 +94,10 @@ enumv(ekELLIPMLINE).Texto multilínea (sin elipsis).
 struct(color_t).Entero de 32 bits que representa un color RGBA. El byte de menor orden corresponde al canal rojo (Red) y el de mayor orden al canal Alpha (transparencia). <lp>color</lp>.
 
 struct(DCtx).Contexto de dibujo 2D, destinatario para los comandos de dibujo. También se conoce como lienzo <i>(canvas)</i> o superficie <i>(surface)</i>. <lp>dctx</lp>.
+
+struct(Palette).Paleta de colores, normalmente relacionada con <lt>Pixbuf</lt> indexados. <lp>palette</lp>.
+
+struct(Pixbuf).Búfer en memoria con información de píxeles. <lp>pixbuf</lp>.
 
 struct(Image).Contiene una imagen de mapa de bits, compuesta por píxeles. <lp>image</lp>.
 

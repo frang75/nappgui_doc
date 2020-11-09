@@ -20,7 +20,7 @@ imageview_image(view, img);
 button_image(button, icon);
 code.
 
-img(use_of_images.svg,460,.65).Integración de imágenes en la interfaz de usuario.
+img(use_of_images.svg,460,.65).Uso de imágenes en la interfaz de usuario.
 Lectura de una imagen desde disco y visualización.
 
 li.Utiliza <lf>image_from_file</lf> para cargar una imagen de disco.
@@ -56,52 +56,20 @@ Imagen generada desde comandos de dibujo.
 
 h2.Acceso a píxeles
 
-p.Otra forma de generar imágenes es mediante algoritmos que calculen el valor de cada píxel. Una clara aplicación de esto la encontramos en la representación de conjuntos fractales <r>fractals</r>, un área de la matemática dedicada al estudio de determinados sistemas dinámicos. En <lp>fractals</lp> tienes la aplicación completa.
+p.Las imágenes son <b>objetos inmutables</b> optimizados para el dibujo recurrente en pantalla, por lo que se permiten ciertas licencias, tanto en la organización interna de la información de color como en la gestión de posibles copias. Por este motivo no es posible manipular directamente los píxeles, sino que debemos acceder a ellos mediante un <lp>pixbuf</lp>. 
 
-li.Utiliza <lf>image_from_pixels</lf> para crear una imagen a partir de un búfer.
+li.Utiliza <lf>image_from_pixels</lf> para crear una imagen a partir de la información de color.
+
+li.Utiliza <lf>image_from_pixbuf</lf> para crear una imagen a partir de un pixel búfer.
 
 li.Utiliza <lf>image_pixels</lf> para obtener un búfer con los píxeles de la imagen.
 
-img(fractals.png,480,.65).Imagen generada píxel a píxel mediante algoritmos fractales.
-Representación de un conjunto de Julia.
+bq.Documentación técnica de Apple: "Treat NSImage and its image representations as immutable objects. The goal of NSImage is to provide an efficient way to display images on the target canvas. Avoid manipulating the data of an image representation directly, especially if there are alternatives to manipulating the data, such as compositing the image and some other content into a new image object."
 
-p.Las imágenes son objetos optimizados para el dibujo recurrente en pantalla, por lo que se permiten ciertas licencias en la organización interna de la información de color. Por este motivo no es posible manipular directamente los píxeles, sino que debemos acceder a ellos mediante un búfer intermedio. Un <b>pixbufer</b> <r>pixel_format</r> no es más que un área de memoria que contiene todos los píxeles de forma secuencial y donde se puede acceder a cada elemento mediante un sencillo desplazamiento, teniendo en cuenta el formato de color <r>accpixel</r>. Los algoritmos escribirán directamente en esta memoria y, posteriormente, se creará un objeto <lt>Image</lt> <r>pixel_buffer</r>, para poder dibujarlo en pantalla o enviarlo por los canales de salida.
+p.Los <b>pixel buffers</b> nos permiten de una forma óptima manipular el contenido de la imagen. Para visualizar el resultado o almacenarlo en cualquiera de los formatos soportados, deberemos crear una nueva imagen <r>image_pixels</r>. 
 
-img(pixel_format.svg,420,.5).Formatos de píxel. <b>(a)</b> <lt>ekRGBA32</lt>, <b>(b)</b> <lt>ekRGB24</lt>, <b>(c)</b> <lt>ekGRAY8</lt>.
-Representación visual de un array de píxeles según el formato.
-
-code(cpp,accpixel).Acceso directo a al píxel (x, y).
-// Pixel format = kRGBA32
-byte_t *pixbuf = heap_new_n(width * height * 4, byte_t);
-byte_t *pixel = pixbuf + (y * width + x) * 4;
-pixel[0] = red;
-pixel[1] = green;
-pixel[2] = blue;
-pixel[3] = alpha;
-
-// Pixel format = kRGB24
-byte_t *pixbuf = heap_new_n(width * height * 3, byte_t);
-byte_t *pixel = pixbuf + (y * width + x) * 3;
-pixel[0] = red;
-pixel[1] = green;
-pixel[2] = blue;
-
-// Pixel format = kGRAY8
-byte_t *pixbuf = heap_new_n(width * height, byte_t);
-byte_t *pixel = pixbuf + (y * width + x);
-pixel[0] = gray;
-code.
-
-img(pixel_buffer.svg,620,.8).Imagen a partir de la información de color.
+img(image_pixels.svg,620,.8).Proceso de edición de imágenes.
 Proceso desde un pixel buffer a una imagen.
-
-p.Otra gran aplicación del acceso directo al píxel es la implementación de filtros de imágen. En estos casos partimos extrayendo el <b>pixbuf</b> de una imagen existente <r>image_filter</r>, se editará y se creará una nueva imagen con el resultado. En <lp>filters</lp> tienes el ejemplo completo <r>imagefilter</r>.
-
-img(image_filter.svg,620,.8).Proceso básico de un filtro de imagen.
-Operativa de un filtro de imagen.
-
-img(imagefilter.png,0,.8).Aplicación de ejemplo del uso de filtros de imagen.
-Captura de una imagen a la que se ha aplicado un filtro.
 
 h2.Guardar imágenes: Codecs
 
@@ -143,7 +111,7 @@ p.<lf>image_from_resource</lf>
 p.El codec original.
 row.
 p.<lf>image_from_pixels</lf>
-p.<lt>ekJPG</lt>.
+p.¿Transparencias? Sí:<lt>ekPNG</lt> No:<lt>ekJPG</lt>.
 row.
 p.<lf>dctx_image</lf>
 p.<lt>ekPNG</lt>.
@@ -155,7 +123,14 @@ fpar(const uint32_t,width).El ancho de la imagen (en píxeles).
 fpar(const uint32_t,height).El alto de la imagen (en píxeles).
 fpar(const pixformat_t,format).El formato de pixel.
 fpar(const byte_t*,data).Búfer que contiene el valor de color de cada pixel. Dependerá de la resolución y del formato.
+fpar(const color_t*,palette).Paleta de color necesaria para representar imágenes indexadas. Si es <c>NULL</c> se utilizará una <lh>Paleta predefinida</lh> si llega el caso.
 fnote.Ver <lh>Acceso a píxeles</lh>.
+
+func(image_from_pixbuf).Crea una imagen a partir de un píxel buffer.
+fret(Image*).La imagen recién creada.
+fpar(const Pixbuf*,pixbuf).El buffer.
+fpar(const Palette*,palette).La paleta.
+fnote.Igual a <lf>image_from_pixels</lf> evitando indicar los parámetros por separado.
 
 func(image_from_file).Crea una imagen a partir de un archivo en disco.
 fret(Image*).La imagen recién creada.
@@ -163,17 +138,24 @@ fpar(const char_t*,pathname).La ruta del archivo. <lh>Filename y pathname</lh>.
 fpar(ferror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
 fnote.Solo los formatos <i>jpg</i>, <i>png</i>, <i>bmp</i> y <i>gif</i> son aceptados.
 
-func(image_from_data).Crea una imagen a partir de un búfer que contiene los datos codificados. 
+func(image_from_data).Crea una imagen a partir de un búfer que contiene los datos codificados.
 fret(Image*).La imagen recién creada.
 fpar(const byte_t*,data).El búfer con los datos de la imagen.
 fpar(const uint32_t,size).El tamaño del búfer en bytes.
 fnote.El búfer representa datos codificados en <i>jpg</i>, <i>png</i>, <i>bmp</i> o <i>gif</i>. Para crear la imagen directamente desde píxeles utiliza <lf>image_from_pixels</lf>.
 
-func(image_from_resource).Obtiene una imagen de un paquete de recursos. 
+func(image_from_resource).Obtiene una imagen de un paquete de recursos.
 fret(Image*).La imagen.
 fpar(const ResPack*,pack).El paquete de recursos.
 fpar(const ResId,id).El identificador del recurso.
 fnote.Ver <lp>resources</lp>.
+
+func(image_rotate).Crea una nueva imagen rotando otra ya existente.
+fret(Image*).La imagen recién creada.
+fpar(const Image*,image).La imagen original.
+fpar(const real32_t,angle).Ángulo en radianes.
+fpar(const bool_t,nsize).<c>TRUE</c> la imagen resultado se redimensionará para que quepa toda la original. <c>FALSE</c> la imagen resultado tendrá las mismas dimensiones que la original, recortando parte del contenido (clipping).
+fpar(const color_t,background).Color de fondo. La nueva imagen tendrá zonas "en blanco" debido a la rotación.
 
 func(image_scale).Crea una copia de la imagen, con un nuevo tamaño.
 fret(Image*).La imagen recién creada.
@@ -211,20 +193,19 @@ fpar(const Image*,image).La imagen.
 fpar(uint32_t*,width).El ancho de la imagen en píxeles.
 fpar(uint32_t*,height).El alto de la imagen en píxeles.
 
-func(image_pixformat).Obtiene el formato de pixel de la imagen.
+func(image_format).Obtiene el formato de pixel de la imagen.
 fpar(const Image*,image).La imagen.
 fpar(pixformat_t*,format).El formato de pixel.
 
 func(image_pixels).Obtiene un búfer con los píxeles que forman la imagen decodificada.
 fpar(const Image*,image).La imagen.
-fpar(uint32_t*,width).El ancho de la imagen en píxeles. Puede ser <c>NULL</c>.
-fpar(uint32_t*,height).El alto de la imagen en píxeles. Puede ser <c>NULL</c>.
-fpar(pixformat_t*,format).El formato del pixel. Necesario para interpretar la información del vector <c>pixels</c>. Puede ser <c>NULL</c>.
-fpar(Buffer**,pixels).El búfer donde se almacenarán los píxeles. Debe ser destruido con <lf>buffer_destroy</lf> cuando ya no sea necesario. Puede ser <c>NULL</c>.
-fnote.Ver <lh>Acceso a píxeles</lh>.
+fpar(const pixformat_t,format).El formato de pixel requerido.
+fpar(Pixbuf**,pixels).El búfer donde se almacenará el resultado. Debe ser destruido con <lf>pixbuf_destroy</lf>.
+fpar(Palette**,palette).La paleta de color en caso de imágenes indexadas. Debe ser destruida con <lf>palette_destroy</lf>. Puede ser <c>NULL</c>.
+fnote.Si en <c>pixformat</c> indicamos <lt>ekOPTIMAL</lt> se utilizará el formato que menos bits requiera sin pérdida de información. <lt>ekFIMAGE</lt> utilizará el formato original de la imagen. Para cualquier otro valor se realizará la conversión si fuera necesario.
 
 func(image_codec).Cambia el codec por defecto asociado con la imagen.
-fpar(Image*,image).La imagen.
+fpar(const Image*,image).La imagen.
 fpar(const codec_t,codec).El nuevo codec.
 fnote.El cambio tendrá efecto la próxima vez que guardemos o escribamos la imagen. Por defecto, la imagen conserva el codec con el que fue leída. Cuando la creamos con <lf>image_from_pixels</lf> se le asigna el codec <lt>ekJPG</lt> por defecto. Para imágenes desde contextos 2d <lf>dctx_image</lf>, el codec por defecto es <lt>ekPNG</lt>.
 fcode.
@@ -249,8 +230,3 @@ fret(real32_t).El tiempo de la secuencia en segundos.
 fpar(const Image*,image).La imagen.
 fpar(const uint32_t,findex).El índice del frame.
 fnote.Únicamente el formato <i>gif</i> soporta animaciones.
-
-func(image_bpp).Obtiene el número de bytes por píxel del formato. 
-fret(uint32_t).Bytes por pixel.
-fpar(const pixformat_t,format).El formato de píxel.
-

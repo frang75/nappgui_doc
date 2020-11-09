@@ -1,0 +1,37 @@
+
+h1.Círculos 2D
+
+p.Los círculos proporcionan el volumen contenedor más sencillo <r>circle2d</r>, donde la detección de colisiones se produce de manera óptima.
+
+img(circle2d.svg,520,.65).Círculos como volumen contenedor.
+Dibujo de un círculo en el plano.
+
+func(Cir2D,).Crea un círculo 2d a partir de sus componentes.
+fret(Cir2D).El círculo 2d.
+fpar(const real,x).Coordenada x del centro.
+fpar(const real,y).Coordenada y del centro.
+fpar(const real,r).Radio.
+
+func(Cir2D,null).Comprueba si un círculo es nulo (sin dimensión).
+fret(bool_t).<c>TRUE</c> si es nulo, <c>FALSE</c> si contiene algún punto.
+fpar(const Cir2D*,cir).El círculo.
+fnote.Un solo punto es un círculo válido con radio = 0.
+
+func(Cir2D,add).Amplia las dimensiones del círculo para albergar al punto de entrada. Si el punto ya está dentro de su área, no se modificará.
+fpar(Cir2D*,cir).El círculo.
+fpar(const V2D*,p).El punto a incluir.
+
+func(Cir2D,addn).Amplia las dimensiones del círculo para albergar varios puntos. Es equivalente a llamar sucesivas veces al método <lf>cir2d_addf</lf>.
+fpar(Cir2D*,cir).El círculo.
+fpar(const V2D*,p).Vector de puntos a incluir.
+fpar(const uint32_t,n).Número de puntos.
+
+func(Cir2D,add_box).Amplia las dimensiones del círculo para albergar una caja 2D.
+fpar(Cir2D*,cir).El círculo.
+fpar(const B2D*,box).La caja.
+
+func(Cir2D,merge).Amplia las dimensiones del círculo <c>dest</c> para contener al círculo <c>src</c>.
+fpar(Cir2D*,dest).El círculo destino.
+fpar(const Cir2D*,src).El círculo origen.
+
+const(Cir2D,NULL).Representa un círculo nulo (sin geometría).

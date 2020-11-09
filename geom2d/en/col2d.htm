@@ -1,0 +1,138 @@
+langrev.
+h1.2D Collisions
+
+p.Collision detection is responsible for studying and developing algorithms that check if two geometric objects intersect at some point. As the general case would be quite complex to implement and inefficient to evaluate, a series of <b>collision volumes</b> <r>collision_volumes</r> are defined that will enclose the original sets and where the tests can be significantly simplified. The use of these most elementary forms is usually known as <i>broad phase collision detection</i> <r>collision_detection</r>, since it seeks to detect "non-collision" as quickly as possible. In <lp>col2dhello</lp> you have an example application.
+
+img(collision_volumes.svg,520,.65).2D collision volumes.
+Drawing multiple collision volumes in the plane.
+
+img(collision_detection.svg,520,.65).<i>Broad phase </i> collision detection.
+Drawing of multiple collision volumes that intersect in the plane.
+
+func(Col2D,point_point).Point-point collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const V2D*,pnt1).First point.
+fpar(const V2D*,pnt2).Second point.
+fpar(const real,tol).Tolerance. Minimum distance to be considered a collision.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,segment_point).Segment-point collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Seg2D*,seg).Segment.
+fpar(const V2D*,pnt).Point.
+fpar(const real,tol).Tolerance. Minimum distance to be considered a collision.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,segment_segment).Segment-segment collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Seg2D*,seg1).First segment.
+fpar(const Seg2D*,seg2).Second segment.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,circle_point).Circle-point collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Cir2D*,cir).Circle.
+fpar(const V2D*,pnt).Point.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,circle_segment).Circle-segment collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Cir2D*,cir).Circle.
+fpar(const Seg2D*,seg).Segment.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,circle_circle).Circle-circle collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Cir2D*,cir1).First circle.
+fpar(const Cir2D*,cir2).Second circle.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,box_point).Box-point collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Box2D*,box).Box.
+fpar(const V2D*,pnt).Point.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,box_segment).Box-segment collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Box2D*,box).Box.
+fpar(const Seg2D*,seg).Segment.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,box_circle).Box-circle collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Box2D*,box).Box.
+fpar(const Cir2D*,cir).Circle.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,box_box).Box-box collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Box2D*,box1).First box.
+fpar(const Box2D*,box2).Second box.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,obb_point).Point-oriented box collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const OBB2D*,obb).Oriented box.
+fpar(const V2D*,pnt).Point.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,obb_segment).Segment-oriented box collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const OBB2D*,obb).Oriented box.
+fpar(const Seg2D*,seg).Segment.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,obb_circle).Collision-oriented box-circle.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const OBB2D*,obb).Oriented box.
+fpar(const Cir2D*,cir).Circle.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,obb_box).Box-oriented box collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const OBB2D*,obb).Oriented box.
+fpar(const Box2D*,box).Aligned box.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,obb_obb).Oriented Box-Oriented Box collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const OBB2D*,obb1).First oriented box.
+fpar(const OBB2D*,obb2).Second oriented box.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,poly_point).Polygon-point collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Pol2D*,pol).Polygon.
+fpar(const V2D*,pnt).Point.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,poly_segment).Polygon-segment collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Pol2D*,pol).Polygon.
+fpar(const Seg2D*,seg).Segment.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,poly_circle).Polygon-circle collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Pol2D*,pol).Polygon.
+fpar(const Cir2D*,cir).Circle.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,poly_box).Polygon-box collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Pol2D*,pol).Polygon.
+fpar(const Box2D*,cir).Box.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,poly_obb).Polygon-box collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Pol2D*,pol).Polygon.
+fpar(const OBB2D*,cir).Oriented box.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.
+
+func(Col2D,poly_poly).Polygon-polygon collision.
+fret(bool_t).<c>TRUE</c> if the objects intersect, <c>FALSE</c> otherwise.
+fpar(const Pol2D*,pol1).First polygon.
+fpar(const Pol2D*,pol2).Second polygon.
+fpar(Col2D*,col).Detailed data of the collision. It can be <c>NULL</c> if we don't need additional information.

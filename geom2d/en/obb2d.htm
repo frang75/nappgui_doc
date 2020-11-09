@@ -1,0 +1,68 @@
+langrev.
+h1.2D Oriented Boxes
+
+p.Oriented Bounding Boxes are 2D boxes that can rotate about their center <r>obb2d</r>, so they will no longer be aligned with axes. Here the collision detection is somewhat complicated compared to 2D Axis-Aligned boxes, in exchange for providing a better fit against elongated objects that can rotate in the plane.
+
+img(obb2d.svg,520,.65).2D oriented boxes.
+Drawing of a box oriented in the plane.
+
+func(OBB2D,create).Create a new oriented box.
+fret(OBB2D*).The newly created box.
+fpar(const V2D*,center).The central point.
+fpar(const real,width).The width of the box.
+fpar(const real,height).The height of the box.
+fpar(const real,angle).The angle with respect to the X axis, in radians.
+fnote.Positive angles are those that rotate from the X axis to the Y axis.
+
+func(OBB2D,from_line).Create a box from a segment.
+fret(OBB2D*).The newly created box.
+fpar(const V2D*,p0).The first point of the segment.
+fpar(const V2D*,p1).The second point of the segment.
+fpar(const real,thickness).The "thickness" of the segment.
+fnote.The width of the box will correspond to the length of the segment. The height will be <c>thickness</c> and the center will be the midpoint of the segment.
+
+func(OBB2D,copy).Create a copy of the box.
+fret(OBB2D*).The copy.
+fpar(const OBB2D,obb).Original box.
+
+func(OBB2D,destroy).Destroy the box.
+fpar(OBB2D**,obb).The box. Will be set to <c>NULL</c> after destruction.
+
+func(OBB2D,update).Update the box parameters.
+fpar(OBB2D*,obb).The box to update.
+fpar(const V2D*,center).The central point.
+fpar(const real,width).The width.
+fpar(const real,height).The height.
+fpar(const real,angle).The angle.
+fnote.See <lf>obb2d_createf</lf>.
+
+func(OBB2D,move).Move the box on the plane.
+fpar(OBB2D*,obb).The box.
+fpar(const real,offset_x).X displacement.
+fpar(const real,offset_y).Y displacement.
+
+func(OBB2D,corners).Gets the vertices bounding the box.
+fret(const V2D*).Pointer to an array of 4 vertices.
+fpar(const OBB2D*,obb).The box.
+fnote.Do not modify the returned array. Copy if necessary.
+
+func(OBB2D,center).Gets the center point of the box.
+fret(V2D).Center.
+fpar(const OBB2D*,obb).The box.
+
+func(OBB2D,width).Get the width of the box.
+fret(real).The width.
+fpar(const OBB2D*,obb).The box.
+
+func(OBB2D,height).Get the height of the box.
+fret(real).The height.
+fpar(const OBB2D*,obb).The box.
+
+func(OBB2D,angle).Get the angle of the box.
+fret(real).The angle in radians with respect to the X axis.
+fpar(const OBB2D*,obb).The box.
+
+func(OBB2D,box).Get the box limits.
+fret(Box2D).Box aligned with the axes, defined by the minimum and maximum vectors.
+fpar(const OBB2D*,obb).The box.
+

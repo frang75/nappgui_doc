@@ -19,4 +19,10 @@ fpar(const R2D*, r2d).Rectángulo.
 fpar(const real, x).Coordenada x del punto.
 fpar(const real, y).Coordenada y del punto.
 
+func(R2D,clip).Comprueba si un rectángulo está totalmente fuera de un viewport.
+fret(bool_t).<c>TRUE</c> si el rectángulo <c>r2d</c> se puede recortar.
+fpar(const R2D*, viewport).Rectángulo contenedor.
+fpar(const R2D*, r2d).Rectángulo a comprobar.
+fnote.Útil para evitar procesar o dibujar objetos que estén totalmente fuera del área de visión.
+
 const(R2D,ZERO).Valor <c>[0,0,0,0]</c>.

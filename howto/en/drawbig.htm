@@ -1,0 +1,27 @@
+langrev.
+h1.Scroll drawings
+
+p.The next application shows how to manage a very large drawing area, of which only a small portion is visible. We will represent a grid of 2000x2000 cells, using a <lt>View</lt> control with scroll bars. The objectives we are pursuing with this example are:
+
+li.Optimize the <c>OnDraw</c> event to draw only the visible area, avoiding launching unnecessary commands.
+
+li.Size scroll bars with <lf>view_content_size</lf>.
+
+li.Move the visible area using <lf>view_scroll_to</lf>.
+
+li.Get the visible area with <lf>view_viewport</lf>.
+
+li.Use of the mouse: To be able to click on a cell or highlight it when the cursor is hover it.
+
+li.Using the keyboard: Allow the view to capture the focus and move the active cell with the <c>[Left]</c>, <c>[Right]</c>, <c>[Up]</c> and <c>[Down]</c> keys. Keyboard navigation requires this cell to always be visible.
+
+img(drawbig_win.png,0,.7).Windows version.
+Capture of an application with drawing examples. Windows version.
+
+img(drawbig_macos.png,0,.7).macOS version.
+Capture of an application with drawing examples. MacOS version.
+
+img(drawbig_linux.png,0,.7).Linux version.
+Capture of an application with drawing examples. Linux version.
+
+codefile(howto/drawbig/drawbig.c).

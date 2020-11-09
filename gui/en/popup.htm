@@ -3,7 +3,11 @@ h1.PopUp
 
 p.<b>PopUps</b> are buttons that have a drop-down menu associated with them <r>popups</r>. Apparently they look like <i>pushbuttons</i> that when pressed show a list of options. In <lh>Hello PopUp and Combo!</lh> you have an example of use.
 
-img(popups.png,0,.8).PopUps on Windows, macOS and Linux.
+li.Use <lf>popup_create</lf> to create a popup.
+
+li.Use <lf>popup_add_elem</lf> to add an item to the list.
+
+img(popups.png,0,.35).PopUps on Windows, macOS and Linux.
 Capture multiple PopUp controls in a window.
 
 func(popup_create).Create a new popup control <i>(PopUp button)</i>.
@@ -28,6 +32,13 @@ fpar(PopUp*,popup).The popup.
 fpar(const uint32_t,index).The index of the item to replace.
 fpar(const char_t*,text).The text of the element in UTF-8 or the resource identifier. <lp>resources</lp>.
 fpar(const Image*,image).Icon associated with the resource element or identifier. For space, it will scale to a maximum maximum of 16 pixels.
+
+func(popup_clear).Remove all items from the dropdown list.
+fpar(PopUp*,popup).The popup.
+
+func(popup_size).Gets the number of items in the list.
+fret(uint32_t).The number of elements.
+fpar(const PopUp*,popup).The popup.
 
 func(popup_list_height).Set the size of the drop-down list.
 fpar(PopUp*,popup).The popup.

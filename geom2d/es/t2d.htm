@@ -1,12 +1,12 @@
 
 h1.Transformaciones 2D
 
-p.Las transformaciones afines son un tipo de operación matemática que permite realizar cambios de coordenadas entre diferentes sistemas de referencia. Por ejemplo, en <r>coord_system</r> <b>(a)</b> construimos un polígono expresando las coordenadas de sus vértices en un sistema cartesiano: [ (4,1), (2,5), (-3,5), (-4,2), (0,-3) ]. Ahora imaginemos que queremos dibujar varias instancias de nuestro modelo en un plano, cada una de ellas con diferente posición, orientación y tamaño <r>coord_system</r> <b>(b)</b>. Necesitaríamos calcular las coordenadas de los puntos del polígono en las nuevas ubicaciones, con el fin de trazar correctamente las líneas que los delimitan.
+p.Las transformaciones afines son operaciones matemáticas que permiten realizar cambios de coordenadas entre diferentes sistemas de referencia. Por ejemplo, en <r>coord_system</r> <b>(a)</b> construimos un polígono expresando las coordenadas de sus vértices en un sistema cartesiano: [ (4,1), (2,5), (-3,5), (-4,2), (0,-3) ]. Ahora imaginemos que queremos dibujar varias instancias del mismo en un plano, cada una de ellas con diferente posición, orientación y tamaño <r>coord_system</r> <b>(b)</b>. Necesitaríamos calcular las coordenadas de los puntos del polígono original en las nuevas ubicaciones, con el fin de trazar correctamente las líneas que delimitan cada copia.
 
 img(coord_system.svg,700,.8).Modelo geométrico (a) Expresado en un sistema cartesiano. (b) Después de aplicar transformaciones.
 Dibujo de un polígono en un sistema cartesiano y dibujo del mismo polígono en diferentes posiciones y orientaciones.
 
-p.El Álgebra Vectorial nos brinda una poderosa herramienta con la que se puede expresar la relación entre dos sistemas utilizando seis número reales <r>affine_transform</r>. Los primeros cuatro valores corresponden a una matriz 2x2 con las coordenadas de los vectores X=[1,0] e Y=[0,1] en el nuevo sistema de referencia. Esta matriz integra una posible rotación y escalado de los ejes. Los últimos dos valores indican un desplazamiento del origen de coordenadas. En <r>aplin</r> tenemos el desarrollo matemático para transformar el punto [4,1] a una nueva base girada 25° con respecto al origen y desplazada 11 unidades en el eje X y -5 en el eje Y. Aplicando la misma operación a todos los puntos, transformaríamos el objeto.
+p.El Álgebra Vectorial nos brinda una poderosa herramienta con la que se puede expresar la relación entre dos sistemas utilizando seis número reales <r>affine_transform</r>. Los primeros cuatro valores corresponden a una matriz 2x2 con las coordenadas de los vectores X=[1,0] e Y=[0,1] del nuevo sistema de referencia. Esta matriz integra una posible rotación y escalado de los ejes. Los últimos dos valores indican un desplazamiento del origen. En <r>aplin</r> tenemos el desarrollo matemático para transformar el punto [4,1] a una nueva base girada 25° con respecto al origen y desplazada 11 unidades en el eje X y -5 en el eje Y. Aplicando la misma operación a cada punto, transformaríamos el objeto completo.
 
 img(affine_transform.svg,700,.8).Cambio de base. Relación de un punto en dos sistemas de referencia diferentes.
 Representación geométrica de un punto expresado en dos sistemas de referencia.
@@ -63,9 +63,9 @@ math(aplin).Transformación del punto [4,1].
 \end{eqnarray*}
 math.
 
-h2.Transformaciones elementales
+h2.Clasificación de transformaciones
 
-p.En principio, cualquier combinación de valores [i.x, i.y, j.x, j.y, p.x, p.y] proporciona una transformación válida, aunque si no los elegimos con cierto criterio obtendremos aberraciones poco útiles en aplicaciones reales. Tres son las transformaciones más utilizadas en aplicaciones gráficas y de ingeniería <r>elemental_transform</r> <r>elemtras</r>:
+p.En principio, cualquier combinación de valores [i.x, i.y, j.x, j.y, p.x, p.y] proporcionaría una transformación válida, aunque si no los elegimos con cierto criterio obtendremos aberraciones poco útiles en el mundo real. Las transformaciones más utilizadas en aplicaciones gráficas y de ingeniería son <r>transforms_classification</r> <r>elemental_transform</r> <r>elemtras</r>:
 
 li.Traslación <b>(a)</b>: Desplaza el origen del objeto a otro punto.
 
@@ -75,7 +75,10 @@ li.Escalado <b>(c)</b>: Cambia el tamaño. Si <i>sx</i> <<> 1, reduce. <i>sx</i>
 
 li.Identidad <b>(d)</b>: Es la transformación nula. Al aplicarla, los vectores permanecen inalterados.
 
-img(elemental_transform.svg,700,.8).Transformaciones afines elementales.
+img(transforms_classification.svg,300,.4).Clasificación de transformaciones afines.
+Transformación afines agrupadas.
+
+img(elemental_transform.svg,700,.8).Representación geométrica.
 Representación geométrica de una traslación, rotación, escalado e identidad.
 
 math(elemtras).Traslación, Rotación, Escalado e Identidad.
@@ -204,18 +207,53 @@ p.La multiplicación matricial no es conmutativa, si no que el orden en el que s
 
 code(cpp,acumtras).Acumulación de transformaciones.
 // (a) First move, then rotate
-T2D t2d;
-t2d_movef(&t2d, kT2D_IDENTITYf, 11, 0);
+T2Df t2d;
+t2d_movef(&t2d, kT2D_IDENTf, 11, 0);
 t2d_rotatef(&t2d, &t2d, kBMATH_PIf / 4);
 
 // (b) First rotate, then move
-T2D t2d;
-t2d_rotatef(&t2d, kT2D_IDENTITYf, kBMATH_PIf / 4);
+T2Df t2d;
+t2d_rotatef(&t2d, kT2D_IDENTf, kBMATH_PIf / 4);
 t2d_movef(&t2d, &t2d, 11, 0);
 code.
 
 img(transform_compose.svg,600,.7).Efecto del orden de aplicación de transformaciones.
 Representación geométrica de aplicar una traslación y una rotación. Y al contrario, rotación y traslación.
+
+p.Cualquier cadena de traslaciones, rotaciones y escalados define un sistema de referencia afín que puede ser expresado en función de un único desplazamiento, rotación y escalado <r>final_transform</r>. Podemos "deshacer" dicha transformación y volver al origen mediante la transformación inversa <r>trasdecomp</r>.
+
+li.Utiliza <lf>t2d_decomposef</lf> para obtener las componentes de una transformación.
+
+li.Utiliza <lf>t2d_inversef</lf> para obtener la transformación inversa.
+
+img(final_transform.svg,600,.7).Cadena de transformaciones y sistema final.
+Representación geométrica de aplicar varias transformaciones en cadena.
+
+code(cpp,trasdecomp).Componentes de un sistema de referencia e inversa.
+T2Df t2d, inv, inv2;
+V2Df pos, sc;
+real32_t a;
+
+// Transform sequence
+t2d_rotatef(&t2d, kT2D_IDENTf, kBMATH_PIf / 4);
+t2d_movef(&t2d, &t2d, 11, 0);
+t2d_movef(&t2d, &t2d, 10, - 10);
+t2d_rotatef(&t2d, &t2d, - kBMATH_PIf / 2);
+t2d_scalef(&t2d, &t2d, 1.5f, 1);
+
+// Transform components
+t2d_decomposef(&t2d, &pos, &a, &sc);
+
+// Transform inverse
+t2d_inversef(&inv, &t2d);
+
+// Inverse from components
+t2d_scalef(&inv2, kT2D_IDENTf, 1/sc.x, 1/sc.y);
+t2d_rotatef(&inv2, &inv2, -a);
+t2d_movef(&inv2, &inv2, -pos.x, -pos.y);
+
+// inv == inv2 ('inv' more numerical accurate)
+code.
 
 func(T2D,move).Multiplica una transformación por una traslación <c>dest = src * move(x,y)</c>.
 fpar(T2D*,dest).Transformación resultado.
@@ -237,6 +275,16 @@ fpar(const real,sx).Escalado en el eje x.
 fpar(const real,sy).Escalado en el eje y.
 fnote.<c>dest</c> y <c>src</c> pueden apuntar a la misma matrix.
 
+func(T2D,invfast).Calcula la transformación inversa, suponiendo que la entrada sea ortogonal.
+fpar(T2D*,dest).Transformación inversa.
+fpar(const T2D*,src).Transformación inicial.
+fnote.La transformación será ortogonal solo si contiene rotaciones y traslaciones, de lo contrario el resultado de aplicarla será impredecible. <c>dest</c> y <c>src</c> pueden apuntar a la misma matrix.
+
+func(T2D,inverse).Calcula la transformación inversa.
+fpar(T2D*,dest).Transformación inversa.
+fpar(const T2D*,src).Transformación inicial.
+fnote.<c>dest</c> y <c>src</c> pueden apuntar a la misma matriz.
+
 func(T2D,mult).Multiplica dos transformaciones <c>dest = src1 * src2</c>.
 fpar(T2D*,dest).Transformación resultado.
 fpar(const T2D*,src1).Primer operando.
@@ -256,5 +304,11 @@ fpar(const V2D*,src).Array de vectores original.
 fpar(const uint32_t,n).Número de vectores en <c>src</c>.
 fnote.<c>dest</c> y <c>src</c> pueden apuntar al mismo array.
 
-const(T2D,IDENTITY).Representa la transformación identidad.
+func(T2D,decompose).Obtiene la posición, rotación y escalado de una transformación.
+fpar(const T2D*,t2d).Transformación.
+fpar(V2D*,pos).Posición. Puede ser <c>NULL</c>.
+fpar(real*,a).Ángulo en radianes (-π/2, π/2). Puede ser <c>NULL</c>.
+fpar(V2D*,sc).Escalado. Puede ser <c>NULL</c>.
+fnote.Si la transformación no está compuesta por una secuencia de traslaciones, rotaciones y escalados, el resultado no será válido.
 
+const(T2D,IDENT).Representa la transformación identidad.

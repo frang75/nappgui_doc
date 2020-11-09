@@ -17,6 +17,7 @@ li.<lp>stream</lp>.
 li.<lp>arrst</lp>.
 li.<lp>setst</lp>.
 li.<lp>lex</lp>.
+li.<lp>regex</lp>.
 li.<lp>dbind</lp>.
 li.<lp>event</lp>.
 li.<lp>hfile</lp>.
@@ -34,6 +35,127 @@ enumv(ekSTOK).All ok, no errors.
 enumv(ekSTEND).No more data on the channel.
 enumv(ekSTCORRUPT).The data in the channel is invalid or has not been read correctly.
 enumv(ekSTBROKEN).Error in the communication channel.
+
+enum(vkey_t).Keyboard codes. See <lh>Using the keyboard</lh>.
+enumv(ekKEY_UNDEF).
+enumv(ekKEY_A).
+enumv(ekKEY_S).
+enumv(ekKEY_D).
+enumv(ekKEY_F).
+enumv(ekKEY_H).
+enumv(ekKEY_G).
+enumv(ekKEY_Z).
+enumv(ekKEY_X).
+enumv(ekKEY_C).
+enumv(ekKEY_V).
+enumv(ekKEY_BSLASH).
+enumv(ekKEY_B).
+enumv(ekKEY_Q).
+enumv(ekKEY_W).
+enumv(ekKEY_E).
+enumv(ekKEY_R).
+enumv(ekKEY_Y).
+enumv(ekKEY_T).
+enumv(ekKEY_1).
+enumv(ekKEY_2).
+enumv(ekKEY_3).
+enumv(ekKEY_4).
+enumv(ekKEY_6).
+enumv(ekKEY_5).
+enumv(ekKEY_9).
+enumv(ekKEY_7).
+enumv(ekKEY_8).
+enumv(ekKEY_0).
+enumv(ekKEY_RCURLY).
+enumv(ekKEY_O).
+enumv(ekKEY_U).
+enumv(ekKEY_LCURLY).
+enumv(ekKEY_I).
+enumv(ekKEY_P).
+enumv(ekKEY_RETURN).
+enumv(ekKEY_L).
+enumv(ekKEY_J).
+enumv(ekKEY_SEMICOLON).
+enumv(ekKEY_K).
+enumv(ekKEY_QUEST).
+enumv(ekKEY_COMMA).
+enumv(ekKEY_MINUS).
+enumv(ekKEY_N).
+enumv(ekKEY_M).
+enumv(ekKEY_PERIOD).
+enumv(ekKEY_TAB).
+enumv(ekKEY_SPACE).
+enumv(ekKEY_GTLT).
+enumv(ekKEY_BACK).
+enumv(ekKEY_ESCAPE).
+enumv(ekKEY_F17).
+enumv(ekKEY_NUMDECIMAL).
+enumv(ekKEY_NUMMULT).
+enumv(ekKEY_NUMADD).
+enumv(ekKEY_NUMLOCK).
+enumv(ekKEY_NUMDIV).
+enumv(ekKEY_NUMRET).
+enumv(ekKEY_NUMMINUS).
+enumv(ekKEY_F18).
+enumv(ekKEY_F19).
+enumv(ekKEY_NUMEQUAL).
+enumv(ekKEY_NUM0).
+enumv(ekKEY_NUM1).
+enumv(ekKEY_NUM2).
+enumv(ekKEY_NUM3).
+enumv(ekKEY_NUM4).
+enumv(ekKEY_NUM5).
+enumv(ekKEY_NUM6).
+enumv(ekKEY_NUM7).
+enumv(ekKEY_NUM8).
+enumv(ekKEY_NUM9).
+enumv(ekKEY_F5).
+enumv(ekKEY_F6).
+enumv(ekKEY_F7).
+enumv(ekKEY_F3).
+enumv(ekKEY_F8).
+enumv(ekKEY_F9).
+enumv(ekKEY_F11).
+enumv(ekKEY_F13).
+enumv(ekKEY_F16).
+enumv(ekKEY_F14).
+enumv(ekKEY_F10).
+enumv(ekKEY_F12).
+enumv(ekKEY_F15).
+enumv(ekKEY_PAGEUP).
+enumv(ekKEY_HOME).
+enumv(ekKEY_SUPR).
+enumv(ekKEY_F4).
+enumv(ekKEY_PAGEDOWN).
+enumv(ekKEY_F2).
+enumv(ekKEY_END).
+enumv(ekKEY_F1).
+enumv(ekKEY_LEFT).
+enumv(ekKEY_RIGHT).
+enumv(ekKEY_DOWN).
+enumv(ekKEY_UP).
+enumv(ekKEY_LSHIFT).
+enumv(ekKEY_RSHIFT).
+enumv(ekKEY_LCTRL).
+enumv(ekKEY_RCTRL).
+enumv(ekKEY_LALT).
+enumv(ekKEY_RALT).
+enumv(ekKEY_INSERT).
+enumv(ekKEY_EXCLAM).
+enumv(ekKEY_MENU).
+enumv(ekKEY_LWIN).
+enumv(ekKEY_RWIN).
+enumv(ekKEY_CAPS).
+enumv(ekKEY_TILDE).
+enumv(ekKEY_GRAVE).
+enumv(ekKEY_PLUS).
+
+enum(keymod_t).Modifier keys.
+enumv(ekMKEY_NONE).
+enumv(ekMKEY_SHIFT).
+enumv(ekMKEY_CONTROL).
+enumv(ekMKEY_ALT).
+enumv(ekMKEY_COMMAND).
 
 enum(lextoken_t).Token types on <lp>lex</lp>.
 enumv(ekTSLCOM).One-line comment, which begins with <c>//</c>.
@@ -97,7 +219,11 @@ struct(SetPt).Pointers set. The type of object is indicated in parentheses. <lp>
 
 struct(LexScn).Lexical Analyzer. <lp>lex</lp>.
 
+struct(RegEx).Regular expresion. <lp>regex</lp>.
+
 struct(Event).Contains information regarding an event. <lp>event</lp>.
+
+struct(KeyBuf).Keyboard buffer with the state of each key (pressed/released). <lp>keybuf</lp>.
 
 struct(Listener).Link to the generator and receiver of an event through a <i>callback</i> function <lp>event</lp>.
 

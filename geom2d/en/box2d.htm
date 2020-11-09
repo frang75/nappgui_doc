@@ -1,0 +1,37 @@
+langrev.
+h1.2D Boxes
+
+p.2D containers or <i>(Bounding boxes)</i> delimit the area of the plane occupied by different geometric elements <r>bounding_box2d</r>. They are useful in the collision detection or <i>clipping operations</i>, which prevent non-visible figures from being drawn, improving overall performance.
+
+img(bounding_box2d.svg,520,.65).Container with various geometric elements.
+Drawing of a plan where a 2D container appears that integrates several figures.
+
+func(Box2D,).Create a new box with the indicated limits.
+fret(Box2D).The newly created box.
+fpar(const real,minX).The lower limit on X.
+fpar(const real,minY).The lower limit on Y.
+fpar(const real,maxX).The upper limit on X.
+fpar(const real,maxY).The upper limit on Y.
+
+func(Box2D,add).Expand the dimensions of the box to contain the entry point. If the point is already within its area, the box is not modified.
+fpar(Box2D*,box).The container.
+fpar(const V2D*,p).The point to include.
+
+func(Box2D,addn).Expand the dimensions of the box to contain several points. It is equivalent to calling the method <lf>box2d_addf</lf> successively.
+fpar(Box2D*,box).The container.
+fpar(const V2D*,p).Vector points to include.
+fpar(const uint32_t,n).Number of points.
+
+func(Box2D,add_circle).Expand the dimensions of the container to accommodate a circle.
+fpar(Box2D*,box).The container.
+fpar(const Cir2D*,cir).Circle.
+
+func(Box2D,merge).Expand the dimensions of <c>dest</c> to contain <c>src</c>.
+fpar(Box2D*,dest).The container that will be expanded.
+fpar(const Box2D*,src).The container that must be added.
+
+func(Box2D,is_null).Check if a container is null (without any geometry inside).
+fret(bool_t).<c>TRUE</c> if is null, <c>FALSE</c> if contains any geometry.
+fpar(const Box2D*,box).The container.
+
+const(Box2D,NULL).Represents a null box (without geometry).

@@ -19,4 +19,10 @@ fpar(const R2D*, r2d).Rectangle.
 fpar(const real, x).X coordinate of the point.
 fpar(const real, y).Coordinate and point.
 
+func(R2D,clip).Check if a rectangle, or part of it, is contained in another rectangle.
+fret(bool_t).<c>TRUE</c> if the <c>r2d</c> rectangle is completely outside of <c>viewport</c>.
+fpar(const R2D*, viewport).Container rectangle.
+fpar(const R2D*, r2d).Rectangle to check.
+fnote.Useful to avoid processing or drawing objects that are totally outside the viewing area.
+
 const(R2D,ZERO).Value <c>[0,0,0,0]</c>.

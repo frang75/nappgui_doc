@@ -1,0 +1,34 @@
+
+h1.Polígonos 2D
+
+p.Los polígonos son el volumen contenedor mas genérico y que mejor se puede ajustar a la forma de determinados objetos o distribuciones de puntos <r>poly2d</r>.
+
+img(poly2d.svg,520,.65).Polígonos 2D.
+Dibujo de un polígono en el plano.
+
+func(Pol2D,create).Crea un nuevo polígono.
+fret(Pol2D*).El polígono creado.
+fpar(const V2D*,points).Lista de puntos que forman el polígono.
+fpar(const uint32_t,n).Número de puntos.
+
+func(Pol2D,copy).Crea una copia del polígono.
+fret(Pol2D*).El polígono copiado.
+fpar(const Pol2D*,pol).El polígono original.
+
+func(Pol2D,destroy).Destruye el polígono.
+fpar(Pol2D**,pol).El polígono. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(Pol2D,update).Actualiza la posición de los puntos que forman el polígono.
+fpar(Pol2D*,pol).El polígono a actualizar.
+fpar(const V2D*,points).Las nuevas posiciones de los puntos.
+fnote.El número de puntos debe ser el mismo que el utilizado en el constructor <lf>pol2d_createf</lf>.
+
+func(Pol2D,points).Obtiene los vértices que forman el polígono.
+fret(const V2D*).Puntero a un array de vértices.
+fpar(const Pol2D*,pol).El polígono.
+fnote.No modificar el array devuelto. Copiar si fuera necesario.
+
+func(Pol2D,n).Obtiene el número de vértices que forman el polígono.
+fret(const uint32_t).El número de vértices.
+fpar(const Pol2D*,pol).El polígono.
+fnote.Es el mismo valor que el utilizado en el constructor <lf>pol2d_createf</lf>.

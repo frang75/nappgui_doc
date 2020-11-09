@@ -102,6 +102,10 @@ p.<lt>Progress</lt>
 p.100 Units (px).
 p.According to the theme of the OS.
 row.
+p.<lt>TextView</lt>
+p.256 px or <lf>textview_size</lf>.
+p.144 px or <lf>textview_size</lf>.
+row.
 p.<lt>View</lt>
 p.128 px or <lf>view_size</lf>.
 p.128 px or <lf>view_size</lf>.
@@ -207,6 +211,10 @@ p.<lt>Progress</lt>
 p.<lt>ekJUSTIFY</lt>
 p.<lt>ekCENTER</lt>
 row.
+p.<lt>TextView</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
 p.<lt>View</lt>
 p.<lt>ekJUSTIFY</lt>
 p.<lt>ekJUSTIFY</lt>
@@ -262,6 +270,70 @@ img(layout_expand.svg,520,.65).When the size of the sublayout is given by extern
 Behavior of a sublayout when its size expands to fit a cell.
 
 bq.The vertical expansion works exactly the same, distributing the excess space between the rows of the layout.
+
+h2.Tabstops
+
+p.It is a common practice in most systems to use the <c>[TAB]</c> key and the combination <c>[LSHIFT]+[TAB]</c> to navigate through the different controls of a window or form. Terms such as <b>taborder</b> or <b>tabstop</b> refer both to the navigation order and to the membership (or not) of an element in said list. Although it is possible to arrange the elements of a <i>tab-list</i> randomly, layouts provide a consistent natural order based on the placement of controls. By default, each layout lists the controls by rows <r>tabstops</r>, but we can change it:
+
+li.Use <lf>layout_taborder</lf> to organize by rows or columns.
+
+img2(tabstops.gif,taborder.svg,400).Taborder by rows in layouts and sublayouts.
+Animation showing [TAB] key navigation tabstops.
+Organization of tablist controls.
+
+p.Not all cells in a layout have to be a <i>tabstop</i>, since it makes no sense for static controls like <lt>Label</lt> to receive keyboard focus. In <r>tablist</r> you have controls that are included by default in said list.
+
+li.Use <lf>layout_tabstop</lf> to add or remove controls from the <i>tab-list</i>. In most cases we will use it to allow certain custom views <lt>View</lt> to receive keyboard focus.
+
+table(tablist).Controls included in the <i>tab-list</i>.
+row.
+p.Control
+p.Included
+row.
+p.<lt>Label</lt>
+p.NO
+row.
+p.<lt>Button</lt> (push)
+p.SÍ
+row.
+p.<lt>Button</lt> (check/radio)
+p.SÍ
+row.
+p.<lt>Button</lt> (flat)
+p.SÍ
+row.
+p.<lt>PopUp</lt>
+p.SÍ
+row.
+p.<lt>Edit</lt>
+p.SÍ
+row.
+p.<lt>Combo</lt>
+p.SÍ
+row.
+p.<lt>UpDown</lt>
+p.NO
+row.
+p.<lt>Slider</lt>
+p.SÍ
+row.
+p.<lt>Progress</lt>
+p.NO
+row.
+p.<lt>TextView</lt>
+p.NO
+row.
+p.<lt>View</lt>
+p.NO
+row.
+p.<lt>Panel</lt>
+p.NO
+row.
+p.<lt>Layout</lt> (sublayout)
+p.SÍ
+table.
+
+bq.When the taborder enters a sublayout, it will follow the local order of the latter. When exiting the sublayout it will continue with the main order.
 
 func(layout_create).Create a new layout specifying the number of columns and rows.
 fret(Layout*).The layout.
@@ -421,6 +493,14 @@ fpar(const uint32_t,row).Row, cell y coordinate.
 func(layout_taborder).Set how the keyboard focus will move when you press <c>[TAB]</c>.
 fpar(Layout*,layout).The layout.
 fpar(const orient_t,order).Loop through rows or columns.
+fnote.See <lh>Tabstops</lh>.
+
+func(layout_tabstop).Sets whether or not a cell in the layout will receive keyboard focus when navigating with <c>[TAB]-[SHIFT][TAB]</c>.
+fpar(Layout*,layout).The layout.
+fpar(const uint32_t,col).Column, cell x coordinate.
+fpar(const uint32_t,row).Row, cell y coordinate.
+fpar(const bool_t,tabstop).Enable or disable cell tabstop.
+fnote.See <lh>Tabstops</lh>.
 
 func(layout_hsize).Set a fixed width for a layout column.
 fpar(Layout*,layout).The layout.

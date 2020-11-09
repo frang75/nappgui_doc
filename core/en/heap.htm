@@ -1,7 +1,7 @@
 langrev.
-h1.Dynamic allocation
+h1.Heap - Memory manager
 
-ep.Optimized memory manager and <i>leaks</i> control.
+ep.Optimized dynamic allocator and <i>leaks</i> control.
 
 p.<b>Heap</b> is a very efficient dynamic memory manager and auditor included in the <i>core</i> library and available for all programs based on NAppGUI (command line and desktop). It is common for applications to request a large number of small memory blocks to hold different objects (character strings, interface controls, structure instances, I/O buffer, etc). The strategy behind <i>heap</i> is just to ask the operating system for memory pages of a certain size (64kb) using <lf>bmem_malloc</lf> and use them to solve several requests. With this we pursue several objectives:
 

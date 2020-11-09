@@ -1,0 +1,96 @@
+
+h1.Paletas
+
+p.Una paleta no es más que una lista de colores relacionada, normalmente, con un <lp>pixbuf</lp> indexado <r>palette</r>. Su principal utilidad es ahorrar espacio en la representación de imágenes, ya que cada pixel se codifica mediante un índice de 1, 2, 4 u 8 bits en lugar del color real donde son necesarios 24 o 32 bits. Por esta razón lo habitual es tener paletas de 2, 4, 16 o 256 colores.
+
+li.Utiliza <lf>palette_create</lf> para crear un paleta.
+
+li.Utiliza <lf>palette_colors</lf> para acceder a los elementos.
+
+img(palette.svg,380,.5).Pixel buffer indexado.
+Pixel buffer relacionado con los colores de una paleta. 
+
+h2.Paleta predefinida
+
+p.Tenemos varias paletas predefinidas tanto en color <r>color_palette</r> como en tonos de gris <r>gray_palette</r>. La paleta RGB8 se ha creado combinando 8 tonos de rojo (3bits), 8 tonos de verde (3bits) y 4 tonos de azul (2bits). Esto es así porque el ojo humano distingue mucho menos la variación del azul que de los otros dos colores.
+
+li.Utiliza <lf>palette_rgb8</lf> y similares para crear una paleta de color.
+
+li.Utiliza <lf>palette_gray4</lf> y similares para crear una paleta en tonos de gris.
+
+img(color_palette.svg,560,.65).Paletas de color predefinidas.
+Paletas CGA y EGA. 
+
+img(gray_palette.svg,560,.65).Paletas de gris predefinidas.
+Paletas en tonos de gris. 
+
+h2.Paleta óptima
+
+p.Normalmente las imágenes RGB utilizan 8 bits para cada canal, lo que supone 16.777.216 colores diferentes, muchos más de los que puede distinguir el ojo humano <r>image_true_color</r>. Para optimizar el espacio que ocupa la imagen, con la menor pérdida posible, se calcula la paleta óptima mediante algoritmos de <b>cuantificación del color</b> <r>image_palette_optimal</r>. Esto contrasta con el uso de una paleta genérica, donde la pérdida de calidad es evidente ya que es posible que muchos colores no se utilicen al ser muy diferentes a los requeridos <r>image_palette_rgb8</r>.
+
+li.Utiliza <lf>palette_optimal</lf> para obtener la paleta óptima de una imagen RGB.
+
+img(image_true_color.png,560,.75).Imagen RGB 24 bits (true color).
+Imagen de un paisaje y espacio RGB asociado.
+
+img(image_palette_optimal.png,560,.75).Imagen en 256 colores utilizando una paleta óptima.
+Imagen de un paisaje y su paleta óptima de 256 colores.
+
+img(image_palette_rgb8.png,560,.75).Imagen en 256 colores utilizando una paleta genérica.
+Imagen de un paisaje y su paleta genérica de 81 colores.
+
+func(palette_create).Crea una paleta.
+fret(Palette*).La paleta. El contenido inicial es indeterminado. Editar con <lf>palette_colors</lf>.
+fpar(const uint32_t,size).El número de colores.
+
+func(palette_optimal).Crea una paleta de colores óptima, aplicando algoritmos de cuantificación del color.
+fret(Palette*).La paleta.
+fpar(const uint32_t,width).El ancho en píxeles de la imagen.
+fpar(const uint32_t,height).El alto en píxeles de la imagen.
+fpar(const pixformat_t,format).El formato del píxel. Solo <lt>ekRGB24</lt> y <lt>ekRGBA32</lt> son válidos.
+fpar(const byte_t*,data).Búfer con la información de color de los píxeles.
+fpar(const uint32_t,size).Número de colores en la paleta resultante.
+fnote.<lh>Paleta óptima</lh>
+
+func(palette_cga2).Crea la paleta de 4 colores (2 bits) de las tarjetas CGA.
+fret(Palette*).La paleta.
+fpar(const bool_t,mode).<c>TRUE</c> para el modo 1 de CGA, <c>FALSE</c> modo 0.
+fpar(const bool_t,intense).<c>TRUE</c> para colores brillantes.
+fnote.<lh>Paleta predefinida</lh>
+
+func(palette_ega4).Crea la paleta por defecto de las tarjetas EGA (16 colores, 4 bits).
+fret(Palette*).La paleta.
+fnote.<lh>Paleta predefinida</lh>
+
+func(palette_rgb8).Crea la paleta de por defecto RGB de 8 bits. Los colores combinan 8 tonos de rojo, 8 de verde y 4 de azul.
+fret(Palette*).La paleta.
+fnote.<lh>Paleta predefinida</lh>
+
+func(palette_gray1).Crea una paleta de 2 tonos de gris (1 bit). Negro (0) y blanco (1).
+fret(Palette*).La paleta.
+fnote.<lh>Paleta predefinida</lh>
+
+func(palette_gray2).Crea una paleta de 4 tonos de gris (2 bit). Negro (0), blanco (3).
+fret(Palette*).La paleta.
+fnote.<lh>Paleta predefinida</lh>
+
+func(palette_gray4).Crea una paleta de 16 tonos de gris (4 bit). Negro (0), blanco (15).
+fret(Palette*).La paleta.
+fnote.<lh>Paleta predefinida</lh>
+
+func(palette_gray8).Crea una paleta de 256 tonos de gris (8 bit). Negro (0), blanco (255).
+fret(Palette*).La paleta.
+fnote.<lh>Paleta predefinida</lh>
+
+func(palette_destroy).Destruye la paleta.
+fpar(Palette**).La paleta. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(palette_size).Retorna el número de colores de la paleta.
+fret(uint32_t).El número de colores.
+fpar(Palette*).La paleta.
+
+func(palette_colors).Obtiene la lista de colores.
+fret(color_t*).Colores. El tamaño del array viene dado por <lf>palette_size</lf>.
+fpar(Palette*).La paleta.
+fnote.El búfer es de lectura/escritura.
+

@@ -16,7 +16,7 @@ Imagen de un mismo programa corriendo en Windows, macOS y Linux.
 
 h2.Composición declarativa
 
-p.La librería <i>Gui</i> se aleja del concepto de tratar las ventanas (o cuadros de diálogo) como un recurso externo del programa. Por el contrario, estas se crean directamente desde el código fuente evitando maquetarlas mediante editores visuales <r>visual_editor</r>. Debemos tener en cuenta que los gestores de ventanas utilizan diferentes tipografías y plantillas, por lo que especificar posiciones y tamaños concretos para los elementos no será portable entre plataformas <r>control_fixed_size</r>. Por el contrario, en <i>Gui</i> los controles se ubican en una rejilla virtual denominada <lt>Layout</lt>, que calculará su ubicación y tamaño final en tiempo de ejecución y en función de la plataforma <r>layout_compose</r>.
+p.La librería <i>Gui</i> se aleja del concepto de tratar las ventanas (o cuadros de diálogo) como un recurso externo del programa. Por el contrario, estas se crean directamente desde el código fuente evitando maquetarlas mediante editores visuales <r>visual_editor</r>. Debemos tener en cuenta que los gestores de ventanas utilizan diferentes tipografías y temas, por lo que especificar posiciones y tamaños concretos para los elementos no será del todo portable <r>control_fixed_size</r>. Por el contrario, en <i>Gui</i> los controles se ubican en una rejilla virtual denominada <lt>Layout</lt>, que los dimensionará en tiempo de ejecución en función de cada máquina concreta <r>layout_compose</r>.
 
 img(visual_editor.svg,580,.65).Los editores de recursos no son buenos aliados para crear complejas interfaces dinámicas. Menos aún si queremos portarlas entre plataformas.
 Captura del editor de interfaces incluido en Xcode.
@@ -49,9 +49,11 @@ li.<lp>edit</lp>. Cuadro de edición de texto.
 
 li.<lp>combo</lp>. Cuadro de edición con lista desplegable.
 
-li.<lp>slider</lp>. Barra deslizadora.
+li.<lp>listbox</lp>. Cuadro de lista.
 
 li.<lp>updown</lp>. Botones de incremento y decremento.
+
+li.<lp>slider</lp>. Barra deslizadora.
 
 li.<lp>progress</lp>. Barra de progreso.
 
@@ -77,7 +79,7 @@ li.<lp>menuitem</lp>. Cada uno de los elementos del menú.
 
 h2.Eventos GUI
 
-p.Las aplicaciones de escritorio están continuamente esperando a que el usuario realice alguna acción sobre la interfaz: Pulsar un botón, arrastrar un <i>slider</i>, escribir un texto, etc. Cuando esto ocurre, el gestor de ventanas detecta el evento y lo notifica a la aplicación <r>gui_event</r>, la cual debe proveer un <b>manejador del evento</b> con el código a ejecutar. Por ejemplo, en <r>eventhandler</r> definimos un manejador para responder a la pulsación de un botón. Evidentemente, si no hay manejador asociado, la aplicación ignorará el evento.
+p.Las aplicaciones de escritorio están dirigidas por eventos, lo que significa que están continuamente esperando a que el usuario realice alguna acción sobre la interfaz: Pulsar un botón, arrastrar un <i>slider</i>, escribir un texto, etc. Cuando esto ocurre, el gestor de ventanas detecta el evento y lo notifica a la aplicación <r>gui_event</r>, la cual debe proveer un <b>manejador del evento</b> con el código a ejecutar. Por ejemplo, en <r>eventhandler</r> definimos un manejador para responder a la pulsación de un botón. Evidentemente, si no hay manejador asociado, la aplicación ignorará el evento.
 
 li.Utiliza <lf>event_params</lf> para obtener los parámetros asociados al evento. Cada tipo de evento tiene sus propios parámetros. Ver <r>allevents</r>.
 
@@ -160,11 +162,6 @@ p.<lf>view_OnSize</lf>
 p.<lt>EvSize</lt>
 p.-
 row.
-p.El ratón se mueve sobre una vista
-p.<lf>view_OnMoved</lf>
-p.<lt>EvMouse</lt>
-p.-
-row.
 p.El ratón entra en el área de una vista
 p.<lf>view_OnEnter</lf>
 p.<lt>EvMouse</lt>
@@ -172,6 +169,21 @@ p.-
 row.
 p.El ratón sale del área de una vista
 p.<lf>view_OnExit</lf>
+p.-
+p.-
+row.
+p.El ratón se mueve sobre una vista
+p.<lf>view_OnMove</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.Se ha pulsado un botón del ratón
+p.<lf>view_OnDown</lf>
+p.<lt>EvMouse</lt>
+p.-
+row.
+p.Se ha liberado un botón del ratón
+p.<lf>view_OnUp</lf>
 p.<lt>EvMouse</lt>
 p.-
 row.
@@ -180,18 +192,8 @@ p.<lf>view_OnClick</lf>
 p.<lt>EvMouse</lt>
 p.-
 row.
-p.Comienzo de clic y arrastrar sobre una vista
-p.<lf>view_OnStartDrag</lf>
-p.<lt>EvMouse</lt>
-p.-
-row.
 p.Arrastrando sobre una vista
 p.<lf>view_OnDrag</lf>
-p.<lt>EvMouse</lt>
-p.-
-row.
-p.Fin de arrastrar sobre una vista
-p.<lf>view_OnEndDrag</lf>
 p.<lt>EvMouse</lt>
 p.-
 row.
@@ -208,6 +210,11 @@ row.
 p.Liberar tecla sobre una vista
 p.<lf>view_OnKeyUp</lf>
 p.<lt>EvKey</lt>
+p.-
+row.
+p.Vista ha recibido el foco del teclado
+p.<lf>view_OnFocus</lf>
+p.<lt>bool_t</lt>
 p.-
 row.
 p.Cierre de una ventana
@@ -229,6 +236,11 @@ p.Clic sobre un menú item
 p.<lf>menuitem_OnClick</lf>
 p.<lt>EvMenu</lt>
 p.-
+row.
+p.Cambio de color
+p.<lf>comwin_color</lf>
+p.<lt>color_t</lt>
+p.-
 table.
 
 enum(orient_t).Orientación.
@@ -245,6 +257,15 @@ enumv(ekMLEFT).Izquierdo.
 enumv(ekMRIGHT).Derecho.
 enumv(ekMMIDDLE).Centro.
 
+enum(cursor_t).Cursores. Ver <lf>window_cursor</lf>.
+enumv(ekCARROW).Flecha (por defecto).
+enumv(ekCHAND).Mano.
+enumv(ekCIBEAM).Barra vertical (edición de texto).
+enumv(ekCCROSS).Cruz.
+enumv(ekCSIZEWE).Redimensionado horizontal (izquierda-derecha).
+enumv(ekCSIZENS).Redimensionado vertical (arriba-abajo).
+enumv(ekCUSER).Creado a partir de una imagen.
+
 enum(close_t).Motivo del cierre de una ventana.
 enumv(ekCLESC).Se ha pulsado la tecla <c>[ESC]</c> (cancelar).
 enumv(ekCLINTRO).Se ha pulsado la tecla <c>[INTRO]</c> (aceptar).
@@ -256,114 +277,6 @@ enumv(ekAUTO).Escalado automático, la proporción puede cambiar.
 enumv(ekSNONE).Sin escalado.
 enumv(ekASPECT).Escalado automático, pero manteniendo la proporción <i>(aspect ratio)</i>.
 enumv(ekASPECTDW).Igual que el anterior, pero no aumenta el tamaño original, solo lo reduce si procede.
-
-enum(vkey_t).Códigos de teclado.
-enumv(ekKEY_UNDEF).
-enumv(ekKEY_A).
-enumv(ekKEY_S).
-enumv(ekKEY_D).
-enumv(ekKEY_F).
-enumv(ekKEY_H).
-enumv(ekKEY_G).
-enumv(ekKEY_Z).
-enumv(ekKEY_X).
-enumv(ekKEY_C).
-enumv(ekKEY_V).
-enumv(ekKEY_BACKSLASH).
-enumv(ekKEY_B).
-enumv(ekKEY_Q).
-enumv(ekKEY_W).
-enumv(ekKEY_E).
-enumv(ekKEY_R).
-enumv(ekKEY_Y).
-enumv(ekKEY_T).
-enumv(ekKEY_1).
-enumv(ekKEY_2).
-enumv(ekKEY_3).
-enumv(ekKEY_4).
-enumv(ekKEY_6).
-enumv(ekKEY_5).
-enumv(ekKEY_9).
-enumv(ekKEY_7).
-enumv(ekKEY_8).
-enumv(ekKEY_0).
-enumv(ekKEY_RBRACKET).
-enumv(ekKEY_O).
-enumv(ekKEY_U).
-enumv(ekKEY_LBRACKET).
-enumv(ekKEY_I).
-enumv(ekKEY_P).
-enumv(ekKEY_RETURN).
-enumv(ekKEY_L).
-enumv(ekKEY_J).
-enumv(ekKEY_SEMICOLON).
-enumv(ekKEY_K).
-enumv(ekKEY_APOSTROPHE).
-enumv(ekKEY_COMMA).
-enumv(ekKEY_MINUS).
-enumv(ekKEY_N).
-enumv(ekKEY_M).
-enumv(ekKEY_PERIOD).
-enumv(ekKEY_TAB).
-enumv(ekKEY_SPACE).
-enumv(ekKEY_MAJOR_MINOR).
-enumv(ekKEY_BACK).
-enumv(ekKEY_ESCAPE).
-enumv(ekKEY_F17).
-enumv(ekKEY_NUMPAD_DECIMAL).
-enumv(ekKEY_NUMPAD_MULT).
-enumv(ekKEY_NUMPAD_ADD).
-enumv(ekKEY_NUMLOCK).
-enumv(ekKEY_NUMPAD_DIV).
-enumv(ekKEY_NUMPAD_RETURN).
-enumv(ekKEY_NUMPAD_SUBTRACT).
-enumv(ekKEY_F18).
-enumv(ekKEY_F19).
-enumv(ekKEY_NUMPAD_EQUAL).
-enumv(ekKEY_NUMPAD0).
-enumv(ekKEY_NUMPAD1).
-enumv(ekKEY_NUMPAD2).
-enumv(ekKEY_NUMPAD3).
-enumv(ekKEY_NUMPAD4).
-enumv(ekKEY_NUMPAD5).
-enumv(ekKEY_NUMPAD6).
-enumv(ekKEY_NUMPAD7).
-enumv(ekKEY_NUMPAD8).
-enumv(ekKEY_NUMPAD9).
-enumv(ekKEY_F5).
-enumv(ekKEY_F6).
-enumv(ekKEY_F7).
-enumv(ekKEY_F3).
-enumv(ekKEY_F8).
-enumv(ekKEY_F9).
-enumv(ekKEY_F11).
-enumv(ekKEY_F13).
-enumv(ekKEY_F16).
-enumv(ekKEY_F14).
-enumv(ekKEY_F10).
-enumv(ekKEY_F12).
-enumv(ekKEY_F15).
-enumv(ekKEY_PAGE_UP).
-enumv(ekKEY_PAGE_BEGIN).
-enumv(ekKEY_SUPR).
-enumv(ekKEY_F4).
-enumv(ekKEY_PAGE_DOWN).
-enumv(ekKEY_F2).
-enumv(ekKEY_PAGE_END).
-enumv(ekKEY_F1).
-enumv(ekKEY_LEFT).
-enumv(ekKEY_RIGHT).
-enumv(ekKEY_DOWN).
-enumv(ekKEY_UP).
-enumv(ekKEY_ALT).
-enumv(ekKEY_CONTROL).
-
-enum(keymod_t).Teclas modificadoras.
-enumv(ekKEYMOD_NONE).
-enumv(ekKEYMOD_SHIFT).
-enumv(ekKEYMOD_CONTROL).
-enumv(ekKEYMOD_ALT).
-enumv(ekKEYMOD_COMMAND).
 
 enum(view_flag_t).Atributos de creación de una vista personalizada.
 enumv(ekHSCROLL).Barra de scroll horizontal.
@@ -381,32 +294,34 @@ enumv(ekWNSTD).Combinación <c>ekWNTITLE | ekWNMIN | ekWNCLOSE</c>.
 enumv(ekWNSRES).Combinación <c>ekWNSTD | ekWNMAX | ekWNRES</c>.
 
 enum(event_t).Tipo de evento. Ver <lh>Eventos GUI</lh>.
-enumv(ekEVENT_LABEL).Se ha hecho clic sobre un control <lt>Label</lt>.
-enumv(ekEVENT_BUTTON).Se ha hecho clic sobre un control <lt>Button</lt>.
-enumv(ekEVENT_POPUP).Se ha cambiado la selección de un control <lt>PopUp</lt>.
-enumv(ekEVENT_SLIDER).Se está deslizando un control <lt>Slider</lt>.
-enumv(ekEVENT_UPDOWN).Se ha hecho clic sobre un control <lt>UpDown</lt>.
-enumv(ekEVENT_TXTFILTER).Se está editando el texto de un control <lt>Edit</lt> o <lt>Combo</lt>.
-enumv(ekEVENT_TXTCHANGE).Se ha terminado de editar el texto de un control <lt>Edit</lt> o <lt>Combo</lt>.
-enumv(ekEVENT_FOCUS).Un control ha recibido el foco del teclado.
-enumv(ekEVENT_MENU).Se ha hecho clic sobre un menú.
-enumv(ekEVENT_CLICK).Se ha hecho clic sobre una vista.
-enumv(ekEVENT_MOVED).El ratón se está moviendo sobre la superficie de la vista.
-enumv(ekEVENT_ENTER).El ratón ha entrado en el área de la vista.
-enumv(ekEVENT_EXIT).El ratón ha salido del área de la vista.
-enumv(ekEVENT_BEGDRAG).Ha comenzado el <i>dragging</i> dentro de la vista.
-enumv(ekEVENT_DRAG).Se está realizando <i>dragging</i> dentro de la vista.
-enumv(ekEVENT_ENDDRAG).Ha finalizado el <i>dragging</i> dentro de la vista.
-enumv(ekEVENT_WHEEL).Se ha movido la rueda del ratón.
-enumv(ekEVENT_KEYDOWN).Se ha pulsado una tecla.
-enumv(ekEVENT_KEYUP).Se ha liberado una tecla.
-enumv(ekEVENT_DRAW).Hay que volver a dibujar el contenido de la vista.
-enumv(ekEVENT_RESIZE).Ha cambiado el tamaño de una vista.
-enumv(ekEVENT_WNDMOVED).Se está moviendo la ventana por el escritorio.
-enumv(ekEVENT_WNDSIZING).Se está re-dimensionando la ventana.
-enumv(ekEVENT_WNDSIZE).Se ha re-dimensionando la ventana.
-enumv(ekEVENT_WNDCLOSE).Se ha cerrado la ventana.
-enumv(ekEVENT_THEME).Ha cambiado el tema del escritorio.
+enumv(ekEVLABEL).Se ha hecho clic sobre un control <lt>Label</lt>.
+enumv(ekEVBUTTON).Se ha hecho clic sobre un control <lt>Button</lt>.
+enumv(ekEVPOPUP).Se ha cambiado la selección de un control <lt>PopUp</lt>.
+enumv(ekEVLISTBOX).Se ha cambiado la selección de un control <lt>ListBox</lt>.
+enumv(ekEVSLIDER).Se está deslizando un control <lt>Slider</lt>.
+enumv(ekEVUPDOWN).Se ha hecho clic sobre un control <lt>UpDown</lt>.
+enumv(ekEVTXTFILTER).Se está editando el texto de un control <lt>Edit</lt> o <lt>Combo</lt>.
+enumv(ekEVTXTCHANGE).Se ha terminado de editar el texto de un control <lt>Edit</lt> o <lt>Combo</lt>.
+enumv(ekEVFOCUS).Un control ha recibido el foco del teclado.
+enumv(ekEVMENU).Se ha hecho clic sobre un menú.
+enumv(ekEVDRAW).Hay que volver a dibujar el contenido de la vista.
+enumv(ekEVRESIZE).Ha cambiado el tamaño de una vista.
+enumv(ekEVENTER).El ratón ha entrado en el área de la vista.
+enumv(ekEVEXIT).El ratón ha salido del área de la vista.
+enumv(ekEVMOVED).El ratón se está moviendo sobre la superficie de la vista.
+enumv(ekEVDOWN).Se ha pulsado un botón del ratón.
+enumv(ekEVUP).Se ha liberado un botón del ratón.
+enumv(ekEVCLICK).Se ha hecho clic sobre una vista.
+enumv(ekEVDRAG).Se está realizando <i>dragging</i> dentro de la vista.
+enumv(ekEVWHEEL).Se ha movido la rueda del ratón.
+enumv(ekEVKEYDOWN).Se ha pulsado una tecla.
+enumv(ekEVKEYUP).Se ha liberado una tecla.
+enumv(ekEVWNDMOVED).Se está moviendo la ventana por el escritorio.
+enumv(ekEVWNDSIZING).Se está re-dimensionando la ventana.
+enumv(ekEVWNDSIZE).Se ha re-dimensionando la ventana.
+enumv(ekEVWNDCLOSE).Se ha cerrado la ventana.
+enumv(ekEVCOLOR).Se está actualizando un color de <lf>comwin_color</lf>.
+enumv(ekEVTHEME).Ha cambiado el tema del escritorio.
 
 struct(Control).Control de interfaz (abstracto).
 
@@ -419,6 +334,8 @@ struct(PopUp).Control botón con lista desplegable. <lp>popup</lp>.
 struct(Edit).Control de edición de texto <lp>edit</lp>.
 
 struct(Combo).Control que combina un cuadro de edición con una lista desplegable. <lp>combo</lp>.
+
+struct(ListBox).Control de lista. <lp>listbox</lp>.
 
 struct(UpDown).Control que muestra dos pequeños botones de incremento y decremento. <lp>updown</lp>.
 
@@ -468,14 +385,14 @@ smember(uint32_t,cpos).Posición del cursor <i>(caret)</i>.
 
 struct(EvDraw).Parámetros del evento <i>OnDraw</i>.
 smember(DCtx*,ctx).Contexto de dibujo 2D.
+smember(real32_t,x).Coordenada x del area de dibujo (viewport).
+smember(real32_t,y).Coordenada y del area de dibujo.
 smember(real32_t,width).Ancho del área de dibujo.
 smember(real32_t,height).Alto del área de dibujo.
 
 struct(EvMouse).Parámetros de eventos de ratón.
 smember(real32_t,x).Coordenada x del puntero.
 smember(real32_t,y).Coordenada y del puntero.
-smember(real32_t,width).Ancho del control.
-smember(real32_t,height).Alto del control.
 smember(mouse_t,button).Botón activo.
 smember(uint32_t,count).Número de clics.
 

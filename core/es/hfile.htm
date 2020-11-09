@@ -1,5 +1,4 @@
 
-
 h1.Operaciones con archivos
 
 ep.Proporciona funciones de alto nivel sobre <lp>bfile</lp>.
@@ -98,27 +97,40 @@ func(hfile_dir_loop).Recorre todos los archivos de un directorio.
 fret(bool_t).<c>TRUE</c> si el recorrido ha sido completado con éxito. <c>FALSE</c> si ha ocurrido algún error.
 fpar(const char_t*,pathname).Ruta del directorio. <lh>Filename y pathname</lh>.
 fpar(Listener*,listener).Función <i>callback</i> que se llamará para cada archivo del directorio.
-fpar(const bool_t,direntry).Si es <c>TRUE</c> el bucle entrará en los subdirectorios.
+fpar(const bool_t,subdirs).Si es <c>TRUE</c> el bucle procesará los subdirectorios.
 fpar(const bool_t,hiddens).Si es <c>TRUE</c> se procesarán los archivos ocultos.
 fpar(ferror_t*,error).Código de error si la función falla. Puede ser <c>NULL</c>.
-fnote.Para cada archivo, se mandará un evento a <c>listener</c>. Será de tipo <lt>ekEFILE</lt> para archivos regulares, <lt>ekEENTRY</lt> cuando entre en un subdirectorio y <lt>ekEEXIT</lt> cuando salga del mismo. Los atributos del archivo se envían en el parámetro del evento como una estructura <lt>EvFileDir</lt>. El recorrido continuará hasta que todos los archivos/subdirectorios hayan sido procesados o se retorne <c>FALSE</c> en <lf>event_result</lf>. Esta salida controlada no será considerada error y esta función retornará <c>TRUE</c>.
+fnote.Para cada archivo, se mandará un evento a <c>listener</c>. Será de tipo <lt>ekEFILE</lt> para archivos regulares, <lt>ekEENTRY</lt> cuando detecte en un subdirectorio y <lt>ekEEXIT</lt> cuando salga del mismo (si el subdirectorio se ha procesado). Los atributos del archivo se envían en el parámetro del evento como una estructura <lt>EvFileDir</lt>. El recorrido continuará hasta que todos los archivos/subdirectorios hayan sido recorridos o se retorne <c>FALSE</c> en <lf>event_result</lf>. Esta salida controlada no será considerada error y esta función retornará <c>TRUE</c>.
 fcode.
 static void OnFile(App *app, Event *event)
 {
     uint32_t type = event_type(event);
     const EvFileDir *params = event_params(event, EvFileDir);
     if (type == ekEFILE)
-        bstd_printf("File: %s\n", params->pathname);
-    else if (type == ekEDIRENTRY)
-        bstd_printf("Entering: %s\n", params->pathname);
-    else if (type == ekEDIREXIT)
-        bstd_printf("Exiting: %s\n", params->pathname);
-
-    // Abort the directory loop
-    if (app->more == FALSE)
     {
-        bool_t *more = event_result(event, bool_t);
-        *more = FALSE;
+        bstd_printf("File: %s\n", params->pathname);
+        // Abort the directory loop
+        if (app->more == FALSE)
+        {
+            bool_t *more = event_result(event, bool_t);
+            *more = FALSE;
+        }    
+    }
+    else if (type == ekEDIRENTRY)
+    {
+        if (app->direntry == TRUE)
+        {
+            bstd_printf("Entering: %s\n", params->pathname);
+        }
+        else
+        {
+            bool_t *entry = event_result(event, bool_t);
+            *entry = FALSE;
+        }
+    }
+    else if (type == ekEDIREXIT)
+    {
+        bstd_printf("Exiting: %s\n", params->pathname);
     }
 }
 

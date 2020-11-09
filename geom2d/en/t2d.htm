@@ -75,6 +75,9 @@ li.Scaling <b>(c)</b>: Change the size. If <i>sx</i> <<> 1, reduce. <i>sx</i> <>
 
 li.Identity <b>(d)</b>: It is the null transformation. When applied, the vectors remain unchanged.
 
+img(transforms_classification.svg,300,.4).Classification of affine transformations.
+Grouped affine transformation.
+
 img(elemental_transform.svg,700,.8).Elementary affine transformations.
 Geometric representation of a translation, rotation, scaling and identity.
 
@@ -204,18 +207,53 @@ p.Matrix multiplication is not commutative, but the order in which the operation
 
 code(cpp,acumtras).Acumulación de transformaciones.
 // (a) First move, then rotate
-T2D t2d;
-t2d_movef(&t2d, kT2D_IDENTITYf, 11, 0);
+T2Df t2d;
+t2d_movef(&t2d, kT2D_IDENTf, 11, 0);
 t2d_rotatef(&t2d, &t2d, kBMATH_PIf / 4);
 
 // (b) First rotate, then move
-T2D t2d;
-t2d_rotatef(&t2d, kT2D_IDENTITYf, kBMATH_PIf / 4);
+T2Df t2d;
+t2d_rotatef(&t2d, kT2D_IDENTf, kBMATH_PIf / 4);
 t2d_movef(&t2d, &t2d, 11, 0);
 code.
 
 img(transform_compose.svg,600,.7).Effect of the order of application of transformations.
 Geometric representation of applying a translation and a rotation. And on the contrary, rotation and translation.
+
+p.Any chain of translations, rotations, and scales defines an affine reference frame that can be expressed in terms of a single traslation, rotation, and scale <r>final_transform</r>. We can "undo" this transformation and return to the origin through the inverse transformation <r>trasdecomp</r>.
+
+li.Use <lf>t2d_decomposef</lf> to get the components of a transformation.
+
+li.Use <lf>t2d_inversef</lf> to get the inverse transformation.
+
+img(final_transform.svg,600,.7).Transformation chain and final system.
+Geometric representation of applying multiple chain transformations.
+
+code(cpp,trasdecomp).Components of a reference and inverse system.
+T2Df t2d, inv, inv2;
+V2Df pos, sc;
+real32_t a;
+
+// Transform sequence
+t2d_rotatef(&t2d, kT2D_IDENTf, kBMATH_PIf / 4);
+t2d_movef(&t2d, &t2d, 11, 0);
+t2d_movef(&t2d, &t2d, 10, - 10);
+t2d_rotatef(&t2d, &t2d, - kBMATH_PIf / 2);
+t2d_scalef(&t2d, &t2d, 1.5f, 1);
+
+// Transform components
+t2d_decomposef(&t2d, &pos, &a, &sc);
+
+// Transform inverse
+t2d_inversef(&inv, &t2d);
+
+// Inverse from components
+t2d_scalef(&inv2, kT2D_IDENTf, 1/sc.x, 1/sc.y);
+t2d_rotatef(&inv2, &inv2, -a);
+t2d_movef(&inv2, &inv2, -pos.x, -pos.y);
+
+// inv == inv2 ('inv' more numerical accurate)
+code.
 
 func(T2D,move).Multiply a transformation by a translation <c>t2d = src * move(x,y)</c>.
 fpar(T2D*,dest).Result transformation.
@@ -237,6 +275,16 @@ fpar(const real,sx).Scaling on the x axis.
 fpar(const real,sy).Scaling on the y axis.
 fnote.<c>dest</c> and <c>src</c> can point to the same matrix.
 
+func(T2D,invfast).Calculate the inverse transformation, assuming the input is orthogonal.
+fpar(T2D*,dest).Inverse transformation.
+fpar(const T2D*,src).Initial transformation.
+fnote.The transformation will be orthogonal only if it contains rotations and translations, otherwise the result of applying it will be unpredictable. <c>dest</c> and <c>src</c> can point to the same matrix.
+
+func(T2D,inverse).Calculate the inverse transformation.
+fpar(T2D*,dest).Inverse transformation.
+fpar(const T2D*,src).Initial transformation.
+fnote.<c>dest</c> and <c>src</c> can point to the same matrix.
+
 func(T2D,mult).Multiply two transformations <c>dest = src1 * src2</c>.
 fpar(T2D*,dest).Result transformation.
 fpar(const T2D*,src1).First operating.
@@ -256,5 +304,11 @@ fpar(const V2D*,src).Original vector array.
 fpar(const uint32_t,n).Number of vectors in <c>src</c>.
 fnote.<c>dest</c> and <c>src</c> can point to the same array.
 
-const(T2D,IDENTITY).Represents the identity transformation.
+func(T2D,decompose).Gets the position, rotation, and scaling of a transformation.
+fpar(const T2D*,t2d).Transformation.
+fpar(V2D*,pos).Position. Can be <c>NULL</c>.
+fpar(real*,a).Angle in radians (-π/2, π/2). Can be <c>NULL</c>.
+fpar(V2D*,sc).Scaled. Can be <c>NULL</c>.
+fnote.If the transformation is not made up of a sequence of translations, rotations, and scales, the result will not be valid.
 
+const(T2D,IDENT).Represents the identity transformation.

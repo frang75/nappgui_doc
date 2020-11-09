@@ -108,3 +108,10 @@ func(window_defbutton).Set the default window button. It will be activated when 
 fpar(Window*,window).The window.
 fpar(Button*,button).The button.
 
+func(window_cursor).Change the mouse cursor.
+fpar(Window*,window).The window.
+fpar(const cursor_t,cursor).Identifier of the new cursor.
+fpar(const Image*,image).Custom image. Only valid in <lt>ekCUSER</lt>.
+fpar(const real32_t,hot_x).The x coordinate of the click point. Only valid in <lt>ekCUSER</lt>.
+fpar(const real32_t,hot_y).The y coordinate of the click point. Only valid in <lt>ekCUSER</lt>.
+fnote.<c>hot_x, hot_y</c> indicate the "sensitive" point within the image, which will indicate the exact position of the mouse.

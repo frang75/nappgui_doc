@@ -169,6 +169,13 @@ func(font_style).Obtiene el estilo de la fuente.
 fret(uint32_t).El estilo. Combinación de valores de la estructura <lt>fstyle_t</lt>. Pe: <c>ekFBOLD | ekFITALIC</c>.
 fpar(const Font*,font).La fuente.
 
+func(font_extents).Obtiene el tamaño en píxeles de una cadena de texto, en función de la fuente.
+fpar(const Font*,font).La fuente.
+fpar(const char_t*,text).La cadena de texto a dimensionar.
+fpar(const real32_t,refwidth).Anchura máxima del cuadro de texto.
+fpar(real32_t*,width).Ancho del cuadro de texto.
+fpar(real32_t*,height).Alto del cuadro de texto.
+
 func(font_exists_family).Comprueba si una familia tipográfica está instalada en el sistema operativo.
 fret(bool_t).<c>TRUE</c> si existe la familia, <c>FALSE</c> si no.
 fpar(const char_t*,family).Cadena UTF8 con el nombre de la familia, terminada en carácter nulo <c>'\0'</c>.

@@ -1,5 +1,4 @@
 langrev.
-
 h1.Strings
 
 ep.Character strings in UTF-8, dynamically allocated.
@@ -176,6 +175,16 @@ func(str_nchars).Returns the number of characters of a string object.
 fret(uint32_t).The number of characters, not including the null character <c>'\0'</c>.
 fpar(const String*,str).The String object.
 fnote.In <lh>UTF-8</lh> strings the number of bytes is not the same as the characters.
+
+func(str_prefix).Locate the common begin of two strings. 
+fret(uint32_t).The number of bytes that are identical at the beginning of both strings.
+fpar(const char_t*,str1).First UTF8 C string terminated in null character <c>'\0'</c>.
+fpar(const char_t*,str2).Second UTF8 C string terminated in null character <c>'\0'</c>.
+
+func(str_is_prefix).Check if one string is prefix of another. 
+fret(bool_t).<c>TRUE</c> if <c>prefix</c> is prefix of <c>str</c>.
+fpar(const char_t*,str).UTF8 C string terminated in null character <c>'\0'</c>.
+fpar(const char_t*,prefix).Prefix of <c>str</c> terminated in null character <c>'\0'</c>.
 
 func(str_scmp).Compare two strings alphabetically. 
 fret(int).Comparison result.

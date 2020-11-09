@@ -1,5 +1,4 @@
 langrev.
-
 h1.Arrays
 
 ep.Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious. <b>Representation Is the Essence of Programming</b>.
@@ -83,7 +82,7 @@ code.
 p(noindent).or in a container
 
 code.
-Product *product = arrst_append1(array, Product);
+Product *product = arrst_new(array, Product);
 code.
 
 p(noindent).its initial content is garbage, understood as undetermined bytes. Initializing an object is assigning valid and consistent values to each field of the object <r>arrinit</r>.
@@ -117,14 +116,14 @@ Product product;
 i_init(&product);
 arrst_append(array, product, Product);
 
-Product *product = arrst_append1(array, Product);
+Product *product = arrst_new(array, Product);
 i_init(product);
 
 Product *product = i_create();
 arrpt_append(array, product, Product);
 code.
 
-bq.Use <lf>arrst_append1</lf>, <lf>arrst_insert1</lf> or <lf>arrst_prepend1</lf> whenever possible to insert into record arrays, as they avoid having to copy the object.
+bq.Use <lf>arrst_new</lf>, <lf>arrst_insert_n</lf> or <lf>arrst_prepend_n</lf> whenever possible to insert into record arrays, as they avoid having to copy the object.
 
 h2.Serialization
 
@@ -228,7 +227,7 @@ code.
 
 h2.Sort and search
 
-p.The usual way to use arrays will be to add elements at the end by <lf>arrst_append1</lf> then iterate over all. This "natural" order will be enough in most cases, but we may need to organize the elements following another criterion for:
+p.The usual way to use arrays will be to add elements at the end by <lf>arrst_new</lf> then iterate over all. This "natural" order will be enough in most cases, but we may need to organize the elements following another criterion for:
 
 li.Present the information ordered by one or several fields of the structure.
 
@@ -330,19 +329,13 @@ fpar(const ArrSt(type)*,array).The array.
 fpar(,type).Object type.
 fnote.Use <lf>arrst_foreach</lf> to iterate over all elements in a more secure and elegant way.
 
-func(arrst_grow).Append <c>n</c> elements, not initialized, at the end of the array.
-fret(type*).Pointer to the first item added.
+func(arrst_grow).Add <c>n</c> elements, not initialized, at the end of the array.
 fpar(ArrSt(type)*,array).The array.
 fpar(const uint32_t,n).Number of items to add.
 fpar(,type).Object type.
 
-func(arrst_append).Append an element to the end of the array.
-fpar(ArrSt(type)*,array).The array.
-fpar(type,value).Item to add.
-fpar(,type).Object type.
-
-func(arrst_append1).Reserve space for an element at the end of the array.
-fret(type*).Pointer to the added element, which can be used to initialize it.
+func(arrst_new).Reserve space for an element at the end of the array.
+fret(type*).Pointer to added element.
 fpar(ArrSt(type)*,array).The array.
 fpar(,type).Object type.
 fcode.
@@ -351,35 +344,62 @@ Product product;
 i_init_product(&product, ...);
 arrst_append(array, product, Product);
 
-// arrst_append1 avoids the copy
-Product *product = arrst_append1(array, Product);
+// arrst_new avoids the copy
+Product *product = arrst_new(array, Product);
 i_init_product(product, ...);
 fcode.
-fnote.It is slightly faster than <c>arrst_append</c>, especially in big structures, since it avoids copying the object content.
+fnote.It is slightly faster than <c>arrst_append</c>, especially in large structures, since it avoids copying the contents of the object. Initial memory content is indeterminate.
+
+func(arrst_new0).Reserve space for an element at the end of the array and initialize it to 0.
+fret(type*).Pointer to added element.
+fpar(ArrSt(type)*,array).The array.
+fpar(,type).Object type.
+fnote.Same as <lf>arrst_new</lf> but initializing all memory to 0.
+
+func(arrst_new_n).Reserve space for multiple elements at the end of the array.
+fret(type*).Pointer to the first element added.
+fpar(ArrSt(type)*,array).The array.
+fpar(const uint32_t,n).Number of elements to add.
+fpar(,type).Object type.
+fnote.Same as <lf>arrst_new</lf> but reserving multiple elements in the same call. Initial memory content is indeterminate.
+
+func(arrst_new_n0).Reserve space for several elements at the end of the array and initialize them to 0.
+fret(type*).Pointer to the first element added.
+fpar(ArrSt(type)*,array).The array.
+fpar(const uint32_t,n).Number of elements to add.
+fpar(,type).Object type.
+fnote.Same as <lf>arrst_new_n</lf> but initializing all memory to 0.
+
+func(arrst_prepend_n).Reserve space for several elements at the beginning of the array. The rest of the elements will be shifted to the right.
+fret(type*).Pointer to the first inserted element.
+fpar(ArrSt(type)*,array).The array.
+fpar(const uint32_t,n).Number of elements to insert.
+fpar(,type).Object type.
+fnote.Initial memory content is indeterminate.
+
+func(arrst_insert_n).Reserve space for several elements in an arbitrary position of the array.
+fret(type*).Pointer to the first inserted element.
+fpar(ArrSt(type)*,array).The array.
+fpar(const uint32_t,pos).Position where it will be inserted. The current element in <c>pos</c> and following will be shifted to the right.
+fpar(const uint32_t,n).Number of elements to insert.
+fpar(,type).Object type.
+fnote.Initial memory content is indeterminate.
+
+func(arrst_append).Append an element to the end of the array.
+fpar(ArrSt(type)*,array).The array.
+fpar(type,value).Item to add.
+fpar(,type).Object type.
 
 func(arrst_prepend).Insert an element at the beginning of the array. The rest of the elements will be shifted to the right.
 fpar(ArrSt(type)*,array).The array.
 fpar(type,value).Item to insert.
 fpar(,type).Object type.
 
-func(arrst_prepend1).Reserve space for an element at the beginning of the array. The rest of the elements will be shifted to the right..
-fret(type*).Pointer to the inserted element, which must be used to initialize it.
-fpar(ArrSt(type)*,array).The array.
-fpar(,type).Object type.
-fnote.See discussion in <lf>arrst_append1</lf>.
-
 func(arrst_insert).Insert an element in an arbitrary array position.
 fpar(ArrSt(type)*,array).The array.
 fpar(const uint32_t,pos).Position where it will be inserted. The current item in <c>pos</c> and following will be shifted to the right.
 fpar(type,value).Item to insert.
 fpar(,type).Object type.
-
-func(arrst_insert1).Reserve space for an element in an arbitrary array position.
-fret(type*).Pointer to the inserted element, which must be used to initialize it.
-fpar(ArrSt(type)*,array).The array.
-fpar(const uint32_t,pos).Position where it will be inserted. The current item in <c>pos</c> and following will be shifted to the right.
-fpar(,type).Object type.
-fnote.See discussion in <lf>arrst_append1</lf>.
 
 func(arrst_delete).Remove an element from the array.
 fpar(ArrSt(type)*,array).The array.
@@ -396,6 +416,12 @@ func(arrst_sort).Sort array elements using Quicksort.
 fpar(ArrSt(type)*,array).The array.
 fpar(FPtr_compare,func_compare).Function to compare two elements. <lh>Sort and search</lh>.
 fpar(,type).Object type.
+
+func(arrst_sort_ex).Sort array elements using Quicksort and additional data.
+fpar(ArrSt(type)*,array).The array.
+fpar(FPtr_compare_ex,func_compare).Function to compare two elements using an additional data.
+fpar(,type).Object type.
+fpar(,dtype).Type of data in the comparison function.
 
 func(arrst_search).Search for an element in the array linearly <c>O(n)</c>.
 fret(type*).Pointer to the first element that matches the search criteria or <c>NULL</c> if none exists.

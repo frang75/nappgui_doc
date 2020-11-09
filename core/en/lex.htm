@@ -169,6 +169,10 @@ func(lexscn_start).Start the analyzer. Zero the line and column counter.
 fpar(LexScn*,lex).Lexical Analyzer.
 fpar(Stream*,stm).<lh>Text stream</lh> for read with the data source.
 
+func(lexscn_jump_bom).Skip the possible sequence <i>Byte Order Mark</i> <c>"ï»¿"</c> found at the beginning of some UTF8 files/streams.
+fpar(LexScn*,lex).Lexical analyzer.
+fnote.This function will have no effect if there is no such sequence at the beginning of the stream. The BOM is common in streams coming from some web servers.
+
 func(lexscn_token).Get the following token from the <lh>Text stream</lh> assigned in <lf>lexscn_start</lf>.
 fret(lextoken_t).The token type.
 fpar(LexScn*,lex).Lexical Analyzer.
@@ -193,3 +197,27 @@ fcode.
 const char_t *desc = lexscn_string(ekTEOL);
 // desc = "newline";
 fcode.
+
+func(lexscn_jump).Skip the next token in the stream. If the token does not correspond to the one indicated, the stream will be marked as corrupt.
+fpar(LexScn*,lex).Lexical analyzer.
+fpar(const lextoken_t,token).Expected token.
+fcode.
+void lexscn_jump(LexScn *lex, const lextoken_t token)
+{
+    lextoken_t tok = lexscn_token(lex);
+    if (tok != token)
+        stm_corrupt(lex->stm);
+}
+fcode.
+
+func(lexscn_read_u32).Read the next token and transform it to <c>uint32_t</c>. If the token is not numeric, the stream will be marked as corrupt.
+fret(uint32_t).The value read.
+fpar(LexScn*,lex).Lexical analyzer.
+
+func(lexscn_read_r32).Read the following token and transform it to <c>real32_t</c>. If the token is not numeric, the stream will be marked as corrupt.
+fret(real32_t).The value read.
+fpar(LexScn*,lex).Lexical analyzer.
+
+func(lexscn_read_r64).Read the following token and transform it to <c>real64_t</c>. If the token is not numeric, the stream will be marked as corrupt.
+fret(real64_t).The value read.
+fpar(LexScn*,lex).Lexical analyzer.

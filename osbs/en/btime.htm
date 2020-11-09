@@ -1,8 +1,11 @@
 langrev.
-
 h1.Time
 
 ep.Access to the internal computer clock.
+
+p.The operating system measures the passage of time using an internal clock, typically implemented by a counter of the <i>ticks</i> that have passed since an initial moment called <i>epoch</i>. In Unix-like systems this counter represents the number of seconds elapsed since January 1, 1970. However, in Windows it represents the number of 100 nanosecond intervals since January 1, 1601 coinciding with the beginning of the Gregorian calendar. In NAppGUI, the <i>epoch</i> values ​​have been unified to work with the same scale on all platforms.
+
+li.Use <lf>btime_now</lf> to get the number of micro-seconds elapsed since January 1, 1970.
 
 func(btime_now).Gets the number of micro-seconds elapsed since January 1, 1970 until this precise moment. Use the difference between instants to know the time consumed by a process.
 fret(uint64_t).The number of micro-seconds elapsed, that is, the number of intervals of 1/1000000 seconds.

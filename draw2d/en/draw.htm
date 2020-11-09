@@ -9,6 +9,8 @@ p.The most elementary operation is to draw a line between two points. In 2d cont
 
 li.<lf>draw_line</lf> will draw a line.
 li.<lf>draw_polyline</lf> will draw several connected lines.
+li.<lf>draw_arc</lf> will draw an arc.
+li.<lf>draw_bezier</lf> will draw a Bézier curve of degree 3 (cubic).
 li.<lf>draw_line_color</lf> will set the line color.
 li.<lf>draw_line_width</lf> set the line width.
 li.<lf>draw_line_cap</lf> set the style of the ends.
@@ -116,6 +118,24 @@ draw_fill_matrix(ctx, &matrix);
 draw_ellipse(ctx, ekSKFILL, 0, 0, 100, 50); 
 code.
 
+h3.Gradients in lines
+
+p.In addition to region fill, gradients can also be applied to lines and contours <r>gradient_lines</r> <r>gradlin</r>.
+
+li.Use <lf>draw_line_fill</lf> to draw the lines with the current fill pattern.
+
+li.Utiliza <lf>draw_line_color</lf> para volver al color sólido.
+
+img(gradient_lines.png,550,.65).Dibujo de líneas utilizando gradientes.
+Varias líneas dibujadas con degradados de color.
+
+code(cpp,gradlin).Gradientes en líneas.
+draw_fill_linear(ctx, c, stop, 2, 0, 0, 600, 400);
+draw_fill_matrix(ctx, kT2D_IDENTITYf);
+draw_line_fill(ctx);
+draw_bezier(ctx, 30, 200, 140, 60, 440, 120, 570, 200);
+code.
+
 h3.Gradient Limits
 
 p.As we have said, the color fill will spread evenly and indefinitely along all the lines perpendicular to the vector, but... What happens outside its limits? In <r>wrapgrad</r> <r>gradient_wrap</r> the gradient has been defined in x=[200, 400], this measure being lower than the figure to be filled:
@@ -143,9 +163,13 @@ p.Text rendering is the most important part of the user interface and one of the
 
 li.Use <lf>draw_text</lf> to draw texts in <lp>dctx</lp>.
 
+li.Use <lf>draw_text_color</lf> to set the color of the text.
+
 li.Use <lf>draw_font</lf> to set the font.
 
 li.Use <lf>draw_text_width</lf> to set the maximum width of a block of text.
+
+li.Use <lf>draw_text_trim</lf> to indicate how the text that does not fit in the indicated width will be cut.
 
 li.Use <lf>draw_text_align</lf> to set the alignment of the text, with respect to its insertion point.
 
@@ -158,9 +182,9 @@ p.To draw single-line texts, we just have to call the function, passing a UTF8 s
 code(cpp,simtext).Dibujo de una línea de texto.
 Font *font = font_system(20, 0);
 draw_font(ctx, font);
-draw_fill_color(ctx, kCOLOR_BLUE);
+draw_text_color(ctx, kCOLOR_BLUE);
 draw_text_align(ctx, ekLEFT, ekTOP);
-draw_text(ctx, ekFILL, "Text 文本 Κείμενο", 25, 25);
+draw_text(ctx, "Text 文本 Κείμενο", 25, 25);
 code.
 
 img(text_single_line.png,0,.65).Single-line texts, with alignment and transformations.
@@ -171,7 +195,7 @@ p.If the string to be displayed has new lines (character '\n') they will be take
 code(cpp,multext).Dibujo de textos con saltos de línea.
 const char_t *text = "Text new line\n文字换行\nΓραμμή κειμένου";
 real32_t width, height;
-draw_text(ctx, ekFILL, text, 25, 25);
+draw_text(ctx, text, 25, 25);
 draw_text_extents(ctx, text, -1, &width, &height);
 code.
 
@@ -184,7 +208,7 @@ code(cpp,blocktext).Maximum width and internal alignment in text blocks.
 const char_t *text = "Lorem ipsum dolor sit amet...consequat";
 draw_text_width(ctx, 200);
 draw_text_halign(ctx, ekLEFT);
-draw_text(ctx, ekFILL, text, 25, 25);
+draw_text(ctx, text, 25, 25);
 draw_text_extents(ctx, text, 200, &width1, &height1);
 code.
 
@@ -203,13 +227,13 @@ draw_line_dash(ctx, dash, 2);
 draw_line_color(ctx, kCOLOR_GREEN);
 draw_text_extents(ctx, "Gradient dashed text", -1, &width, &height);
 draw_fill_linear(ctx, c, stop, 2, 25, 0, 25 + width, 0);
-draw_text(ctx, ekFILLSK, "Gradient dashed text", 25, 250);
+draw_text_path(ctx, ekFILLSK, "Gradient dashed text", 25, 250);
 code.
 
 img(text_stroke_fill.png,0,.65).Combining fill and stroke.
 Text with different border and fill styles.
 
-bq.The optimal way to draw texts is with solid color and <lt>ekFILL</lt> operation. This should be configured in the case that we have to make intensive use: browsers, word processors, reports, etc. Drawing contours or using gradients will have a performance penalty.
+bq.<lf>draw_text</lf> much faster than <lf>draw_text_path</lf>, so we must limit the use of the latter to what is strictly necessary.
 
 h2.Drawing images
 
@@ -272,6 +296,10 @@ p.LineDash
 p.Sólido
 p.<lf>draw_line_dash</lf>
 row.
+p.TextColor
+p.<lt>kCOLOR_BLACK</lt>
+p.<lf>draw_text_color</lf>
+row.
 p.FillColor
 p.<lt>kCOLOR_BLACK</lt>
 p.<lf>draw_fill_color</lf>
@@ -318,9 +346,33 @@ fpar(const bool_t,closed).<c>TRUE</c> to join the last point with the first.
 fpar(const V2Df*,points).Array of points that compose the polyline.
 fpar(const uint32_t,n).Number of points.
 
+func(draw_arc).Draw an arc (circle segment).
+fpar(DCtx*,ctx).Drawing context.
+fpar(const real32_t,x).X coordinate of the arc center.
+fpar(const real32_t,y).Y coordinate of the arc center.
+fpar(const real32_t,radius).Arc radius.
+fpar(const real32_t,start).Initial angle with respect to the vector <c>X=[1,0] </c> in radians.
+fpar(const real32_t,sweep).Sweep angle or arc size in radians.
+fnote.Positive angles are those that rotate from vector X to vector Y. See <lp>v2d</lp>.
+
+func(draw_bezier).Draw a cubic Bézier curve (degree 3) using two endpoints (x0,y0)-(x3,y3) and two intermediate control points (x1,y1)-(x2,y2).
+fpar(DCtx*,ctx).Drawing context.
+fpar(const real32_t,x0).X coordinate of the starting point.
+fpar(const real32_t,y0).Y coordinate of the starting point.
+fpar(const real32_t,x1).X coordinate of the first intermediate point.
+fpar(const real32_t,y1).Y coordinate of the first intermediate point.
+fpar(const real32_t,x2).X coordinate of the second intermediate point.
+fpar(const real32_t,y2).Y coordinate of the second intermediate point.
+fpar(const real32_t,x3).X coordinate of end point.
+fpar(const real32_t,y3).Y coordinate of the end point.
+
 func(draw_line_color).Set the color of drawing lines and contours.
 fpar(DCtx*,ctx).Drawing context.
 fpar(const color_t,color).Line color.
+
+func(draw_line_fill).Sets the current fill pattern for line drawing.
+fpar(DCtx*,ctx).Drawing context.
+fnote.The fill pattern must have been previously set by <lf>draw_fill_linear</lf>. See <lh>Gradients in lines</lh>.
 
 func(draw_line_width).Set the line thickness.
 fpar(DCtx*,ctx).Drawing context.
@@ -410,18 +462,33 @@ fpar(DCtx*,ctx).Drawing context.
 fpar(const Font*, font).Fuente tipográfica.
 fnote.Tendrá efecto a partir del siguiente texto dibujado. Ver <lp>font</lp>.
 
+func(draw_text_color).Sets the text color.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const color_t,color).Color.
+
 func(draw_text).Draw a block of text.
 fpar(DCtx*,ctx).Drawing context.
-fpar(const drawop_t,op).Drawing operation.
 fpar(const char_t*,text).UTF8 string, terminated in a null character <c>'\0'</c>.
 fpar(const real32_t, x).X coordinate on the canvas of the text origin.
 fpar(const real32_t, y).Y coordinate on the canvas of the text origin.
 fnote.The text will be drawn with the font and preset style and will be sensitive to the context transformation. See <lh>Drawing text</lh>.
 
+func(draw_text_path).Draw a block of text as a geometric area. Similar to <lf>draw_text</lf>, but allows you to use gradients or draw only the border of the text.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const drawop_t,op).Drawing operation.
+fpar(const char_t*,text).UTF8 string, null-terminated <c>'\0'</c>.
+fpar(const real32_t, x).X coordinate on the canvas of the text origin.
+fpar(const real32_t, y).Y coordinate on canvas of text origin.
+fnote.The text will be drawn with the preset font and style (fill and line) and will be context sensitive. See <lh>Drawing text</lh>.
+
 func(draw_text_width).Set the maximum width of the text blocks.
 fpar(DCtx*,ctx).Drawing context.
 fpar(const real32_t, width).Maximum width.
 fnote.If the text to draw with <lf>draw_text</lf> is wider than <c>width</c>, it will fragment into several lines. Pass -1 to draw the entire block on a single line. Context scaling is not taken into account. The measurement is made based on the size of the preset font. See <lh>Drawing text</lh>.
+
+func(draw_text_trim).Sets how the text will be trimmed when it is wider than the value of <lf>draw_text_width</lf>.
+fpar(DCtx*,ctx).Drawing context.
+fpar(const ellipsis_t,ellipsis).Trim style.
 
 func(draw_text_align).Sets the alignment of the text with respect to the insertion point.
 fpar(DCtx*,ctx).Drawing context.

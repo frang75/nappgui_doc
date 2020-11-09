@@ -1,5 +1,4 @@
 
-
 h1.Streams
 
 ep.El agua puede fluir, arrastrarse, gotear o estrellarse, sé agua amigo mío.
@@ -465,6 +464,7 @@ fpar(,type).El tipo del <c>enum</c>.
 fnote.Es una escritura binaria. No utilizar en streams de texto "puros". <lh>Orden de bytes</lh>.
 
 func(stm_read).Lee bytes desde el stream.
+fret(uint32_t).El número de bytes realmente leídos.
 fpar(Stream*,stm).El objeto stream.
 fpar(byte_t*,data).Puntero al búfer donde se escribirán los datos leídos.
 fpar(const uint32_t,size).La cantidad de bytes a leer (tamaño del búfer).

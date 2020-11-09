@@ -239,41 +239,47 @@ p.Xcode 3.2.6
 p.Intel x86
 p.Snow Leopard
 row.
+img(ubuntu20_logo.png,32,.05).
+p.gcc9_gtk3_x64
+p.GCC 9.3/GTK 3.24
+p.Intel x64
+p.Ubuntu 20.04 LTS
+row.
 img(ubuntu_logo.png,32,.05).
 p.gcc7_gtk3_x64
-p.GCC 7.3.0
+p.GCC 7.5/GTK 3.22
 p.Intel x64
-p.18.04 LTS
+p.Ubuntu 18.04 LTS
 row.
 img(ubuntu_logo.png,32,.05).
 p.gcc5_gtk3_x64
-p.GCC 5.3.1
+p.GCC 5.4/GTK 3.18
 p.Intel x64
-p.16.04 LTS
+p.Ubuntu 16.04 LTS
 row.
 img(ubuntu_logo.png,32,.05).
 p.gcc5_gtk3_x86
 p.GCC 5.3.1
 p.Intel x86
-p.16.04 LTS
+p.Ubuntu 16.04 LTS
 row.
 img(ubuntu_logo.png,32,.05).
 p.gcc4_gtk3_x64
 p.GCC 4.8.2
 p.Intel x64
-p.14.04 LTS
+p.Ubuntu 14.04 LTS
 row.
 img(ubuntu_logo.png,32,.05).
 p.gcc4_gtk3_x86
 p.GCC 4.8.2
 p.Intel x86
-p.14.04 LTS
+p.Ubuntu 14.04 LTS
 row.
 img(raspbian.png,32,.05).
 p.gcc6_gtk3_arm
 p.GCC 6.3.0
 p.ARM
-p.9.1 Strech
+p.Raspbian 9.1 Strech
 table.
 
 h2.Portabilidad Windows
@@ -441,7 +447,20 @@ Depurando la aplicación Die desde Xcode en Snow Leopard.
 
 h2.Portabilidad Linux
 
-p.En el mundo Linux, se utiliza el compilador <c>gcc</c> y la herramienta <c>make</c> para generar los binarios, pero no existe un entorno de desarrollo "oficial". Nosotros utilizaremos <l>https://www.eclipse.org/cdt/''Eclipse CDT</l> pero existen otras alternativas, incluída el trabajar directamente con un terminal. La metodología de trabajo no cambia en absoluto. Abrimos CMake, seleccionamos los directorios, pulsamos <c>[Configure]</c> y después <c>[Generate]</c> <r>cmake_linux</r>.
+p.En el mundo Linux, se utiliza el compilador <c>gcc</c> y la herramienta <c>make</c> para generar los binarios, pero no existe un entorno de desarrollo "oficial". Para realizar una configuración elemental de nuestro equipo en Ubuntu teclear los siguientes comandos:
+
+code(text).
+sudo apt-get install gcc
+sudo apt-get install g++
+sudo apt-get install make
+sudo apt-get install svn
+sudo apt-get install cmake cmake-qt-gui
+sudo apt-get install libgtk-3-dev
+sudo apt-get install libglu1-mesa-dev freeglut3-dev mesa-common-dev
+gsettings set org.gtk.Settings.Debug enable-inspector-keybinding true
+code.
+
+p.La metodología de trabajo no cambia en absoluto. Abrimos CMake, seleccionamos los directorios, pulsamos <c>[Configure]</c> y después <c>[Generate]</c> <r>cmake_linux</r>.
 
 img(cmake_linux.png,0,.80).Configurando NAppGUI en Linux.
 Configurar los directorios de CMake en Linux.
@@ -478,7 +497,9 @@ Uso de GDB para depurar una aplicación C.
 
 h3.Eclipse CDT
 
-p.Trabajar directamente con el terminal nos dará el mayor nivel de libertad posible para programar. Con volver a la consola y teclear <c>make</c> se re-compilará todo lo necesario. Ahora bien, utilizar <c>GDB</c> directamente resultará bastante tedioso, por lo que daremos el salto a Eclipse CDT. Este entorno nos permitirá programar con una metodología similar a la de Visual Studio y Xcode: Situar puntos de ruptura, inspeccionar la pila y variables, buscar archivos dentro del directorio de código, ediciones múltiples, búsquedas masivas, etc.
+p.Trabajar directamente con el terminal nos brinda una gran flexibilidad a la hora de configurar nuestras herramientas. Con volver a la consola y teclear <c>make</c> se re-compilará todo lo necesario. Ahora bien, utilizar <c>GDB</c> directamente resultará bastante tedioso, por lo que daremos el salto a <l>https://www.eclipse.org/cdt/''Eclipse CDT</l>. Este entorno nos permitirá programar con una metodología similar a la de Visual Studio y Xcode: Situar puntos de ruptura, inspeccionar la pila y variables, buscar archivos dentro del directorio de código, ediciones múltiples, búsquedas masivas, etc.
+
+bq.No es imperativo utilizar Eclipse. Puedes elegir el editor/IDE que prefieras.
 
 p.La única diferencia es que deberemos utilizar el generador <c>Eclipse CDT4 - Unix Makefiles</c> en CMake <r>make_generators</r> que adicionalmente a los <c>Makefile</c> creará los archivos <c>.cproject</c> y <c>.project</c> necesarios para importar el proyecto dentro de Eclipse.
 
@@ -489,6 +510,10 @@ p.Abrimos Eclipse y hacemos <c>File->Import->Existing Projects into Workspace</c
 
 img(eclipse_debug.png,0,.80).Depurando la aplicación <i>Die</i> con Eclipse.
 Depurando la aplicación Die desde Eclipse.
+
+p.Algunas opciones interesantes de Eclipse CDT bajo <c>Window->Preferences</c>.
+
+li.Run/Debug->Launching->Terminate and Relaunch while launching.
 
 h3.update-alternatives
 
@@ -613,17 +638,14 @@ Menú de selección de configuración en CMake.
 
 h2.Instaladores
 
-p.El último paso, una vez creado y depurado un programa, será el de crear un paquete/instalador que contenga el ejecutable y sus posibles dependencias, para distribuirlo de forma cómoda al usuario final. Este proceso de empaquetado se ha automatizado en NAppGUI gracias a CPack, una utilidad incluida con CMake. El proceso es sencillo, tan solo hay que seguir tres pasos:
+p.El último paso, una vez creado y depurado un programa, será el de crear un paquete/instalador que contenga el ejecutable y sus posibles dependencias, para distribuirlo de forma cómoda al usuario final. Este proceso de empaquetado se ha automatizado en NAppGUI gracias a CPack, una utilidad incluida con CMake <r>packing</r>.
 
-li.Indicar que deseamos empaquetar una aplicación a través del último parámetro del comando <c>desktopApp</c> (<c>CMakeLists.txt</c>), que ya vimos en <lh>Soluciones y proyectos</lh>. Cambiamos <c>NO</c> por <c>YES</c>.
+img(packing.png,0,.65).Opciones de empaquetado en CMake.
+Panel de CMake con las opciones de empaquetado.
 
-code(text).
-desktopApp(Die die "" NRC_EMBEDDED YES)
-code.
+li.Activar la opción <c>CMAKE_PACKAGE</c> en el panel de CMake.
 
-bq.El empaquetado de un programa consume tiempo. Cambiar a <c>YES</c> únicamente cuando vayamos a distribuir. Durante el proceso de desarrollo mantener el valor <c>NO</c>.
-
-li.En CMake hay una variable denominada <c>CMAKE_PACKAGE_PATH</c> en la que debemos establecer el directorio en el que van a guardar los paquetes generados.
+li.Establecer en <c>CMAKE_PACKAGE_PATH</c> el directorio en el que van a guardar los paquetes generados.
 
 li.Seleccionar el tipo de empaquetado a través de la variable <c>CMAKE_PACKAGE_GEN</c> que admite tres valores:
 
@@ -635,7 +657,7 @@ Empaquetado de una aplicación con .tar.gz.
 lili.<c>DragNDrop</c>: (Solo macOS). Crea una unidad <c>dmg</c> con un bundle <c>.app</c> y un enlace a la carpeta <c>/Applications</c> <r>pack_drag_n_drop</r>.
 
 img(pack_drag_n_drop.png,0,.80).Empaquetado dmg en macOS.
-Empaquetado de una aplicación con .tar.gz.
+Empaquetado de una aplicación en dmg.
 
 lili.<c>NSIS</c>: (Solo Windows). Crea un instalador mediante la utilidad <i>Nullsoft scriptable install system</i> <r>pack_nsis</r>. Es necesario tener instalado el software <l>https://nsis.sourceforge.io/Download''NSIS</l> (solo para crear el instalador). El usuario que recibe el paquete no es necesario que tenga dicho software instalado.
 
@@ -644,3 +666,4 @@ Instalador NSIS con la aplicación que acabamos de crear.
 
 p.Cada paquete incluye una copia de la licencia con la que vamos a distribuir la aplicación. El contenido de la misma podemos editarlo a partir del archivo <c>/res/license.txt</c> incluido en el directorio de recursos de cada proyecto. 
 
+bq.El empaquetado de un programa consume tiempo. Activar <c>CMAKE_PACKAGE</c> únicamente cuando vayamos a distribuir. Durante el proceso de desarrollo se aconseja desactivar el checkbox.

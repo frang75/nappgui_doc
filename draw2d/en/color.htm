@@ -53,7 +53,9 @@ Screenshot of application that displays system colors on a dark desktop theme.
 
 const(color_t,kCOLOR_TRANSPARENT).Totally transparent color, absence of color or null color.
 
-const(color_t,kCOLOR_LABEL).Default color of text <lt>Label</lt>.
+const(color_t,kCOLOR_DEFAULT).Default color.
+
+const(color_t,kCOLOR_LABEL).Color of text <lt>Label</lt>.
 
 const(color_t,kCOLOR_VIEW).Background color in controls  <lt>View</lt>.
 
@@ -65,9 +67,13 @@ const(color_t,kCOLOR_TEXT).Text color in tables or controls.
 
 const(color_t,kCOLOR_SELTEXT).Selected text color in tables or controls.
 
+const(color_t,kCOLOR_HOTTEXT).Color of highlighted text in tables or controls.
+
 const(color_t,kCOLOR_BGTEXT).Text background color in tables or controls.
 
 const(color_t,kCOLOR_BGSELTEXT).Text background color selected in tables or controls.
+
+const(color_t,kCOLOR_BGHOTTEXT).Background color of highlighted text in tables or controls.
 
 const(color_t,kCOLOR_HEADER).Text color in table headers.
 
@@ -114,6 +120,32 @@ fpar(const real32_t,b).Blue channel.
 fpar(const real32_t,a).Alpha channel (transparency).
 fnote.<c>a=0</c> not supported. Use <lt>kCOLOR_TRANSPARENT</lt> in those cases.
 
+func(color_hsbf).Creates a color (rgb) from its components Hue-Saturation-Brightness.
+fret(color_t).Color.
+fpar(const real32_t,hue).Hue component.
+fpar(const real32_t,sat).Saturation component.
+fpar(const real32_t,bright).Brightness component.
+
+func(color_red).Create an RGB color using only the red channel.
+fret(color_t).Color.
+fpar(const uint8_t,r).Red Channel.
+fnote.Equivalent to <c>color_rgb(r, 0, 0)</c>.
+
+func(color_green).Create an RGB color using only the green channel.
+fret(color_t).Color.
+fpar(const uint8_t,g).Green channel.
+fnote.Equivalent to <c>color_rgb(0, g, 0)</c>.
+
+func(color_blue).Create an RGB color using only the blue channel.
+fret(color_t).Color.
+fpar(const uint8_t,b).Blue channel.
+fnote.Equivalent to <c>color_rgb(0, 0, b)</c>.
+
+func(color_gray).Creates a gray RGB color from intensity value.
+fret(color_t).Color.
+fpar(const uint8_t,l).Intensity (luminance).
+fnote.Equivalent to <c>color_rgb(l, l, l)</c>.
+
 func(color_bgr).Create a color from a 32-bit BGR value. Byte 0 corresponds to channel <b>B</b> , 1 to <b>G</b> and 2 to <b>R.</b> The highest order byte is ignored (set to 255).
 fret(color_t).Color.
 fpar(const uint32_t,bgr).The bgr 32bits value.
@@ -132,6 +164,12 @@ fret(color_t).Color.
 fpar(const color_t,light_color).Color for LIGHT desktop themes.
 fpar(const color_t,dark_color).Color for DARK desktop themes.
 fnote.The system will set the final color based on the "clarity" of the window manager colors (Light/Dark). NO nested alternative colors ARE ALLOWED. The values <c>light</c> and <c>dark</c> must be a RGB or system colors.
+
+func(color_to_hsbf).Convert a color (rgb) to HSB space (hue, saturation, brightness).
+fpar(const color_t,color).Color.
+fpar(real32_t*,hue).Hue component.
+fpar(real32_t*,sat).Saturation component.
+fpar(real32_t*,sat).Brightness component.
 
 func(color_to_html).Convert a color to the HTML or CSS format (#RRGGBB).
 fpar(const color_t,color).The color to convert.
@@ -170,6 +208,12 @@ fnote.In system or indexed colors, it makes effective the RGBA value.
 
 func(color_get_alpha).Get the alpha (transparency) color component.
 fret(uint8_t).The alpha component. If it is equal 0 it means that the color is indexed (does not contain RGB values).
+fpar(const color_t,color).Color.
+
+func(color_set_alpha).Changes the alpha (transparency) value of a color.
+fret(color_t).The new color, with the altered alpha component.
+fpar(const color_t,color).Color.
+fpar(const uint8_t,alpha).Alpha component.
 
 func(color_dark_mode).Determine if the window environment has a light or dark theme.
 fret(bool_t).<c>TRUE</c> for <i>Dark mode</i>, <c>FALSE</c> for <i>light mode</i>.

@@ -1,7 +1,7 @@
 langrev.
 h1.Geom2D
 
-p.We are facing a geometric calculation library in two dimensions. Geom2D allows working with primitives in the real plane: Points, vectors, transformations, curves and regions. It offers only mathematical functionality, that is, it does not define any type of representation or drawing operation. It only depends on <lp>core</lp> library <r>geom2d_depends</r>, so it can be used in both desktop applications and command line utilities. All types and functions are defined in simple <c>(float)</c> and <c>double</c> precision, in addition to being able to make use of <lh>C++ Math templates</lh>.
+p.We are facing a geometric calculation library in two dimensions. Geom2D allows working with primitives in the real plane: Points, vectors, transformations, curves and surfaces. It offers only mathematical functionality, that is, it does not define any type of representation or drawing operation. It only depends on <lp>core</lp> library <r>geom2d_depends</r>, so it can be used in both desktop applications and command line utilities. All types and functions are defined in simple <c>(float)</c> and <c>double</c> precision, in addition to being able to make use of <lh>C++ Math templates</lh>.
 
 img(geom2d_depends.svg,300,.4).Dependencies of <i>geom2d</i>. See <lp>sdk</lp>.
 Geom2d library dependency tree.
@@ -26,15 +26,29 @@ struct(R2D,real).2d rectangle. <lp>r2d</lp>.
 smember(V2D,pos).Origin.
 smember(S2D,size).Size.
 
-struct(B2D,real).2d bounding box. <lp>b2d</lp>.
-smember(V2D,min).Minimum bounding coordinate.
-smember(V2D,max).Maximum bounding coordinate.
-
 struct(T2D,real).2d affine transformation. <lp>t2d</lp>.
 smember(V2D,i).Component i of the linear transformation.
 smember(V2D,j).Component j of the linear transformation.
 smember(V2D,p).Position.
 
-struct(Curve2D,real).2d parametric curve. <lp>curve2d</lp>.
+struct(Seg2D,real).2d line segment. <lp>seg2d</lp>.
+smember(V2D,p0).Coordinate of the first point of the segment.
+smember(V2D,p1).Coordinate of the second point of the segment.
 
-struct(Brep2D,real).Area or region in 2d. <lp>brep2d</lp>.
+struct(Cir2D,real).2d circle. <lp>cir2d</lp>.
+smember(V2D,c).Center.
+smember(real,r).Radix.
+
+struct(Box2D,real).2d bounding box. <lp>box2d</lp>.
+smember(V2D,min).Minimum bounding coordinate.
+smember(V2D,max).Maximum bounding coordinate.
+
+struct(OBB2D,real).2d Oriented Bounding Box. <lp>obb2d</lp>.
+
+struct(Pol2D,real).2d convex polygon. <lp>pol2d</lp>.
+
+struct(Cur2D,real).2d parametric curve. <lp>cur2d</lp>.
+
+struct(Reg2D,real).Area or region in 2d. <lp>reg2d</lp>.
+
+struct(Col2D,real).Collision data in 2d. <lp>col2d</lp>.

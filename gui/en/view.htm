@@ -1,32 +1,112 @@
 langrev.
 h1.View
 
-p.Custom <b>View</b> are blank areas within the window that allow us to implement our own components. They are characterized by three things:
+p.The <b>View</b> controls or custom views <r>view</r> are blank areas within the window that allow us to implement our own components. We will have total freedom to draw and capture the mouse or keyboard events that allow us to interact with it. 
 
-li.They are integrated within a <lt>Layout</lt> like the rest of interface elements. The layout will manage the position and size of the view based on its configuration.
+li.Use <lf>view_create</lf> to create a view.
 
-li.They allow you to draw anything through the <b>OnDraw</b> event. The handler will receive a 2D context ready to draw.
+li.Use <lf>view_data</lf> to set a data object.
 
-li.They allow to capture the keyboard and mouse events produced by the user, which will make it possible to interact with the generated scenes.
+li.Use <lf>view_get_data</lf> to get this object.
 
-li.They assume nothing about the content. It is the programmer who must synchronize the user's events with the drawing to produce the desired effect.
+li.Use <lf>view_size</lf> to set the default size. See <lh>Natural sizing</lh>.
 
-li.Use <lf>view_create</lf> to create a custom view.
+img(view.svg,520,.7).Custom view control.
+Capture of a simple application that incorporates a custom view.
 
-li.Use <lf>view_OnDraw</lf> to draw in a view.
+h2.Draw in views.
 
-li.Use <lf>view_data</lf> to associate user data with the view.
+p.We cannot update the drawing area whenever we want. This can be affected by other windows in the environment, so the <i>framebuffer</i> is managed directly by the operating system. It will send a notification each time the control must refresh its content.
 
-p.We can't draw in the view whenever we want. Being an area within the window is subject to overlaps so the drawing buffer is managed by the operating system. The refresh cycle is divided into several steps <r>view_events</r>:
+li.Use <lf>view_OnDraw</lf> to set the drawing handler.
 
-li.There is an event that requires updating the view content.
+li.Use <lf>view_update</lf> to force an area update.
 
-li.We call the <lf>view_update</lf> method to notify that the view must be updated. 
+p.In <lp>die</lp> you have a simple example application that implements drawing in custom views. The complete cycle can be summarized in these steps <r>view_events</r>:
 
-li.In a timely manner, the system will send an <c>OnDraw</c> event with an <lt>DCtx</lt> object ready to receive our drawing command. In <lp>drawimg</lp> or <lp>die</lp> you have examples of using custom views.
+li.Some event occurs that requires updating the content of the view.
+
+li.The application calls the <lf>view_update</lf> method to notify that the view must be updated. 
+
+li.At the appropriate moment, the system will send an <c>OnDraw</c> event with a <lt>DCtx</lt> context ready to draw.
 
 img(view_events.svg,420,.6).Refresh cycle of a custom view.
 Chart with the different phases of updating a view.
+
+bq.The operating system can launch <c>OnDraw</c> events at any time without previously calling <c>view_update</c>.
+
+h2.Scrolling views
+
+p.It is possible that the "scene" to be rendered is much larger than the control itself, so it will show only a small fragment of it <r>bigdraw</r>. In these cases we will say that the view is a <i>viewport</i> of the scene. We can manage it in two ways:
+
+img(bigdraw.svg,420,.6).Scene and view (viewport).
+Relationship of a 2D scene to the viewport where it is displayed.
+
+li.Use <lf>draw_matrix</lf> to indicate the transformation that integrates the movement, zoom and possible rotation of the viewport with respect to the scene. All this must be managed by the application and we do not have to do anything special, except call <c>view_update()</c> when necessary.
+
+li.Use scroll bars that allow the user to move freely through the content. In this case, managing the view is a bit more complicated. This is what we must take into account:
+
+lili.Include the constants <lt>ekVSCROLL</lt> and <lt>ekHSCROLL</lt> in the constructor.
+
+lili.Use <lf>view_content_size</lf> to indicate the measurements of the scene, so that the bars are sized correctly.
+
+lili.Use <lf>view_scroll_to</lf> to move the origin of the visible area.
+
+lili.Use <lf>view_viewport</lf> to get the position and dimensions of the visible area.
+
+p.Something very important is to avoid drawing non-visible elements, especially in very large scenes or with a multitude of objects. The operating system will send successive <c>OnDraw()</c> events as the user manipulates the scrollbars, indicating in the <lt>EvDraw</lt> structure the parameters of the visible area. In <lp>drawbig</lp> you have an example of how to correctly handle this type of case. 
+
+bq.The dimensions of the viewport received in <c>OnDraw()</c> may be slightly larger than the actual measurements returned by <c>view_viewport()</c>. This is due to the fact that certain systems (macOS, Linux) force drawing in external non-visible areas near the edges, in order to avoid flickering in very fast movements.
+
+h2.Using the mouse
+
+p.In order to interact with the control, it is necessary to define handlers for the different mouse events <r>mouse_events</r>. The operating system will notify the user's actions so that the application can launch the relevant actions. It is not necessary to use all of them, only the essential ones in each case.
+
+img(mouse_events.svg,360,.5).View position events.
+Illustration of mouse events in a 2d view.
+
+li.Use <lf>view_OnEnter</lf> to know when the cursor enters the view.
+
+li.Use <lf>view_OnExit</lf> to know when the cursor leaves the view.
+
+li.Use <lf>view_OnMove</lf> to know when the cursor is moving through the view.
+
+li.Use <lf>view_OnDown</lf> to know when a button is pressed within the view.
+
+li.Use <lf>view_OnUp</lf> to know when a button is released inside the view.
+
+li.Use <lf>view_OnClick</lf> to identify a click (Fast Up + Down).
+
+li.Use <lf>view_OnDrag</lf> to move the cursor with a pressed button.
+
+li.Use <lf>view_OnWheel</lf> to use the mouse wheel.
+
+bq.If the view uses scroll bars, the cursor (x,y) position passed to <lt>EvMouse</lt> in each event, refers to the global coordinates of the scene, taking into account the displacement. In views without scroll bars, they are the control local coordinates.
+
+h2.Using the keyboard
+
+p.In order to receive keyboard events, it is necessary that the view be able to obtain the focus, something that by default is disabled. 
+
+li.Use <lf>layout_tabstop</lf> to include the view in the <i>tab-list</i> of the window and allow it to receive keyboard focus using the <c>[TAB]</c> key or by clicking on it.
+
+li.Use <lf>view_OnKeyDown</lf> to know when a key is pressed (if the view has focus).
+
+li.Use <lf>view_OnKeyUp</lf> to know when a key is released.
+
+li.Use <lf>view_OnFocus</lf> to notify the application whenever the view receives (or loses) keyboard focus. In <r>view_focus</r>, the view changes the color of the active cell when it has focus.
+
+img(view_focus.svg,460,.6).View without keyboard focus (left) and with it (right).
+Changing keyboard focus between two controls.
+
+p.In the <c>KeyDown</c> and <c>KeyUp</c> events a <lt>vkey_t</lt> will be received with the value of the pressed key. In <r>keycodes</r> and <r>extkeycodes</r> the correspondence of these codes is shown.
+
+img(keycodes.svg,0,1).Keyboard codes.
+Representation of a keyboard with the code of each key.
+
+img(extkeycodes.svg,0,1).Keyboard Extended Codes.
+Representation of an extended keyboard with the code of each extended key.
+
+p.In <lh>Synchronous applications</lh> we may need to know if a key is pressed or not during the update cycle (synchronous) where we do not have access to the <c>OnKeyDown</c> and <c>OnKeyUp</c> events (asynchronous). This can be done by assigning the view a keyboard buffer using <lf>view_keybuf</lf>, which will capture the events associated with each key and allow us to consult its status at any time in a comfortable way.
 
 func(view_create).Create a new custom view.
 fret(View*).The view.
@@ -58,11 +138,6 @@ fpar(View*,view).The view.
 fpar(Listener*,listener).<i>Callback</i> function to be called every time the view changes size.
 fnote.See <lh>GUI Events</lh>.
 
-func(view_OnMoved).Set an event handler for mouse movement.
-fpar(View*,view).The view.
-fpar(Listener*,listener).<i>Callback</i> function to be called as the mouse cursor moves over the view.
-fnote.See <lh>GUI Events</lh>.
-
 func(view_OnEnter).Set an event handler for mouse enter.
 fpar(View*,view).The view.
 fpar(Listener*,listener).<i>Callback</i> function to be called when the mouse cursor enters the view area.
@@ -73,24 +148,29 @@ fpar(View*,view).The view.
 fpar(Listener*,listener).<i>Callback</i> function to be called when the mouse cursor exits the view area.
 fnote.See <lh>GUI Events</lh>.
 
+func(view_OnMove).Set an event handler for mouse movement.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called as the mouse cursor moves over the view.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnDown).Sets an event handler for a mouse button down.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function that will be called every time the button is down.
+fnote.See <lh>GUI Events</lh>.
+
+func(view_OnUp).Sets an event handler for a mouse button up.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function that will be called every time the button is up.
+fnote.See <lh>GUI Events</lh>.
+
 func(view_OnClick).Set an event handler for mouse click.
 fpar(View*,view).The view.
 fpar(Listener*,listener).<i>Callback</i> function that will be called every time the view is clicked.
 fnote.See <lh>GUI Events</lh>.
 
-func(view_OnStartDrag).Set an event handler for the start of mouse drag.
-fpar(View*,view).The view.
-fpar(Listener*,listener).<i>Callback</i> function that will be called when you start dragging the mouse.
-fnote."Drag" is to move the mouse with one of the buttons pressed. See <lh>GUI Events</lh>.
-
 func(view_OnDrag).Set an event handler for mouse drag.
 fpar(View*,view).The view.
 fpar(Listener*,listener).<i>Callback</i> function to be called while dragging the mouse cursor over the view.
-fnote."Drag" is to move the mouse with one of the buttons pressed. See <lh>GUI Events</lh>.
-
-func(view_OnEndDrag).Set an event handler for the end of the mouse drag.
-fpar(View*,view).The view.
-fpar(Listener*,listener).<i>Callback</i> function that will be called when you finish dragging the mouse.
 fnote."Drag" is to move the mouse with one of the buttons pressed. See <lh>GUI Events</lh>.
 
 func(view_OnWheel).Set an event handler for mouse wheel.
@@ -108,15 +188,40 @@ fpar(View*,view).The view.
 fpar(Listener*,listener).<i>Callback</i> function to be called when a key is released and the view has the keyboard focus.
 fnote.See <lh>GUI Events</lh>.
 
-func(view_scrollbar_size).Get the size of scroll bars.
+func(view_OnFocus).Sets an event handler for keyboard focus.
+fpar(View*,view).The view.
+fpar(Listener*,listener).<i>Callback</i> function to be called when keyboard focus is received or lost.
+fnote.See <lh>Using the keyboard</lh> and <lh>GUI Events</lh>.
+
+func(view_keybuf).Sets a keyboard buffer for synchronous or asynchronous query of key state.
+fpar(View*,view).The view.
+fpar(Keybuf*,buffer).Keyboard buffer that will be maintained by the view, capturing the <c>OnKeyDown</c> and <c>OnKeyUp</c>events.
+fnote.It just keeps a reference to the buffer, which will need to be destroyed by the object that created it. See <lp>keybuf</lp>. The application will still be able to receive keyboard events through <lf>view_OnKeyDown</lf> and <lf>view_OnKeyUp</lf>.
+
+func(view_get_size).Gets the current size of the view.
 fpar(const View*,view).The view.
-fpar(S2Df*,size).The width of the horizontal bar and height of the vertical.
-fnote.Useful if we must take into account the scroll bars when drawing in the view.
+fpar(S2Df*,size).The size.
 
 func(view_content_size).Set the size of the drawing area when scroll bars exist.
 fpar(View*,view).The view.
 fpar(const S2Df,size).The internal size of the drawing area.
 fnote.When creating a scroll view, this method indicates the entire drawing area. The control will use it to size and position the scroll bars.
+
+func(view_scroll_to).Move the scroll bars to the indicated position.
+fpar(View*,view).The view.
+fpar(const real32_t,x).New horizontal bar position.
+fpar(const real32_t,y).New vertical bar position.
+
+func(view_viewport).Gets the dimensions of the visible area of ​​the view.
+fpar(const View*,view).The view.
+fpar(V2Df*,pos).The position of the viewport. It can be <c>NULL</c>.
+fpar(S2Df*,size).The size of the viewport. It can be <c>NULL</c>.
+fnote.If the view does not have scroll bars, <c>pos</c> will be <c>(0,0)</c>.
+
+func(view_point_scale).Gets the scaling of the point.
+fpar(const View*,view).The view.
+fpar(real32_t*,scale).The scaling.
+fnote.The view size and drawing coordinates are expressed in points, which typically correspond to pixels (1pt = 1px). In <lh>Retina displays</lh> it can happen that (1pt = 2px). Although <lp>dctx</lp> handles this automatically, we may need to know the number of pixels to create another type of <i>framebuffers</i> (OpenGL, DirectX, etc). Pixels = <lf>view_get_size</lf> * <lf>view_point_scale</lf>.
 
 func(view_update).Send an order to the operating system that the view should be refreshed.
 fpar(View*,view).The view.

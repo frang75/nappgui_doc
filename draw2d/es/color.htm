@@ -51,7 +51,9 @@ Captura de una aplicación que muestra los colores del sistema en un tema de esc
 img(colorview_dark.png,520,.65).Vista de colores en temas oscuros.
 Captura de una aplicación que muestra los colores del sistema en un tema de escritorio oscuro.
 
-const(color_t,kCOLOR_TRANSPARENT).Color totalmente transparente, ausencia de color o color nulo.
+const(color_t,kCOLOR_TRANSPARENT).Color totalmente transparente o ausencia de color.
+
+const(color_t,kCOLOR_DEFAULT).Color por defecto.
 
 const(color_t,kCOLOR_LABEL).Color por defecto de las etiquetas de texto <lt>Label</lt>.
 
@@ -65,9 +67,13 @@ const(color_t,kCOLOR_TEXT).Color del texto en tablas o controles.
 
 const(color_t,kCOLOR_SELTEXT).Color del texto seleccionado en tablas o controles.
 
+const(color_t,kCOLOR_HOTTEXT).Color del texto resaltado en tablas o controles.
+
 const(color_t,kCOLOR_BGTEXT).Color del fondo de texto en tablas o controles.
 
-const(color_t,kCOLOR_BGSELTEXT).Color del fondo de texto seleccionado en tablas o controles.
+const(color_t,kCOLOR_BGSELTEXT).Color del fondo del texto seleccionado en tablas o controles.
+
+const(color_t,kCOLOR_BGHOTTEXT).Color del fondo del texto resaltado en tablas o controles.
 
 const(color_t,kCOLOR_HEADER).Color del texto en cabeceras de tablas.
 
@@ -114,6 +120,32 @@ fpar(const real32_t,b).El canal azul.
 fpar(const real32_t,a).El canal alpha (transparencia).
 fnote.No se admite <c>a=0</c>, utilizar <lt>kCOLOR_TRANSPARENT</lt> en esos casos.
 
+func(color_hsbf).Crea un color (rgb) a partir de sus componentes Hue-Saturation-Brightness (Tono-Saturación-Brillo).
+fret(color_t).Color.
+fpar(const real32_t,hue).Componente Hue (brillo).
+fpar(const real32_t,sat).Componente Saturation (saturación).
+fpar(const real32_t,bright).Componente Brightness (brillo).
+
+func(color_red).Crea un color RGB utilizando solo el canal rojo.
+fret(color_t).Color.
+fpar(const uint8_t,r).Canal rojo.
+fnote.Equivalente a <c>color_rgb(r, 0, 0)</c>.
+
+func(color_green).Crea un color RGB utilizando solo el canal verde.
+fret(color_t).Color.
+fpar(const uint8_t,g).Canal verde.
+fnote.Equivalente a <c>color_rgb(0, g, 0)</c>.
+
+func(color_blue).Crea un color RGB utilizando solo el canal azul.
+fret(color_t).Color.
+fpar(const uint8_t,b).Canal azul.
+fnote.Equivalente a <c>color_rgb(0, 0, b)</c>.
+
+func(color_gray).Crea un color RGB gris a partir del valor de intensidad.
+fret(color_t).Color.
+fpar(const uint8_t,l).Intensidad (luminancia).
+fnote.Equivalente a <c>color_rgb(l, l, l)</c>.
+
 func(color_bgr).Crea un color a partir de un valor de 32 bits BGR. El byte 0 corresponde al canal <b>B</b>, el 1 al <b>G</b> y el 2 al <b>R</b>. El byte de mayor orden se ignora (se fija a 255).
 fret(color_t).Color.
 fpar(const uint32_t,bgr).El valor bgr de 32bits.
@@ -132,6 +164,12 @@ fret(color_t).Color.
 fpar(const color_t,light_color).Color para temas CLAROS de escritorio.
 fpar(const color_t,dark_color).Color para temas OSCUROS de escritorio.
 fnote.El sistema establecerá el color final en función de la "claridad" de los colores del gestor de ventanas (Light/Dark). NO SE PERMITEN colores alternativos anidados. Los valores <c>light</c> y <c>dark</c> deben ser colores RGB o de sistema.
+
+func(color_to_hsbf).Convierte un color (rgb) al espacio HSB (hue, saturation, brightness).
+fpar(const color_t,color).Color.
+fpar(real32_t*,hue).Componente Hue (tono).
+fpar(real32_t*,sat).Componente Saturación.
+fpar(real32_t*,sat).Componente Brightness (brillo).
 
 func(color_to_html).Convierte un color al formato HTML o CSS (#RRGGBB).
 fpar(const color_t,color).El color a convertir.
@@ -170,6 +208,12 @@ fnote.En colores de sistema o indexados, hace efectivo el valor RGBA.
 
 func(color_get_alpha).Extrae el componente alfa (transparencia) del color.
 fret(uint8_t).El componente alfa. Si es igual 0 significa que el color es indexado (no contiene valores RGB).
+fpar(const color_t,color).Color.
+
+func(color_set_alpha).Cambia el valor alfa (transparencia) de un color.
+fret(color_t).El nuevo color, con la componente alfa alterada.
+fpar(const color_t,color).Color.
+fpar(const uint8_t,alpha).Componente alfa.
 
 func(color_dark_mode).Determina si el entorno de ventanas tiene un tema claro u oscuro.
 fret(bool_t).<c>TRUE</c> para <i>Dark mode</i>, <c>FALSE</c> para <i>light mode</i>.

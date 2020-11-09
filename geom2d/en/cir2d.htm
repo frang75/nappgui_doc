@@ -1,0 +1,37 @@
+langrev.
+h1.2D Circles
+
+p.Circles provide the simplest container volume <r>circle2d</r>, where collision detection occurs optimally.
+
+img(circle2d.svg,520,.65).Circles as bounding volume.
+Drawing a circle on the plane.
+
+func(Cir2D,).Create a 2d circle from its components.
+fret(Cir2D).The 2d circle.
+fpar(const real,x).Center x coordinate.
+fpar(const real,y).Center y coordinate.
+fpar(const real,r).Radius.
+
+func(Cir2D,null).Check if a circle is null (dimensionless).
+fret(bool_t).<c>TRUE</c> if it is null, <c>FALSE</c> if it contains any point.
+fpar(const Cir2D*,cir).The circle.
+fnote.A single point is a valid circle with radius = 0.
+
+func(Cir2D,add).Expand the dimensions of the circle to accommodate the entry point. If the point is already within your area, it will not be modified.
+fpar(Cir2D*,cir).The circle.
+fpar(const V2D*,p).The point to include.
+
+func(Cir2D,addn).Expand the dimensions of the circle to accommodate multiple points. It is equivalent to calling successively the <lf>cir2d_addf</lf> method.
+fpar(Cir2D*,cir).The circle.
+fpar(const V2D*,p).Vector of points to include.
+fpar(const uint32_t,n).Number of points.
+
+func(Cir2D,add_box).Expand the dimensions of the circle to accommodate a 2D box.
+fpar(Cir2D*,cir).The circle.
+fpar(const B2D*,box).The box.
+
+func(Cir2D,merge).Expand the dimensions of the circle <c>dest</c> to contain the circle <c>src</c>.
+fpar(Cir2D*,dest).The destiny circle.
+fpar(const Cir2D*,src).The origin circle.
+
+const(Cir2D,NULL).Represents a null circle (no geometry).

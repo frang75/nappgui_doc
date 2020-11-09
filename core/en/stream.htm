@@ -1,5 +1,4 @@
 langrev.
-
 h1.Streams
 
 ep.Water can flow or creep or drip or crash, be water my friend.
@@ -465,6 +464,7 @@ fpar(,type).The <c>enum</c> type.
 fnote.It is a binary write. Do not use in "pure" text streams. <lh>Byte order</lh>.
 
 func(stm_read).Read bytes from the stream.
+fret(uint32_t).The number of bytes actually read.
 fpar(Stream*,stm).The stream.
 fpar(byte_t*,data).Pointer to the buffer where the read data will be written.
 fpar(const uint32_t,size).The number of bytes to read (buffer size).

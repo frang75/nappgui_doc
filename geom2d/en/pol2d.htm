@@ -1,0 +1,34 @@
+langrev.
+h1.2D Polygons
+
+p.Polygons are the most generic container volume that can best be adjusted to the shape of certain objects or point distributions <r>poly2d</r>.
+
+img(poly2d.svg,520,.65).2D polygons.
+Drawing a polygon on the plane.
+
+func(Pol2D,create).Create a new polygon.
+fret(Pol2D*).The polygon created.
+fpar(const V2D*,points).List of points that make up the polygon.
+fpar(const uint32_t,n).Number of points.
+
+func(Pol2D,copy).Create a copy of the polygon.
+fret(Pol2D*).The copy.
+fpar(const Pol2D*,pol).The original polygon.
+
+func(Pol2D,destroy).Destroy the polygon.
+fpar(Pol2D**,pol).The polygon. Will be set to <c>NULL</c> after destruction.
+
+func(Pol2D,update).Updates the position of the points that make up the polygon.
+fpar(Pol2D*,pol).The polygon to update.
+fpar(const V2D*,points).The new positions of the points.
+fnote.The number of points must be the same as that used in the constructor <lf>pol2d_createf</lf>.
+
+func(Pol2D,points).Gets the vertices that make up the polygon.
+fret(const V2D*).Pointer to an array of vertices.
+fpar(const Pol2D*,pol).The polygon.
+fnote.Do not modify the returned array. Copy if necessary.
+
+func(Pol2D,n).Gets the number of vertices that make up the polygon.
+fret(const uint32_t).The number of vertices.
+fpar(const Pol2D*,pol).The polygon.
+fnote.It is the same value as the one used in the constructor <lf>pol2d_createf</lf>.

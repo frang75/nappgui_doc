@@ -1,8 +1,11 @@
 
-
 h1.Tiempo
 
 ep.Acceso al reloj interno del computador.
+
+p.El sistema operativo mide el paso del tiempo utilizando un reloj interno, implementado típicamente mediante un contador de los <i>ticks</i> que han pasado desde un instante inicial denominado <i>epoch</i>. En sistemas tipo Unix este contador representa el número de segundos transcurridos desde el 1 de Enero de 1970. Sin embargo, en Windows representa el número de intervalos de 100 nanosegundos desde el 1 de Enero de 1601 coincidiendo con el inicio del calendario Gregoriano. En NAppGUI se han unificado los valores de <i>epoch</i> para trabajar con la misma escala en todas las plataformas.
+
+li.Utiliza <lf>btime_now</lf> para obtener el número de micro-segundos trascurridos desde el 1 de Enero de 1970.
 
 func(btime_now).Obtiene el número de micro-segundos trascurridos desde el 1 de Enero de 1970 hasta este preciso momento. Utiliza la diferencia entre instantes para saber el tiempo consumido por un proceso.
 fret(uint64_t).El número de micro-segundos transcurridos, es decir, el número de intervalos de 1/1000000 segundos.

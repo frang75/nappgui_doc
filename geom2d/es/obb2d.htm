@@ -1,0 +1,68 @@
+
+h1.Cajas Orientadas 2D
+
+p.Las cajas orientadas <i>(Oriented Bounding Box)</i> son cajas 2D que pueden rotan sobre su centro <r>obb2d</r>, por lo que ya no estarán alineadas con los ejes. Aquí la detección de colisiones se complica un poco con respecto a las cajas 2D, a cambio de proporcionar un mejor ajuste ante objetos alargados que puedan girar en el plano.
+
+img(obb2d.svg,520,.65).Cajas orientadas en 2D.
+Dibujo de una caja orientada en el plano.
+
+func(OBB2D,create).Crea una nueva caja orientada.
+fret(OBB2D*).La caja recién creada.
+fpar(const V2D*,center).El punto central.
+fpar(const real,width).El ancho de la caja.
+fpar(const real,height).El alto de la caja.
+fpar(const real,angle).El ángulo con respecto al eje X, en radianes.
+fnote.Los ángulos positivos son los que giran desde el eje X al eje Y.
+
+func(OBB2D,from_line).Crea una caja a partir de un segmento.
+fret(OBB2D*).La caja recién creada.
+fpar(const V2D*,p0).El primer punto del segmento.
+fpar(const V2D*,p1).El segundo punto del segmento.
+fpar(const real,thickness).El "grosor" del segmento.
+fnote.La anchura de la caja corresponderá con la longitud del segmento. La altura será <c>thickness</c> y el centro el punto medio del segmento.
+
+func(OBB2D,copy).Crea una copia de la caja.
+fret(OBB2D*).La caja copiada.
+fpar(const OBB2D,obb).La caja original.
+
+func(OBB2D,destroy).Destruye la caja.
+fpar(OBB2D**,obb).La caja. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(OBB2D,update).Actualiza los parámetros de la caja.
+fpar(OBB2D*,obb).La caja a actualizar.
+fpar(const V2D*,center).El punto central.
+fpar(const real,width).La anchura.
+fpar(const real,height).La altura.
+fpar(const real,angle).El ángulo.
+fnote.Ver <lf>obb2d_createf</lf>.
+
+func(OBB2D,move).Desplaza la caja en el plano.
+fpar(OBB2D*,obb).La caja.
+fpar(const real,offset_x).Desplazamiento en X.
+fpar(const real,offset_y).Desplazamiento en Y.
+
+func(OBB2D,corners).Obtiene los vértices que limitan la caja.
+fret(const V2D*).Puntero a un array de 4 vértices.
+fpar(const OBB2D*,obb).La caja.
+fnote.No modificar el array devuelto. Copiar si fuera necesario.
+
+func(OBB2D,center).Obtiene el punto central de la caja.
+fret(V2D).El centro.
+fpar(const OBB2D*,obb).La caja.
+
+func(OBB2D,width).Obtiene la anchura de la caja.
+fret(real).La anchura.
+fpar(const OBB2D*,obb).La caja.
+
+func(OBB2D,height).Obtiene la altura de la caja.
+fret(real).La altura.
+fpar(const OBB2D*,obb).La caja.
+
+func(OBB2D,angle).Obtiene el ángulo de la caja.
+fret(real).El ángulo en radianes con respecto al eje X.
+fpar(const OBB2D*,obb).La caja.
+
+func(OBB2D,box).Obtiene los límites de la caja.
+fret(Box2D).Caja alineada con los ejes, definida por los vectores mínimo y máximo.
+fpar(const OBB2D*,obb).La caja.
+

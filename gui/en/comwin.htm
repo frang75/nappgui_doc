@@ -3,14 +3,23 @@ h1.Common dialogs
 
 p.Common dialogs are default windows provided by the operating system to perform daily tasks such as: Open files <r>file_explorer_windows</r>, select colors, fonts, etc. Its use is doubly beneficial. On the one hand we avoid programming them as part of the application and, on the other, we take advantage of the user's previous knowledge since they will surely have been used in other programs.
 
-img(file_explorer_windows.png).File explorer in Windows.
+img(file_explorer_windows.png,0,.8).File explorer in Windows.
 File Explorer Capture in Windows.
 
-img(file_explorer_macos.png).File explorer in macOS.
+img(file_explorer_macos.png,0,.8).File explorer in macOS.
 File Explorer Capture in macOS.
 
-img(file_explorer_linux.png).File explorer in Linux.
+img(file_explorer_linux.png,0,.8).File explorer in Linux.
 File Explorer Capture in Linux.
+
+img(colordialog_macos.png,0,.4).Color selection in macOS.
+Capture the color dialog on macOS.
+
+img(colordialog_win.png,0,.8).Color selection in Windows.
+Capture the color dialog in Windows.
+
+img(colordialog_linux.png,0,.8).Color selection in Linux.
+Capture the color dialog in Linux.
 
 func(comwin_open_file).Launch the open file dialog.
 fret(const char_t*).The name of the selected file or <c>NULL</c> if the user has aborted the dialog.
@@ -28,3 +37,24 @@ fpar(const uint32_t,size).Number of file types.
 fpar(const char_t*,start_dir).Start directory of the dialog. It can be <c>NULL</c>.
 fnote.It will be launched <b>modal</b>. <c>parent</c> will remain locked until the dialog is accepted.
 
+func(comwin_color).Launch the color selection dialog.
+fpar(Window*,parent).Parent window.
+fpar(const real32_t,x).Initial x position.
+fpar(const real32_t,y).Initial y position.
+fpar(const align_t,halign).Horizontal alignment with respect to <c>x</c>.
+fpar(const align_t,valign).Vertical alignment with respect to <c>y</c>.
+fpar(const color_t,current).Current color the panel will display.
+fpar(color_t*,colors).Custom colors that the panel will show and that can also be edited. It can be <c>NULL</c> only if <c>n = 0</c>.
+fpar(const uint32_t,n).Number of custom colors.
+fpar(Listener*,OnChange).<i>Callback</i> function to be called after each color change.
+fnote.On Windows and Linux systems the dialog will be launched modally and must be accepted for a color change notification to occur via <c>OnChange</c>. On macOS, notifications will be launched continuously as the dialog is manipulated.
+fcode.
+static void i_OnColorChange(App *app, Event *e)
+{
+    color_t *color = event_params(e, color_t);
+    // Do something
+    ...
+}
+
+comwin_color(window, "Select color", 100, 50, ekRIGHT, ekTOP, kCOLOR_BLUE, NULL, 0, listener(app, i_OnColorChange, App));
+fcode.

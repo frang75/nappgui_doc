@@ -102,6 +102,10 @@ p.<lt>Progress</lt>
 p.100 Unidades (px).
 p.Según el tema del S.O.
 row.
+p.<lt>TextView</lt>
+p.256 px o <lf>textview_size</lf>.
+p.144 px o <lf>textview_size</lf>.
+row.
 p.<lt>View</lt>
 p.128 px o <lf>view_size</lf>.
 p.128 px o <lf>view_size</lf>.
@@ -207,6 +211,10 @@ p.<lt>Progress</lt>
 p.<lt>ekJUSTIFY</lt>
 p.<lt>ekCENTER</lt>
 row.
+p.<lt>TextView</lt>
+p.<lt>ekJUSTIFY</lt>
+p.<lt>ekJUSTIFY</lt>
+row.
 p.<lt>View</lt>
 p.<lt>ekJUSTIFY</lt>
 p.<lt>ekJUSTIFY</lt>
@@ -258,10 +266,74 @@ li.Utiliza <lf>layout_hexpand2</lf> para expandir dos celdas indicando la propor
 
 li.Utiliza <lf>layout_hexpand3</lf> para expandir tres celdas.
 
-img(layout_expand.svg,520,.65).Cuando el tamaño del sublayout viene dado por condiciones externas, se reparte por igual el exceso de píxeles entre las columnas (expansión horizontal) y filas (expansión vertial).
+img(layout_expand.svg,520,.65).Cuando el tamaño del sublayout viene dado por condiciones externas, se reparte por igual el exceso de píxeles entre las columnas (expansión horizontal) y filas (expansión vertical).
 Comportamiento de un sublayout cuando su tamaño se expande para ajustarse a una celda.
 
 bq.La expansión vertical funciona exactamente igual, repartiendo el espacio sobrante entre las filas del layout.
+
+h2.Tabstops
+
+p.Es una práctica habitual en la mayoría de sistemas utilizar la tecla <c>[TAB]</c> y la combinación <c>[LSHIFT]+[TAB]</c> para navegar por los diferentes controles de una ventana o formulario. Términos como <b>taborder</b> o <b>tabstop</b> hacen referencia tanto al orden de navegación como a la pertenencia (o no) de un elemento a dicha lista. Si bien es posible organizar los elementos de un <i>tab-list</i> aleatoriamente, los layouts proporcionan un orden natural coherente basado en la ubicación de los controles. Por defecto, cada layout enumera los controles por filas <r>tabstops</r>, pero podemos cambiarlo:
+
+li.Utiliza <lf>layout_taborder</lf> para organizar por filas o columnas.
+
+img2(tabstops.gif,taborder.svg,400).Taborder por filas en layouts y sublayouts.
+Animación que muestra la navegación con la tecla [TAB] tabstops.
+Organización de los controles de la tablist.
+
+p.No todas las celdas de un layout tienen porqué ser un <i>tabstop</i>, ya que no tiene sentido que controles estáticos como <lt>Label</lt> reciban el foco del teclado. En <r>tablist</r> tienes que controles se incluyen por defecto en dicha lista.
+
+li.Utiliza <lf>layout_tabstop</lf> para añadir o quitar controles de la <i>tab-list</i>. En la mayoría de ocasiones la utilizaremos que permitir que ciertas vistas personalizadas <lt>View</lt> reciban el foco del teclado.
+
+table(tablist).Controles incluídos en el <i>tab-list</i>.
+row.
+p.Control
+p.Incluído
+row.
+p.<lt>Label</lt>
+p.NO
+row.
+p.<lt>Button</lt> (push)
+p.SÍ
+row.
+p.<lt>Button</lt> (check/radio)
+p.SÍ
+row.
+p.<lt>Button</lt> (flat)
+p.SÍ
+row.
+p.<lt>PopUp</lt>
+p.SÍ
+row.
+p.<lt>Edit</lt>
+p.SÍ
+row.
+p.<lt>Combo</lt>
+p.SÍ
+row.
+p.<lt>UpDown</lt>
+p.NO
+row.
+p.<lt>Slider</lt>
+p.SÍ
+row.
+p.<lt>Progress</lt>
+p.NO
+row.
+p.<lt>TextView</lt>
+p.NO
+row.
+p.<lt>View</lt>
+p.NO
+row.
+p.<lt>Panel</lt>
+p.NO
+row.
+p.<lt>Layout</lt> (sublayout)
+p.SÍ
+table.
+
+bq.Cuando el taborder entra en un sublayout, seguirá el órden local de este último. Cuando salga del sublayout continuará con el orden principal.
 
 func(layout_create).Crea un nuevo layout especificando el número de columnas y filas.
 fret(Layout*).El nuevo layout.
@@ -421,6 +493,14 @@ fpar(const uint32_t,row).Fila, coordenada y de la celda.
 func(layout_taborder).Establece como se moverá el foco del teclado al pulsar <c>[TAB]</c>.
 fpar(Layout*,layout).El layout.
 fpar(const orient_t,order).Recorrido por filas o columnas.
+fnote.Ver <lh>Tabstops</lh>.
+
+func(layout_tabstop).Establece si una celda del layout recibirá o no el foco del teclado al navegar con <c>[TAB]-[MAYS][TAB]</c>.
+fpar(Layout*,layout).El layout.
+fpar(const uint32_t,col).Columna, coordenada x de la celda.
+fpar(const uint32_t,row).Fila, coordenada y de la celda.
+fpar(const bool_t,tabstop).Habilitar o deshabilitar el punto de parada en la celda.
+fnote.Ver <lh>Tabstops</lh>.
 
 func(layout_hsize).Establece un ancho fijo para la columna de un layout.
 fpar(Layout*,layout).El layout.

@@ -1,20 +1,140 @@
 
 h1.TextView
 
-p.Los <b>TextView</b> son vistas de texto que pueden mostrar varios bloques de texto enriquecido, donde pueden combinarse tipografías, tamaños y colores.
+p.Los <b>TextView</b> son vistas diseñadas para trabajar con bloques de texto enriquecido, donde pueden combinarse tipografías, tamaños y colores <r>richtext</r>. Podemos considerarlas como la base de un editor de texto. En <lh>¡Hola TextView!</lh> tienes un ejemplo de uso.
+
+li.Utiliza <lf>textview_create</lf> para crear una vista de texto.
+
+li.Utiliza <lf>textview_writef</lf> para añadir texto a la vista.
+
+li.Utiliza <lf>textview_printf</lf> para añadir texto con el formato de <c>printf</c>.
+
+li.Utiliza <lf>textview_rtf</lf> para añadir contenido en formato <b>RTF</b> de Microsoft.
+
+li.Utiliza <lf>textview_clear</lf> para borrar todo el texto.
+
+img(richtext.png,0,.8).Texto plano y texto enriquecido.
+Comparativa entre un bloque de texto plano y otro de texto enriquecido.
+
+h2.Formato de carácter
+
+p.Una de las ventajas del texto enriquecido con respecto al texto plano, es la posibilidad de combinar diferentes formatos de carácter dentro del mismo párrafo <r>charformat</r>. Los cambios se aplicarán al nuevo texto que se añada al control.
+
+p.Utiliza <lf>textview_family</lf> para cambiar la tipografía.
+
+p.Utiliza <lf>textview_fsize</lf> para cambiar el tamaño del carácter.
+
+p.Utiliza <lf>textview_fstyle</lf> para cambiar el estilo.
+
+p.Utiliza <lf>textview_color</lf> para cambiar el color del texto.
+
+p.Utiliza <lf>textview_bgcolor</lf> para cambiar el color de fondo del texto.
+
+img(charformat.png,0,.45).Controles típicos del formato de carácter.
+Selección de tipografías y atributos de texto.
+
+h2.Formato de párrafo
+
+p.Se pueden establecer también atributos por párrafo <r>parformat</r>. El carácter nueva línea <c>'\n'</c> se considera cierre o final del párrafo.
+
+p.Utiliza <lf>textview_halign</lf> para establecer a alineación del párrafo.
+
+p.Utiliza <lf>textview_lspacing</lf> para establecer la separación entre líneas (interlineado).
+
+p.Utiliza <lf>textview_bfspace</lf> para indicar el espacio vertical antes del párrafo.
+
+p.Utiliza <lf>textview_afspace</lf> para indicar el espacio vertical después del párrafo.
+
+img(parformat.png,0,.45).Controles típicos del formato de párrafo.
+Formateo de un párrafo de texto.
+
+h2.Formato del documento
+
+p.Por último disponemos de varios atributos que afectan a la totalidad del documento o del control.
+
+p.Utiliza <lf>textview_units</lf> para establecer la unidades del texto.
+
+p.Utiliza <lf>textview_pgcolor</lf> para establecer el color del fondo del control (página).
 
 func(textview_create).Crea una vista de texto.
 fret(TextView*).La vista de texto.
 
-func(textview_insert).Inserta una cadena al final de una vista, con el formato predeterminado.
-fpar(TextView*,view).La vista de texto.
-fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+func(textview_size).Establece el tamaño por defecto de la vista.
+fpar(TextView*,view).La vista.
+fpar(const S2Df,size).El tamaño.
+fnote.Corresponde al <lh>Dimensionado natural</lh> del control. Por defecto 245x144.
 
-func(textview_text).Establece el texto del control.
-fpar(TextView*,view).La vista de texto.
-fpar(const char_t*,text).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
-fnote.Eliminará el contenido previo del control.
+func(textview_clear).Borra todo el contenido de la vista.
+fpar(TextView*,view).La vista.
 
-func(textview_get_text).Obtiene el texto del control.
-fret(const char_t*).Cadena C UTF8 con el contenido del control. Terminada en carácter nulo <c>'\0'</c>.
-fpar(const TextView*,view).La vista de texto.
+func(textview_printf).Escribe texto en la vista, utilizando el formato del <c>printf</c>.
+fret(uint32_t).El número de bytes escritos.
+fpar(TextView*,view).La vista.
+fpar(const char_t*,format).Cadena con el formato tipo-printf con un número variable de parámetros.
+fpar(,...).Argumentos o variables del printf.
+fcode.
+textview_printf(view, Code: %-10s Price %5.2f\n", code, price);
+fcode.
+
+func(textview_writef).Escribe una cadena C UTF8 en la vista.
+fpar(TextView*,view).La vista.
+fpar(const char_t*,str).Cadena C UTF8 terminada en carácter nulo <c>'\0'</c>.
+
+func(textview_rtf).Inserta texto en el formato <b>RTF</b> de Microsoft.
+fpar(TextView*,view).La vista.
+fpar(Stream*,rtf_in).Stream de lectura con el contenido RTF.
+
+func(textview_units).Establece las unidades del texto.
+fpar(TextView*,view).La vista.
+fpar(const uint32_t,units).Unidades <lt>ekFPIXELS</lt> ó <lt>ekFPOINTS</lt>.
+fnote.<lt>ekFPOINTS</lt> es el valor por defecto y el utilizado normalmente por los procesadores de texto. Ver <lh>Tamaño en puntos</lh>.
+
+func(textview_family).Establece la familia tipográfica del texto (<i>"Arial", "Times New Roman", "Helvetica", etc</i>).
+fpar(TextView*,view).La vista.
+fpar(const char_t*,family).La familia tipográfica.
+fnote.No todas las familias estarán presentes en todas las plataformas. Utiliza <lf>font_exists_family</lf> o <lf>font_installed_families</lf> para comprobarlo.
+
+func(textview_fsize).Establece el tamaño del texto.
+fpar(TextView*,view).La vista.
+fpar(const real32_t,size).El tamaño.
+fnote.El valor está condicionado a las unidades establecidas en <lf>textview_units</lf>.
+
+func(textview_fstyle).Establece el estilo del texto.
+fpar(TextView*,view).La vista.
+fpar(const uint32_t,fstyle).Combinación de <lt>ekFBOLD</lt>, <lt>ekFITALIC</lt>, <lt>ekFSTRIKEOUT</lt>, <lt>ekFUNDERLINE</lt> <lt>ekFSUBSCRIPT</lt>, <lt>ekFSUPSCRIPT</lt>. Para anular cualquier estilo previo utiliza <lt>ekFNORMAL</lt>.
+
+func(textview_color).Establece el color del texto.
+fpar(TextView*,view).La vista.
+fpar(const color_t, color).El color. Utiliza <lt>kCOLOR_DEFAULT</lt> para restablecer el color por defecto.
+
+func(textview_bgcolor).Establece el color de fondo del texto.
+fpar(TextView*,view).La vista.
+fpar(const color_t, color).El color. Utiliza <lt>kCOLOR_DEFAULT</lt> para restablecer el color por defecto.
+
+func(textview_pgcolor).Establece el color de fondo del control.
+fpar(TextView*,view).La vista.
+fpar(const color_t, color).El color. Utiliza <lt>kCOLOR_DEFAULT</lt> para restablecer el color por defecto.
+
+func(textview_halign).Establece la alineación del texto en un párrafo.
+fpar(TextView*,view).La vista.
+fpar(const align_t, align).La alineación. Por defecto <lt>ekLEFT</lt>.
+
+func(textview_lspacing).Establece el espaciado inter-lineal del párrafo.
+fpar(TextView*,view).La vista.
+fpar(const real32_t, scale).Factor de escala en la altura de la fuente. <c>1</c> es el valor por defecto, <c>2</c> el doble de dicha altura, <c>3</c> el triple, etc. Valores intermedios también son válidos (pe. <c>1.25</c>).
+
+func(textview_bfspace).Establece un espacio vertical antes del párrafo.
+fpar(TextView*,view).La vista.
+fpar(const real32_t,space).El espacio en las unidades preestablecidas.
+
+func(textview_afspace).Establece un espacio vertical después del párrafo.
+fpar(TextView*,view).La vista.
+fpar(const real32_t,space).El espacio en las unidades preestablecidas.
+
+func(textview_scroll_down).Fuerza un scroll hasta el límite inferior del contenido de la vista.
+fpar(TextView*,view).La vista.
+fnote.Hará visible el último contenido insertado. 
+
+func(textview_editable).Establece si el texto del control es o no editable.
+fpar(TextView*,view).La vista.
+fpar(const bool_t,is_editable).<c>TRUE</c> permitirá editar el texto. Por defecto <c>FALSE</c>.

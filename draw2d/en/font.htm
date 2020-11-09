@@ -169,6 +169,13 @@ func(font_style).Get the font style.
 fret(uint32_t).The style. Combination of <lt>fstyle_t</lt> structure values. Eg: <c>ekFBOLD | ekFITALIC</c>.
 fpar(const Font*,font).The font.
 
+func(font_extents).Gets the size in pixels of a text string, based on the font.
+fpar(const Font*,font).The font.
+fpar(const char_t*,text).The text string to size.
+fpar(const real32_t,refwidth).Maximum width of the text box.
+fpar(real32_t*,width).Text box width.
+fpar(real32_t*,height).Text box height.
+
 func(font_exists_family).Check if a typeface family is installed in the operating system.
 fret(bool_t).<c>TRUE</c> if the family exists, <c>FALSE</c> if not.
 fpar(const char_t*,family).UTF8 string with family name, terminated in a null character <c>'\0'</c>.

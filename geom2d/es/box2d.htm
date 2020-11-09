@@ -1,0 +1,37 @@
+
+h1.Cajas 2D
+
+p.Los cajas 2D o <i>(Axis-Aligned Bounding boxes)</i> delimitan la zona del plano que ocupan diferentes elementos geométricos <r>bounding_box2d</r>. Son útiles en la detección de colisiones u operaciones de recortado <i>(clipping)</i>, que impiden que se dibujen figuras no visibles, mejorando el rendimiento global.
+
+img(bounding_box2d.svg,520,.65).Contenedor con varios elementos geométricos.
+Dibujo de un plano donde aparece un contenedor 2D que integra varias figuras.
+
+func(Box2D,).Crea una nueva caja con los límites indicados.
+fret(Box2D).La caja recién creada.
+fpar(const real,minX).El límite inferior en X.
+fpar(const real,minY).El límite inferior en Y.
+fpar(const real,maxX).El límite superior en X.
+fpar(const real,maxY).El límite superior en Y.
+
+func(Box2D,add).Amplia las dimensiones del contenedor para albergar al punto de entrada. Si el punto ya está dentro de su área, las dimensiones no se modificarán.
+fpar(Box2D*,box).El contenedor.
+fpar(const V2D*,p).El punto a incluir.
+
+func(Box2D,addn).Amplia las dimensiones del contenedor para albergar varios puntos. Es equivalente a llamar sucesivas veces al método <lf>box2d_addf</lf>.
+fpar(Box2D*,box).El contenedor.
+fpar(const V2D*,p).Vector de puntos a incluir.
+fpar(const uint32_t,n).Número de puntos.
+
+func(Box2D,add_circle).Amplia las dimensiones del contenedor para albergar un círculo.
+fpar(Box2D*,box).El contenedor.
+fpar(const Cir2D*,cir).Círculo.
+
+func(Box2D,merge).Amplia las dimensiones de la caja <c>dest</c> para contener a la caja <c>src</c>.
+fpar(Box2D*,dest).La caja destino.
+fpar(const Box2D*,src).La caja origen.
+
+func(Box2D,is_null).Comprueba si un contendor es nulo (sin dimensión).
+fret(bool_t).<c>TRUE</c> si es nulo, <c>FALSE</c> si contiene alguna geometría.
+fpar(const Box2D*,box).El contenedor.
+
+const(Box2D,NULL).Representa un contenedor nulo (sin geometría).

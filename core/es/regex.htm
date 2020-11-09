@@ -1,0 +1,93 @@
+
+h1.Expresiones regulares
+
+p.Las expresiones regulares definen un patrón de texto que puede utilizarse para buscar o comparar cadenas.
+
+li.Utiliza <lf>regex_create</lf> para crear una expresión regular.
+
+li.Utiliza <lf>regex_match</lf> para comprobar si una cadena cumple con el patrón.
+
+h2.Definir patrones
+
+p.Podemos construir una expresión regular a partir de una cadena de texto, siguiendo estas sencillas reglas:
+
+li.Un patrón cadena se corresponde únicamente con esa misma cadena.
+code(txt,ref1,no).
+"hello" --> {"hello"}
+code.
+
+li.Un punto <c>'.'</c> equivale a "cualquier carácter".
+code(txt,ref1,no).
+"h.llo" --> {"hello", "htllo", "hällo", "h5llo", ...}
+code.
+
+li.Un guión <c>'A-Z'</c> establece un rango de caracteres, utilizando el código ASCII/Unicode de ambos extremos.
+code(txt,ref1,no).
+"A-Zello" --> {"Aello", "Bello", "Cello", ..., "Zello"}
+
+'A-Z': (65-90) (ABCDEFGHIJKLMNOPQRSTUVWXYZ)
+'0-9': (48-57) (0123456789)
+'á-ú': (225-250) (áâãäåæçèéêëìíîïðñòóôõö÷øùú)
+code.
+
+bq.Al igual que los objetos <lt>String</lt>, los patrones se expresan en <lh>UTF-8</lh>, por tanto, puede utilizarse todo el conjunto Unicode para crear expresiones regulares.
+
+li.Los corchetes <c>'[áéíóú]'</c> permiten alternar entre varios caracteres.
+code(txt,ref1,no).
+"h[áéíóú]llo" --> {"hállo", "héllo", "híllo", "hóllo", "húllo"}
+code.
+
+li.El asterisco <c>'*'</c> permite que el último carácter aparezca cero o más veces.
+code(txt,ref1,no).
+"he*llo" --> {"hllo", "hello", "heello", "heeello", "heeeello", ...}
+"h.*llo" --> {"hllo", "hello", "hallo", "hillo", "hasello", ...}
+"hA-Z*llo" --> {"hllo", "hAllo", "hABllo", "hVFFRREASllo", "hAQWEDllo", ...}
+"FILE_0-9*.PNG" --> {"FILE_.PNG", "FILE_0.PNG", "FILE_01.PNG", "FILE_456.PNG", ...}
+code.
+
+li.Los paréntesis <c>'(he*llo)'</c> permiten agrupar una expresión regular, de tal forma que se comporte como un único carácter.
+code(txt,ref1,no).
+"[(hello)(bye)]" --> {"hello", "bye" }
+"[(red)(blue)(1*)]" --> {"red", "blue", "", "1", "11", "111", ... }
+"(hello)*" --> {"", "hello", "hellohello", "hellohellohello", ... }
+"(he*llo)ZZ" --> {"hlloZZ", "helloZZ", "heelloZZ", "heeelloZZ", ... }
+code.
+
+li.Para que <c>'.', '-', '[]', '*', '()'</c> sean interpretados como carácteres, utilizar el <i>backslash</i> <c>'\'</c>.
+code(txt,ref1,no).
+"\(he\*\-llo\)" --> {"(he*-llo)"}
+code.
+
+bq.Recuerda que para expresiones insertadas como constantes en código C, el carácter <i>backslash</i> se representa con doble barra <c>"\\(he\\*\\-llo\\)"</c>.
+
+h2.Lenguajes regulares y autómatas
+
+p.Los lenguajes regulares son aquellos que se definen de forma recursiva utilizando tres operaciones básicas sobre el conjunto de carácteres (o símbolos) disponibles. Se pueden describir mediante las expresiones regulares comentadas anteriormente.
+
+li.Cada carácter <b>'a'</b> es un lenguaje regular <b>'A'</b>.
+
+li.La unión de dos lenguajes regulares, es un lenguaje regular <b>A∪B</b>.
+
+li.La concatenación de dos lenguajes regulares, es un lenguaje regular <b>A·B</b>.
+
+li.La clausura de un lenguaje regular, es un lenguaje regular <b>A*</b>. Aquí es donde entra en juego la recursión.
+
+bq.En este contexto los símbolos son todos los carácteres Unicode. Pero pueden definirse lenguajes basados en otros alfabetos, incluído el binario {0, 1}.
+
+p.Para reconocer si una cadena pertenece o no a un determinado lenguaje regular, es necesario construir un <b>Autómata Finito</b> basándonos en las reglas reflejadas en <r>regex</r>.
+
+img(regex.svg,480,.6).Construcción de autómatas finitos para filtrar expresiones regulares.
+Concatenación, Unión y Clausura de autómatas finitos.
+
+func(regex_create).Crea una expresión regular a partir de un patrón.
+fret(RegEx*).Expresión regular (autómata).
+fpar(const char_t*, pattern).Patrón de búsqueda.
+fnote.Ver <lh>Definir patrones</lh>.
+
+func(regex_destroy).Destruye una expresión regular.
+fpar(RegEx**,regex).Expresión regular. Será puesto a <c>NULL</c> tras la destrucción.
+
+func(regex_match).Comprueba si una cadena cumple el patrón de búsqueda.
+fret(bool_t).<c>TRUE</c> si la cadena es aceptada por la expresión regular.
+fpar(const RegEx*,regex).Expresión regular.
+fpar(const char_t*,str).Cadena a evaluar.
